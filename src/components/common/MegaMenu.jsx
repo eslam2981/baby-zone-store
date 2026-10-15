@@ -20,7 +20,9 @@ import {
   Gift,
   Flame,
   ArrowLeft,
-  X
+  X,
+  Baby,
+  Truck
 } from 'lucide-react';
 
 const ICON_MAP = {
@@ -136,9 +138,10 @@ export default function MegaMenu({ isOpen, onClose }) {
                 handleSmoothClose();
                 navigate('/hospital-bag');
               }}
-              className="bg-white hover:bg-rawaa-primary hover:text-white border border-rawaa-border px-3 py-1 rounded-full font-bold text-rawaa-primary transition-colors cursor-pointer flex items-center gap-1 shadow-soft-xs"
+              className="bg-white hover:bg-rawaa-primary hover:text-white border border-rawaa-border px-3 py-1 rounded-full font-bold text-rawaa-primary transition-colors cursor-pointer flex items-center gap-1.5 shadow-soft-xs"
             >
-              <span>🛍️ دليل تجهيز حقيبة الولادة</span>
+              <Baby size={14} className="shrink-0" />
+              <span>دليل تجهيز حقيبة الولادة</span>
               <span className="bg-amber-100 text-amber-900 text-[10px] px-1.5 py-0.2 rounded-full font-bold">تفاعلي</span>
             </button>
             <button
@@ -147,9 +150,10 @@ export default function MegaMenu({ isOpen, onClose }) {
                 handleSmoothClose();
                 navigate('/track-order');
               }}
-              className="bg-white hover:bg-emerald-600 hover:text-white border border-rawaa-border px-3 py-1 rounded-full font-bold text-emerald-800 transition-colors cursor-pointer flex items-center gap-1 shadow-soft-xs"
+              className="bg-white hover:bg-emerald-600 hover:text-white border border-rawaa-border px-3 py-1 rounded-full font-bold text-emerald-800 transition-colors cursor-pointer flex items-center gap-1.5 shadow-soft-xs"
             >
-              <span>🚚 تتبع شحنتك المباشر</span>
+              <Truck size={14} className="shrink-0" />
+              <span>تتبع شحنتك المباشر</span>
             </button>
           </div>
           <span className="text-rawaa-muted hidden md:inline">خدمة التوصيل السريع لجميع محافظات مصر</span>

@@ -20,7 +20,7 @@
 [الصفحات والمسارات](#-الصفحات-والأقسام) •
 [هيكل المشروع](#-هيكل-المشروع) •
 [التشغيل محلياً](#-التشغيل-محليا) •
-[الرفع على Vercel](#-النشر-على-vercel)
+[الترخيص](#-الترخيص)
 
 </div>
 
@@ -140,28 +140,6 @@ e-commerce-app/
    ```bash
    npm run preview
    ```
-
----
-
-## 🌐 النشر على Vercel (Deployment)
-
-المشروع مهيأ تماماً وجاهز للرفع الفوري على منصة **Vercel** دون أي إعدادات إضافية بفضل ملف `vercel.json` الذي يعيد توجيه جميع المسارات إلى `index.html` لتفادي أخطاء 404:
-
-### طريقة الرفع عبر GitHub:
-1. ارفع المشروع إلى مستودعك على GitHub:
-   ```bash
-   git add .
-   git commit -m "feat: complete luxury mother and baby e-commerce store"
-   git push origin main
-   ```
-2. توجه إلى [Vercel Dashboard](https://vercel.com/dashboard) واضغط **Add New Project**.
-3. اختر المستودع واضغط **Deploy**.
-
-### طريقة الرفع عبر Vercel CLI:
-```bash
-npm i -g vercel
-vercel
-```
 
 ---
 

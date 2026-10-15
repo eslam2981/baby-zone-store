@@ -9,7 +9,9 @@ import {
   Menu,
   X,
   ChevronDown,
-  ArrowLeft
+  ArrowLeft,
+  Baby,
+  Truck
 } from 'lucide-react';
 
 export default function Header({ onOpenMegaMenu, isMegaMenuOpen }) {
@@ -233,17 +235,19 @@ export default function Header({ onOpenMegaMenu, isMegaMenuOpen }) {
           {/* Direct link to hospital bag checklist */}
           <Link
             to="/hospital-bag"
-            className="hidden lg:inline-flex items-center gap-1.5 text-xs font-semibold text-rawaa-primary bg-rawaa-primary-light hover:bg-rawaa-primary hover:text-white px-3 py-1.5 rounded-full transition-all whitespace-nowrap"
+            className="hidden lg:inline-flex items-center gap-1.5 text-xs font-bold text-rawaa-primary bg-rawaa-primary-light hover:bg-rawaa-primary hover:text-white px-3 py-1.5 rounded-full transition-all whitespace-nowrap shadow-soft-xs group"
           >
+            <Baby size={14} className="transition-transform group-hover:scale-110" />
             <span>حقيبة الولادة</span>
-            <span className="text-[10px] bg-white text-rawaa-primary px-1.5 py-0.2 rounded-full font-bold">جديد</span>
+            <span className="text-[10px] bg-white text-rawaa-primary px-1.5 py-0.2 rounded-full font-bold group-hover:bg-white/20 group-hover:text-white transition-colors">جديد</span>
           </Link>
 
           {/* Direct link to live order tracking */}
           <Link
             to="/track-order"
-            className="hidden xl:inline-flex items-center gap-1 text-xs font-semibold text-rawaa-muted hover:text-rawaa-primary px-2.5 py-1.5 rounded-lg hover:bg-rawaa-soft transition-colors whitespace-nowrap"
+            className="hidden xl:inline-flex items-center gap-1.5 text-xs font-semibold text-rawaa-dark hover:text-rawaa-primary px-2.5 py-1.5 rounded-lg hover:bg-rawaa-soft transition-colors whitespace-nowrap group"
           >
+            <Truck size={14} className="text-rawaa-muted group-hover:text-rawaa-primary transition-colors" />
             <span>تتبع طلبيتك</span>
           </Link>
 

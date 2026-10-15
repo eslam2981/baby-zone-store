@@ -86,3 +86,33 @@
 .custom-modal-scroll::-webkit-scrollbar-thumb:hover {
   background: #C25E3E;
 }
+
+/* Responsive category rail scrollbar with auto marquee support */
+@media (max-width: 640px) {
+  .mobile-category-scroll {
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #C25E3E #F4EFEB;
+    padding-bottom: 6px;
+  }
+  .mobile-category-scroll::-webkit-scrollbar {
+    display: block !important;
+    height: 4px;
+  }
+  .mobile-category-scroll::-webkit-scrollbar-track {
+    background: #F4EFEB;
+    border-radius: 9999px;
+  }
+  .mobile-category-scroll::-webkit-scrollbar-thumb {
+    background: #C25E3E;
+    border-radius: 9999px;
+  }
+}
+
+@media (min-width: 641px) {
+  .mobile-category-scroll {
+    overflow-x: hidden;
+  }
+}

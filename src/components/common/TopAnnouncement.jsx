@@ -2,7 +2,7 @@
 // Top announcement bar displaying shipping thresholds currency and customer service
 import { Link } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
-import { Truck, PhoneCall, ShieldCheck } from 'lucide-react';
+import { Truck, PhoneCall, ShieldCheck, Baby } from 'lucide-react';
 
 export default function TopAnnouncement() {
   const {
@@ -35,6 +35,14 @@ export default function TopAnnouncement() {
 
         {/* Secondary trust badges and contact details */}
         <div className="flex items-center gap-2 sm:gap-4 md:gap-6 shrink-0">
+          <Link
+            to="/hospital-bag"
+            className="hidden md:inline-flex items-center gap-1 text-white/90 hover:text-amber-200 transition-colors"
+          >
+            <Baby size={13} className="text-amber-300" />
+            <span>حقيبة الولادة</span>
+          </Link>
+
           <Link
             to="/track-order"
             className="hidden sm:inline-flex items-center gap-1 text-white/90 hover:text-amber-200 transition-colors"

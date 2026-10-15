@@ -138,16 +138,16 @@ export default function CategoryPills() {
         </div>
 
         {/* Infinite marquee carousel container */}
-        <div className="relative w-full overflow-hidden rounded-2xl bg-[#FAF7F2]/70 border border-rawaa-border/70 p-2 sm:p-2.5">
+        <div className="relative w-full rounded-2xl bg-[#FAF7F2]/70 border border-rawaa-border/70 p-2 sm:p-2.5 overflow-hidden">
           {/* Right fade gradient mask */}
-          <div className="absolute right-0 top-0 bottom-0 w-10 sm:w-16 md:w-20 bg-gradient-to-l from-[#FAF7F2] via-[#FAF7F2]/90 to-transparent z-10 pointer-events-none rounded-r-2xl" />
+          <div className="hidden sm:block absolute right-0 top-0 bottom-0 w-10 sm:w-16 md:w-20 bg-gradient-to-l from-[#FAF7F2] via-[#FAF7F2]/90 to-transparent z-10 pointer-events-none rounded-r-2xl" />
 
           {/* Left fade gradient mask */}
-          <div className="absolute left-0 top-0 bottom-0 w-10 sm:w-16 md:w-20 bg-gradient-to-r from-[#FAF7F2] via-[#FAF7F2]/90 to-transparent z-10 pointer-events-none rounded-l-2xl" />
+          <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-10 sm:w-16 md:w-20 bg-gradient-to-r from-[#FAF7F2] via-[#FAF7F2]/90 to-transparent z-10 pointer-events-none rounded-l-2xl" />
 
-          {/* Continuous marquee track with pause on interaction */}
+          {/* Continuous marquee track with pause on interaction and mobile scrollbar */}
           <div
-            className={`marquee-group flex overflow-hidden relative w-full select-none py-1 ${
+            className={`marquee-group mobile-category-scroll flex relative w-full select-none py-1 ${
               isPressed ? 'marquee-paused' : ''
             }`}
             dir="ltr"

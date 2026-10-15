@@ -1,6 +1,6 @@
 // Interactive banner showcasing hospital bag planner and live Egyptian delivery tracking
 import { Link } from 'react-router-dom';
-import { Sparkles, Truck, CheckCircle2, ChevronLeft, ArrowLeft, Stethoscope, Clock } from 'lucide-react';
+import { Sparkles, Truck, CheckCircle2, ChevronLeft, ArrowLeft, Stethoscope, Clock, Baby } from 'lucide-react';
 
 export default function SmartServicesBanner() {
   return (
@@ -28,8 +28,8 @@ export default function SmartServicesBanner() {
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
-                <span className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl shadow-soft-xs">
-                  🛍️
+                <span className="w-12 h-12 rounded-2xl bg-rawaa-primary-light text-rawaa-primary flex items-center justify-center shadow-soft-xs">
+                  <Baby size={24} />
                 </span>
                 <span className="text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1">
                   <Stethoscope size={13} />
@@ -81,8 +81,8 @@ export default function SmartServicesBanner() {
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
-                <span className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center text-xl shadow-soft-xs">
-                  🚚
+                <span className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shadow-soft-xs">
+                  <Truck size={24} />
                 </span>
                 <span className="text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full flex items-center gap-1">
                   <Clock size={13} />
