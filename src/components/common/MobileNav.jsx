@@ -4,6 +4,7 @@ import { useShop } from '../../context/ShopContext';
 import {
   X,
   ChevronDown,
+  ChevronLeft,
   PhoneCall,
   Globe,
   Grid,
@@ -218,7 +219,13 @@ export default function MobileNav() {
                     <button
                       type="button"
                       className="flex-1 flex items-center gap-2.5 p-3 text-right text-xs font-semibold text-rawaa-dark min-w-0 cursor-pointer"
-                      onClick={() => handleSelectCategory(cat.id)}
+                      onClick={(e) => {
+                        if (cat.subcategories && cat.subcategories.length > 0) {
+                          toggleCategoryExpand(cat.id, e);
+                        } else {
+                          handleSelectCategory(cat.id);
+                        }
+                      }}
                     >
                       <div className="w-8 h-8 rounded-lg bg-rawaa-soft flex items-center justify-center shrink-0 text-rawaa-primary">
                         <IconComp size={16} />
@@ -240,33 +247,55 @@ export default function MobileNav() {
                     {cat.subcategories && cat.subcategories.length > 0 && (
                       <button
                         type="button"
-                        className="px-3 flex items-center justify-center text-rawaa-muted hover:text-rawaa-primary hover:bg-rawaa-soft transition-colors shrink-0 cursor-pointer"
+                        className="w-12 flex items-center justify-center text-rawaa-muted hover:text-rawaa-primary hover:bg-rawaa-primary-light/40 active:bg-rawaa-primary-light transition-all shrink-0 cursor-pointer border-r border-rawaa-border/40"
                         onClick={(e) => toggleCategoryExpand(cat.id, e)}
-                        aria-label="عرض الفئات الفرعية"
+                        aria-label={isExpanded ? 'إغلاق القائمة الفرعية' : 'عرض القائمة الفرعية'}
                       >
                         <ChevronDown
-                          size={17}
-                          className={`transition-transform duration-200 ${isExpanded ? 'rotate-180 text-rawaa-primary' : ''}`}
+                          size={18}
+                          className={`transition-transform duration-300 ease-in-out ${
+                            isExpanded ? 'rotate-180 text-rawaa-primary' : 'text-rawaa-muted'
+                          }`}
                         />
                       </button>
                     )}
                   </div>
 
-                  {isExpanded && cat.subcategories && (
-                    <ul className="bg-[#FAF7F2] border-t border-rawaa-border/50 py-2 px-3 flex flex-col gap-1">
-                      {cat.subcategories.map((sub, sIdx) => (
-                        <li key={sIdx}>
-                          <button
-                            type="button"
-                            className="flex items-center justify-between gap-2 text-xs text-rawaa-muted hover:text-rawaa-primary hover:bg-white p-2 rounded-lg w-full text-right transition-colors cursor-pointer"
-                            onClick={() => handleSelectCategory(cat.id, sub)}
-                          >
-                            <span className="font-medium text-xs break-words">{sub}</span>
-                            <ChevronLeft size={13} className="text-rawaa-subtle shrink-0" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
+                  {cat.subcategories && cat.subcategories.length > 0 && (
+                    <div
+                      className={`grid transition-all duration-300 ease-in-out ${
+                        isExpanded
+                          ? 'grid-rows-[1fr] opacity-100'
+                          : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <ul className="bg-[#FAF7F2] border-t border-rawaa-border/50 py-2 px-3 flex flex-col gap-1">
+                          <li>
+                            <button
+                              type="button"
+                              className="flex items-center justify-between gap-2 text-xs font-bold text-rawaa-primary hover:bg-white p-2 rounded-lg w-full text-right transition-colors cursor-pointer border-b border-rawaa-border/40 pb-2 mb-1"
+                              onClick={() => handleSelectCategory(cat.id)}
+                            >
+                              <span className="break-words">عرض جميع منتجات {cat.name}</span>
+                              <ChevronLeft size={13} className="text-rawaa-primary shrink-0" />
+                            </button>
+                          </li>
+                          {cat.subcategories.map((sub, sIdx) => (
+                            <li key={sIdx}>
+                              <button
+                                type="button"
+                                className="flex items-center justify-between gap-2 text-xs text-rawaa-muted hover:text-rawaa-primary hover:bg-white p-2 rounded-lg w-full text-right transition-colors cursor-pointer"
+                                onClick={() => handleSelectCategory(cat.id, sub)}
+                              >
+                                <span className="font-medium text-xs break-words">{sub}</span>
+                                <ChevronLeft size={13} className="text-rawaa-subtle shrink-0" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
                   )}
                 </li>
               );
