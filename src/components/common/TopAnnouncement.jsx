@@ -23,7 +23,7 @@ export default function TopAnnouncement() {
           <span className="truncate sm:overflow-visible">
             {freeShippingRemainingSAR === 0 ? (
               <strong className="text-amber-200 font-bold">
-                تهانينا! مؤهل لشحن مجاني سريع لكافة محافظات مصر 🚚
+                تهانينا! مؤهل لشحن مجاني سريع لكافة محافظات مصر
               </strong>
             ) : (
               <>

@@ -1,5 +1,5 @@
 // Track order page component providing live package tracking and delivery estimates
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
 import {
@@ -115,7 +115,7 @@ const MOCK_ORDERS = {
 // Shipping guide coverage data across Egyptian regions
 const GOVERNORATES = [
   { name: 'القاهرة والجيزة', eta: 'خلال 24 ساعة (نفس اليوم قبل 2 ظهر)', fee: 'مجاني للطلبات فوق 1000 ج.م أو 45 ج.م', speed: 'فائق السرعة' },
-  { name: 'الإسكندرية والساحل', eta: 'خلال 24 إلى 48 ساعة كحد أقصى', fee: 'مجاني للطلبات فوق 1000 ج.م أو 55 ج.م', speed: 'سريع ومبرد' },
+  { name: 'الإسكندرية والساحل', eta: 'خلال 24 إلى 48 ساعة كحد أقصى', fee: 'مجاني للطلبات فوق 1000 ج.م أو 55 ج.م', speed: 'سريع وامن' },
   { name: 'مدن القناة (الإسماعيلية، السويس، بورسعيد)', eta: 'خلال 48 ساعة عمل', fee: 'مجاني للطلبات فوق 1000 ج.م أو 65 ج.م', speed: 'شحن مؤمن' },
   { name: 'محافظات الدلتا (طنطا، المنصورة، الزقازيق)', eta: 'خلال 48 ساعة عمل', fee: 'مجاني للطلبات فوق 1000 ج.م أو 60 ج.م', speed: 'شحن مباشر' },
   { name: 'شمال ووسط الصعيد (الفيوم، بني سويف، المنيا، أسيوط)', eta: 'من 2 إلى 3 أيام عمل', fee: 'مجاني للطلبات فوق 1000 ج.م أو 75 ج.م', speed: 'مغلف بحماية مزدوجة' },
@@ -128,6 +128,11 @@ export default function TrackOrderPage() {
   const [activeOrder, setActiveOrder] = useState(MOCK_ORDERS['RAW-8842']);
   const [hasSearched, setHasSearched] = useState(true);
   const [selectedGovernorate, setSelectedGovernorate] = useState(GOVERNORATES[0]);
+
+  // Smooth scroll window to top when tracking page mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   // Handle tracking form submission with lookup logic
   const handleSearch = (e) => {
@@ -143,6 +148,10 @@ export default function TrackOrderPage() {
       setActiveOrder(found);
       setHasSearched(true);
       addToast(`تم العثور على بيانات الطلب #${found.id} بنجاح`, 'success');
+      setTimeout(() => {
+        const el = document.getElementById('tracking-result-card');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
     } else {
       setActiveOrder(null);
       setHasSearched(true);
@@ -155,6 +164,10 @@ export default function TrackOrderPage() {
     setSearchInput(code);
     setActiveOrder(MOCK_ORDERS[code]);
     setHasSearched(true);
+    setTimeout(() => {
+      const el = document.getElementById('tracking-result-card');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   };
 
   return (
@@ -234,24 +247,24 @@ export default function TrackOrderPage() {
 
         {/* Live order tracking card results */}
         {hasSearched && activeOrder ? (
-          <div className="bg-white rounded-2xl shadow-soft-lg border border-rawaa-border overflow-hidden mb-12">
+          <div id="tracking-result-card" className="bg-white rounded-2xl shadow-soft-lg border border-rawaa-border overflow-hidden mb-12 scroll-mt-24">
             {/* Header banner of order status */}
             <div className="bg-gradient-to-r from-rawaa-dark via-[#26352E] to-rawaa-dark text-white p-5 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2.5 mb-1.5">
-                  <span className="text-xs bg-white/15 px-3 py-0.5 rounded-full font-mono font-bold tracking-wider">
+                  <span className="text-xs bg-white/15 px-3 py-0.5 rounded-full font-mono font-bold tracking-wider text-white">
                     #{activeOrder.id}
                   </span>
                   <span className="text-xs text-amber-300 font-medium">
                     {activeOrder.date}
                   </span>
                 </div>
-                <h2 className="font-heading text-lg sm:text-2xl font-bold">
+                <h2 className="font-heading text-lg sm:text-2xl font-bold !text-white text-white">
                   {activeOrder.statusLabel}
                 </h2>
-                <p className="text-xs sm:text-sm text-white/80 mt-1 flex items-center gap-1.5">
+                <p className="text-xs sm:text-sm text-white/90 mt-1 flex items-center gap-1.5">
                   <Clock size={15} className="text-amber-400 shrink-0" />
-                  <span>الموعد المتوقع: <strong>{activeOrder.estimatedTime}</strong></span>
+                  <span>الموعد المتوقع: <strong className="text-white font-bold">{activeOrder.estimatedTime}</strong></span>
                 </p>
               </div>
 

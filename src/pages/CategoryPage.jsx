@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
 import FilterSidebar from '../components/catalog/FilterSidebar';
@@ -22,7 +22,6 @@ export default function CategoryPage() {
   const {
     products,
     categories,
-    selectedCategory,
     setSelectedCategory,
     selectedSubcategory,
     setSelectedSubcategory,

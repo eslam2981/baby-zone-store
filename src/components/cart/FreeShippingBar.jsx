@@ -1,6 +1,6 @@
 // Progress bar showing remaining amount for free shipping eligibility
 import { useShop } from '../../context/ShopContext';
-import { Truck, CheckCircle2 } from 'lucide-react';
+import { Truck, CheckCircle2, Gift } from 'lucide-react';
 
 export default function FreeShippingBar() {
   const {
@@ -22,7 +22,10 @@ export default function FreeShippingBar() {
         )}
         <p className="text-xs text-rawaa-dark leading-snug">
           {isUnlocked ? (
-            <strong className="text-rawaa-sage font-bold">تهانينا! لقد حصلتِ على شحن مجاني سريع لطلبكِ 🎁</strong>
+            <span className="inline-flex items-center gap-1 text-rawaa-sage font-bold">
+              <span>تهانينا! لقد حصلتِ على شحن مجاني سريع لطلبكِ</span>
+              <Gift size={15} className="text-rawaa-sage shrink-0" />
+            </span>
           ) : (
             <>
               أضيفي بـ <strong className="text-rawaa-primary font-bold">{formatPrice(freeShippingRemainingSAR)}</strong> إضافية للحصول على <strong className="text-rawaa-primary">شحن مجاني</strong> (الحد الأدنى {formatPrice(FREE_SHIPPING_LIMIT_SAR)})

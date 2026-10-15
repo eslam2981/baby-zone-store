@@ -7,7 +7,8 @@ import {
   PhoneCall,
   Mail,
   MapPin,
-  Lock
+  Lock,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function Footer() {
@@ -19,7 +20,7 @@ export default function Footer() {
     e.preventDefault();
     if (newsletterEmail.trim()) {
       setSubscribed(true);
-      addToast('شكراً لانضمامكِ لمجتمع بيبي زون! تم إرسال دليل تجهيز حقيبة الولادة المجاني لبريدك 💌', 'success');
+      addToast('شكراً لانضمامكِ لمجتمع بيبي زون! تم إرسال دليل تجهيز حقيبة الولادة المجاني لبريدك الإلكتروني', 'success');
       setNewsletterEmail('');
     }
   };
@@ -183,7 +184,7 @@ export default function Footer() {
       <div className="border-t border-white/10 py-4 px-4 sm:px-6 lg:px-8 text-[11px] text-white/50">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 xl:px-12 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-right">
           <p>
-            جميع الحقوق محفوظة &copy; {new Date().getFullYear()} لمتجر <strong>بيبي زون (Baby Zone)</strong> سجل تجاري رقم 1010894210
+            جميع الحقوق محفوظة &copy; {new Date().getFullYear()} لمتجر <strong>بيبي زون (Baby Zone)</strong> 
           </p>
           <div className="flex items-center gap-1.5 justify-center">
             <span>صُنِع بكل الحب لراحة أمهات وأطفال الوطن العربي</span>

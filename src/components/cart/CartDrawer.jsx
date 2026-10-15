@@ -39,7 +39,7 @@ export default function CartDrawer() {
     const clean = promoInput.trim().toUpperCase();
     if (clean === 'BABY10' || clean === 'ZONE10' || clean === 'BABYZONE10' || clean === 'RAWAA10') {
       setAppliedPromo({ code: clean, percent: 10 });
-      addToast(`تم تطبيق كود الخصم ${clean} بنجاح! تم خصم 10% إضافية 🎉`, 'success');
+      addToast(`تم تطبيق كود الخصم ${clean} بنجاح! تم خصم 10% إضافية`, 'success');
     } else {
       addToast('كود الخصم المدخل غير صالح أو منتهي الصلاحية', 'warning');
     }

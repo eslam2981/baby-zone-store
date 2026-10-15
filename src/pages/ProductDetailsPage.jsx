@@ -39,7 +39,7 @@ export default function ProductDetailsPage() {
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (product) {
       setActiveImage(0);
       setQuantity(1);
@@ -92,7 +92,7 @@ export default function ProductDetailsPage() {
       }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
-      addToast('تم نسخ رابط المنتج إلى الحافظة بنجاح 📋', 'success');
+      addToast('تم نسخ رابط المنتج إلى الحافظة بنجاح', 'success');
     }
   };
 
@@ -355,7 +355,7 @@ export default function ProductDetailsPage() {
                 onClick={handleAddToCart}
               >
                 <ShoppingBag size={18} />
-                <span>{isAdding ? 'تمت الإضافة بنجاح ✨' : `أضف إلى السلة (${formatPrice(product.price * quantity)})`}</span>
+                <span>{isAdding ? 'تمت الإضافة بنجاح' : `أضف إلى السلة (${formatPrice(product.price * quantity)})`}</span>
               </button>
             </div>
 

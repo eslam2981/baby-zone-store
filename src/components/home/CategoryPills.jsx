@@ -51,6 +51,7 @@ export default function CategoryPills() {
     setSelectedCategory(catId);
     setSelectedSubcategory(null);
     navigate(`/category/${catId}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const renderCategoryPill = (cat, keySuffix = '') => {

@@ -218,7 +218,7 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
             {isAdding ? (
               <>
                 <Check size={16} />
-                <span>تمت الإضافة بنجاح ✨</span>
+                <span>تمت الإضافة بنجاح</span>
               </>
             ) : (
               <>

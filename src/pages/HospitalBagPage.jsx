@@ -246,6 +246,11 @@ export default function HospitalBagPage() {
     }
   }, [checkedItems]);
 
+  // Smooth scroll to top when switching checklist sections
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
+
   // Calculate totals and checklist completion metrics
   const allItems = CHECKLIST_CATEGORIES.flatMap((c) => c.items);
   const totalCount = allItems.length;
@@ -258,7 +263,7 @@ export default function HospitalBagPage() {
       setCheckedItems((prev) => prev.filter((id) => id !== itemId));
     } else {
       setCheckedItems((prev) => [...prev, itemId]);
-      addToast('أحسنتِ! تم تحديد الغرض كجاهز في حقيبتك 💖', 'success');
+      addToast('أحسنتِ! تم تحديد الغرض كجاهز في حقيبتك', 'success');
     }
   };
 
@@ -281,7 +286,7 @@ export default function HospitalBagPage() {
     if (product) {
       const defaultColor = product.colors && product.colors.length > 0 ? product.colors[0] : null;
       addToCart(product, 1, defaultColor);
-      addToast(`تمت إضافة "${product.name}" إلى حقيبة التسوق بنجاح 🛍️`, 'success');
+      addToast(`تمت إضافة "${product.name}" إلى حقيبة التسوق بنجاح`, 'success');
     }
   };
 
@@ -345,10 +350,10 @@ export default function HospitalBagPage() {
                 <span>تم إنجاز {completedCount} من أصل {totalCount} غرض</span>
                 <span>
                   {completionPercentage === 100
-                    ? '🎉 حقيبتك مكتملة 100%، مستعدة تماماً ليومك الكبير!'
+                    ? 'حقيبتك مكتملة 100%، مستعدة تماماً ليومك الكبير!'
                     : completionPercentage > 50
-                    ? '👏 أحسنتِ! أنجزتِ أكثر من نصف القائمة'
-                    : '🌸 ابدئي بتجهيز الأغراض الأساسية أولاً'}
+                    ? 'أحسنتِ! أنجزتِ أكثر من نصف القائمة'
+                    : 'ابدئي بتجهيز الأغراض الأساسية أولاً'}
                 </span>
               </div>
             </div>

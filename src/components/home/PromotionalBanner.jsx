@@ -13,7 +13,7 @@ export default function PromotionalBanner() {
   const handleCopyCode = () => {
     navigator.clipboard.writeText(promoCode);
     setCopied(true);
-    addToast('تم نسخ كود الخصم (BABY10) بنجاح! استخدميه عند إتمام الطلب ✨', 'success');
+    addToast('تم نسخ كود الخصم (BABY10) بنجاح! استخدميه عند إتمام الطلب', 'success');
     setTimeout(() => setCopied(false), 3000);
   };
 

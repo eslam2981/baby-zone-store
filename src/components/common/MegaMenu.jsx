@@ -22,7 +22,8 @@ import {
   ArrowLeft,
   X,
   Baby,
-  Truck
+  Truck,
+  Zap
 } from 'lucide-react';
 
 const ICON_MAP = {
@@ -229,8 +230,9 @@ export default function MegaMenu({ isOpen, onClose }) {
         {/* WhatsApp ordering banner strip */}
         <div className="bg-gradient-to-r from-rawaa-sage to-emerald-900 text-white px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <span className="bg-white/20 text-amber-200 text-xs px-2.5 py-0.5 rounded-full font-bold">
-              خدمة عملاء وطلب سريع ⚡
+            <span className="inline-flex items-center gap-1.5 bg-white/20 text-amber-200 text-xs px-2.5 py-0.5 rounded-full font-bold">
+              <Zap size={13} className="text-amber-300" />
+              <span>خدمة عملاء وطلب سريع</span>
             </span>
             <h4 className="font-heading text-base font-bold text-white mt-1">
               محتاجة مساعدة في اختيار المنتج أو حابة تطلبي عبر واتساب مباشرة؟
