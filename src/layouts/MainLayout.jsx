@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import TopAnnouncement from '../components/common/TopAnnouncement';
 import Header from '../components/common/Header';
 import MegaMenu from '../components/common/MegaMenu';
 import MobileNav from '../components/common/MobileNav';
@@ -18,9 +17,6 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen bg-rawaa-bg flex flex-col font-sans text-rawaa-dark antialiased selection:bg-rawaa-primary selection:text-white">
-      {/* Top announcement banner for active offers */}
-      <TopAnnouncement />
-
       {/* Main site header with navigation and actions */}
       <Header
         isMegaMenuOpen={isMegaMenuOpen}
