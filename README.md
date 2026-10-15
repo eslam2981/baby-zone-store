@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🍼 رَواء الصغير | RAWAA
-### المتجر الرقمي المتكامل والراقي لمستلزمات الأم والطفل في مصر
-**A Modern, Luxury Mother & Baby E-Commerce Experience**
+# 🍼 بيبي زون | BABY ZONE
+### المتجر الرقمي المتكامل والراقي لمستلزمات الأم والطفل في مصر (Baby Care & Momy Care)
+**A Modern, Luxury Mother & Baby E-Commerce Experience — Egypt**
 
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)

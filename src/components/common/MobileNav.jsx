@@ -100,12 +100,16 @@ export default function MobileNav() {
         {/* Mobile drawer header with branding and close action */}
         <div className="flex items-center justify-between p-4 border-b border-rawaa-border bg-rawaa-soft shrink-0">
           <div className="flex items-center gap-2.5">
-            <span className="w-9 h-9 rounded-full bg-rawaa-primary-light border border-rawaa-primary/30 flex items-center justify-center text-rawaa-primary font-black shadow-soft-xs">
-              ر
-            </span>
+            <img
+              src="/logo.png"
+              alt="شعار بيبي زون"
+              className="w-10 h-10 object-contain rounded-full shadow-soft-xs bg-white border border-rawaa-border/80 p-1"
+            />
             <div className="flex flex-col leading-tight">
-              <strong className="font-heading text-sm font-bold text-rawaa-dark">رَواء الصغير</strong>
-              <small className="text-[11px] text-rawaa-muted">قائمة التصفح الشاملة</small>
+              <strong className="font-heading text-sm font-black text-rawaa-dark">
+                بيبي <span className="text-rawaa-primary">زون</span>
+              </strong>
+              <small className="text-[10px] text-rawaa-sage font-bold">BABY CARE &bull; MOMY CARE</small>
             </div>
           </div>
           <button

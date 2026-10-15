@@ -261,7 +261,7 @@ export default function TrackOrderPage() {
                   <div className="font-mono text-lg font-extrabold text-amber-300 tracking-widest">{activeOrder.deliveryPin}</div>
                 </div>
                 <a
-                  href={`https://wa.me/201211735629?text=${encodeURIComponent(`مرحباً رَواء، أود الاستفسار عن طلبي رقم ${activeOrder.id}`)}`}
+                  href={`https://wa.me/201211735629?text=${encodeURIComponent(`مرحباً بيبي زون، أود الاستفسار عن طلبي رقم ${activeOrder.id}`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-3 rounded-xl flex items-center gap-2 transition-colors shrink-0 shadow-sm"

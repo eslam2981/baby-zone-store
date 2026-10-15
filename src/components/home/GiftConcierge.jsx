@@ -20,7 +20,7 @@ export default function GiftConcierge() {
           <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
             <div className="inline-flex items-center gap-2 bg-white/80 border border-rawaa-primary/20 text-rawaa-primary text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full mb-3 shadow-soft-xs">
               <Gift size={14} />
-              <span>خدمة رَواء الخاصة للتهنئة وتجهيز المواليد</span>
+              <span>خدمة بيبي زون الخاصة للتهنئة وتجهيز المواليد</span>
             </div>
             <h2 className="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-rawaa-dark leading-tight mb-3">
               لأن الهدايا ذكريات تدوم... <br className="hidden xs:inline" />

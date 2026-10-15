@@ -92,7 +92,7 @@ export default function AuthModal() {
             <div className="bg-rawaa-soft rounded-card p-4 text-right flex flex-col gap-2.5 mb-6 text-xs text-rawaa-dark">
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-rawaa-sage shrink-0" />
-                <span>عضوية نادي رَواء للأمهات مفعلة</span>
+                <span>عضوية نادي بيبي زون للأمهات مفعلة</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-rawaa-sage shrink-0" />
@@ -122,7 +122,7 @@ export default function AuthModal() {
               <div className="w-12 h-12 rounded-full bg-rawaa-primary-light text-rawaa-primary flex items-center justify-center mx-auto mb-2.5">
                 <Heart size={22} />
               </div>
-              <h3 className="font-heading text-xl font-bold text-rawaa-dark">عضوية عائلة رَواء</h3>
+              <h3 className="font-heading text-xl font-bold text-rawaa-dark">عضوية عائلة بيبي زون</h3>
               <p className="text-xs text-rawaa-muted mt-1">
                 سجلي دخولك لتتبع طلبياتك وحفظ مقاسات طفلك وتلقي عروض المناسبات الحصرية
               </p>

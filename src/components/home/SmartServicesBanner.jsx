@@ -10,7 +10,7 @@ export default function SmartServicesBanner() {
         <div className="text-center max-w-2xl mx-auto mb-10">
           <div className="inline-flex items-center gap-1.5 bg-rawaa-primary/10 text-rawaa-primary text-xs font-bold px-3 py-1 rounded-full mb-2.5">
             <Sparkles size={14} />
-            <span>خدمات وأدوات رَواء الحصرية</span>
+            <span>خدمات وأدوات بيبي زون الحصرية</span>
           </div>
           <h2 className="font-heading text-2xl sm:text-3xl font-extrabold text-rawaa-dark">
             أدوات ذكية ترافقك في كل خطوة

@@ -365,7 +365,7 @@ export default function HospitalBagPage() {
               </button>
 
               <a
-                href={`https://wa.me/201211735629?text=${encodeURIComponent(`مرحباً رَواء، لقد جهزت ${completionPercentage}% من حقيبة الولادة وأود الاستفسار عن توفير باقي المنتجات`)}`}
+                href={`https://wa.me/201211735629?text=${encodeURIComponent(`مرحباً بيبي زون، لقد جهزت ${completionPercentage}% من حقيبة الولادة وأود الاستفسار عن توفير باقي المنتجات`)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold px-3.5 py-2.5 rounded-xl flex items-center gap-2 transition-all cursor-pointer"
@@ -567,7 +567,7 @@ export default function HospitalBagPage() {
         <div className="bg-gradient-to-r from-[#222C27] to-rawaa-dark text-white rounded-3xl p-6 sm:p-10 text-center relative overflow-hidden">
           <div className="max-w-2xl mx-auto space-y-3 relative z-10">
             <span className="inline-block bg-white/10 text-amber-200 text-xs font-bold px-3.5 py-1 rounded-full">
-              فريق رَواء الطبي معكِ خطوة بخطوة
+              فريق بيبي زون الطبي معكِ خطوة بخطوة
             </span>
             <h2 className="font-heading text-xl sm:text-3xl font-extrabold text-white">
               هل أنتِ محتارة في اختيار المقاسات أو نوع المستلزمات؟

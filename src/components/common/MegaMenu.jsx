@@ -112,7 +112,7 @@ export default function MegaMenu({ isOpen, onClose }) {
         <div className="flex justify-between items-center px-6 py-5 border-b border-rawaa-border bg-rawaa-soft">
           <div>
             <h3 className="font-heading text-lg sm:text-xl font-bold text-rawaa-dark">
-              جميع أقسام ومستلزمات متجر رَواء الصغير
+              جميع أقسام ومستلزمات متجر بيبي زون
             </h3>
             <p className="text-xs text-rawaa-muted mt-0.5">
               17 قسماً رئيسياً مدروساً بعناية لمرافقة كل خطوة في رحلة نمو طفلك
@@ -245,7 +245,7 @@ export default function MegaMenu({ isOpen, onClose }) {
             onClick={() => {
               handleSmoothClose();
               window.open(
-                `https://wa.me/201211735629?text=${encodeURIComponent('السلام عليكم، محتاجة مساعدة بخصوص منتجات رَواء الصغير')}`,
+                `https://wa.me/201211735629?text=${encodeURIComponent('السلام عليكم، محتاجة مساعدة بخصوص منتجات متجر بيبي زون (Baby Zone)')}`,
                 '_blank'
               );
             }}

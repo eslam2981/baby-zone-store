@@ -19,7 +19,7 @@ export default function Footer() {
     e.preventDefault();
     if (newsletterEmail.trim()) {
       setSubscribed(true);
-      addToast('شكراً لانضمامكِ لمجتمع رَواء! تم إرسال دليل تجهيز حقيبة الولادة المجاني لبريدك 💌', 'success');
+      addToast('شكراً لانضمامكِ لمجتمع بيبي زون! تم إرسال دليل تجهيز حقيبة الولادة المجاني لبريدك 💌', 'success');
       setNewsletterEmail('');
     }
   };
@@ -31,7 +31,7 @@ export default function Footer() {
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 xl:px-12 flex flex-col lg:flex-row items-center justify-between gap-6">
           <div className="max-w-xl text-center lg:text-right">
             <span className="inline-block bg-rawaa-primary/20 text-amber-200 text-xs font-bold px-3 py-0.5 rounded-full mb-2">
-              نادي رَواء للأمهات الجدد
+              نادي بيبي زون للأمهات الجدد
             </span>
             <h3 className="font-heading text-lg sm:text-xl font-bold text-white mb-1">
               انضمي لأكثر من 50,000 أم واستلمي دليل رعاية المواليد مجاناً
@@ -70,16 +70,18 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand information and contacts */}
           <div className="flex flex-col">
-            <Link to="/" className="flex items-center gap-2 mb-3">
-              <span className="w-8 h-8 rounded-full bg-rawaa-primary/20 text-rawaa-primary flex items-center justify-center font-bold">
-                ر
-              </span>
-              <span className="font-heading text-xl font-black text-white">رَواء الصغير</span>
+            <Link to="/" className="flex items-center gap-2.5 mb-3">
+              <img
+                src="/logo.png"
+                alt="شعار بيبي زون - Baby Zone"
+                className="w-10 h-10 object-contain rounded-full bg-white p-1 shadow-soft-xs border border-white/20"
+              />
+              <span className="font-heading text-xl font-black text-white">بيبي <span className="text-rawaa-primary">زون</span> | BABY ZONE</span>
             </Link>
 
             <p className="text-xs text-white/65 leading-relaxed mb-4">
-              المتجر المتخصص الأرقى في الشرق الأوسط لمستلزمات الطفولة الآمنة والأمومة الواعية.
-              نجمع بين الدفء الأسري وأعلى درجات الأمان الطبي والاعتمادات الأوروبية الموثوقة.
+              المتجر المتخصص الأرقى في مصر والشرق الأوسط لمستلزمات الطفولة الآمنة وعناية الأم والطفل.
+              نجمع بين الدفء الأسري وأعلى درجات الأمان الطبي والاعتمادات العالمية الموثوقة.
             </p>
 
             <div className="flex flex-col gap-2 text-xs text-white/75">
@@ -89,7 +91,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2">
                 <Mail size={14} className="text-emerald-300" />
-                <span>care@rawaa-kids.com</span>
+                <span>care@babyzone-egypt.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin size={14} className="text-rose-300" />
@@ -181,7 +183,7 @@ export default function Footer() {
       <div className="border-t border-white/10 py-4 px-4 sm:px-6 lg:px-8 text-[11px] text-white/50">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 xl:px-12 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-right">
           <p>
-            جميع الحقوق محفوظة &copy; {new Date().getFullYear()} لمتجر <strong>رَواء الصغير</strong> سجل تجاري رقم 1010894210
+            جميع الحقوق محفوظة &copy; {new Date().getFullYear()} لمتجر <strong>بيبي زون (Baby Zone)</strong> سجل تجاري رقم 1010894210
           </p>
           <div className="flex items-center gap-1.5 justify-center">
             <span>صُنِع بكل الحب لراحة أمهات وأطفال الوطن العربي</span>

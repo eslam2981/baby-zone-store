@@ -88,23 +88,18 @@ export default function Header({ onOpenMegaMenu, isMegaMenuOpen }) {
             <Menu size={22} className="sm:w-6 sm:h-6" />
           </button>
 
-          <Link to="/" className="flex items-center gap-2 sm:gap-3 group text-decoration-none">
-            <span className="flex items-center justify-center filter drop-shadow-sm group-hover:rotate-[-6deg] group-hover:scale-105 transition-transform duration-300">
-              <svg viewBox="0 0 40 40" className="w-8 h-8 sm:w-10 sm:h-10" fill="none">
-                <circle cx="20" cy="20" r="18" fill="#FDF3EF" stroke="#C25E3E" strokeWidth="2" />
-                <path d="M12 25 C 16 14, 24 14, 28 25" stroke="#C25E3E" strokeWidth="2.5" strokeLinecap="round" />
-                <circle cx="16" cy="18" r="1.75" fill="#19211D" />
-                <circle cx="24" cy="18" r="1.75" fill="#19211D" />
-                <path d="M18 22 Q 20 24 22 22" stroke="#C25E3E" strokeWidth="2" strokeLinecap="round" />
-                <path d="M28 10 L30 13 L33 13 L31 15 L32 18 L29 16 L27 18 L27 15 L25 13 L28 13 Z" fill="#EAB308" />
-              </svg>
-            </span>
+          <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group text-decoration-none">
+            <img
+              src="/logo.png"
+              alt="شعار بيبي زون - Baby Zone"
+              className="w-11 h-11 sm:w-13 sm:h-13 object-contain rounded-full shadow-soft-xs border border-rawaa-border/80 bg-white p-1 group-hover:scale-105 transition-transform duration-300"
+            />
             <div className="flex flex-col">
               <span className="font-heading text-lg sm:text-2xl font-black text-rawaa-dark tracking-tight leading-none whitespace-nowrap">
-                رَواء <span className="text-rawaa-primary font-black">الصغير</span>
+                بيبي <span className="text-rawaa-primary font-black">زون</span>
               </span>
-              <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-rawaa-sage mt-0.5 hidden sm:block">
-                RAWAA ATELIER BÉBÉ
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-rawaa-sage mt-0.5 hidden sm:block">
+                BABY CARE &bull; MOMY CARE
               </span>
             </div>
           </Link>
