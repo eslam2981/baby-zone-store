@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-rawaa-bg text-rawaa-dark font-body antialiased;
+    direction: rtl;
+    text-align: right;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold text-rawaa-dark leading-tight;
+  }
+
+  /* Global subtle scrollbar style */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #F4EFEB;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #D5CCC0;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #C25E3E;
+  }
+}
+
+/* Seamless infinite marquee animation */
+@keyframes marquee-seamless {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+.animate-marquee-seamless {
+  display: flex;
+  width: max-content;
+  animation: marquee-seamless 50s linear infinite;
+  will-change: transform;
+}
+
+/* Pause marquee animation on hover or active touch */
+.marquee-group:hover .animate-marquee-seamless,
+.marquee-group:active .animate-marquee-seamless,
+.marquee-paused .animate-marquee-seamless,
+.animate-marquee-seamless:hover,
+.animate-marquee-seamless:active {
+  animation-play-state: paused !important;
+}
+
+/* Thin internal scrollbar for modals */
+.custom-modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #D5CCC0 transparent;
+}
+
+.custom-modal-scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-modal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-modal-scroll::-webkit-scrollbar-thumb {
+  background: #D5CCC0;
+  border-radius: 9999px;
+}
+
+.custom-modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #C25E3E;
+}
