@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
+import { couponsApi } from '../../services/api';
 import FreeShippingBar from './FreeShippingBar';
+import CheckoutModal from './CheckoutModal';
 import {
   X,
   ShoppingBag,
@@ -27,43 +29,89 @@ export default function CartDrawer() {
     cartCount,
     freeShippingRemainingSAR,
     formatPrice,
-    addToast
+    addToast,
+    user,
+    setIsAuthOpen
   } = useShop();
 
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const navigate = useNavigate();
 
-  const handleApplyPromo = (e) => {
+  const handleApplyPromo = async (e) => {
     e.preventDefault();
     const clean = promoInput.trim().toUpperCase();
+    if (!clean) return;
+
     if (clean === 'BABY10' || clean === 'ZONE10' || clean === 'BABYZONE10' || clean === 'RAWAA10') {
-      setAppliedPromo({ code: clean, percent: 10 });
+      setAppliedPromo({ code: clean, type: 'percentage', percent: 10, amount: 0 });
       addToast(`تم تطبيق كود الخصم ${clean} بنجاح! تم خصم 10% إضافية`, 'success');
-    } else {
+      return;
+    }
+
+    try {
+      setIsApplyingPromo(true);
+      const cp = await couponsApi.getByCode(clean);
+      if (cp && cp.is_active) {
+        const isPercent = cp.type === 'percentage';
+        const percentVal = isPercent ? (Number(cp.discount_percent) || 10) : 0;
+        const amountVal = !isPercent ? (Number(cp.discount_amount) || 0) : 0;
+        const minSpend = Number(cp.min_spend) || 0;
+
+        if (minSpend > 0 && cartTotalSAR < minSpend) {
+          addToast(`هذا الكوبون يتطلب مشتريات بقيمة ${minSpend} ج.م على الأقل`, 'warning');
+          return;
+        }
+
+        setAppliedPromo({
+          code: clean,
+          type: cp.type || 'percentage',
+          percent: percentVal,
+          amount: amountVal
+        });
+
+        const discountDesc = isPercent ? `${percentVal}%` : `${amountVal} ج.م`;
+        addToast(`تم تطبيق كود الخصم ${clean} بنجاح! (${discountDesc})`, 'success');
+      } else {
+        addToast('كود الخصم المدخل غير صالح أو منتهي الصلاحية', 'warning');
+      }
+    } catch {
       addToast('كود الخصم المدخل غير صالح أو منتهي الصلاحية', 'warning');
+    } finally {
+      setIsApplyingPromo(false);
     }
   };
 
   const promoDiscountSAR = appliedPromo
-    ? Math.round((cartTotalSAR * appliedPromo.percent) / 100)
+    ? appliedPromo.type === 'fixed'
+      ? Math.min(cartTotalSAR, appliedPromo.amount || 0)
+      : Math.round((cartTotalSAR * (appliedPromo.percent || 0)) / 100)
     : 0;
 
-  const shippingCostSAR = cartTotalSAR === 0 ? 0 : freeShippingRemainingSAR === 0 ? 0 : 25;
+  const shippingCostSAR = cartTotalSAR === 0 ? 0 : freeShippingRemainingSAR === 0 ? 0 : 70;
   const finalTotalSAR = Math.max(0, cartTotalSAR - promoDiscountSAR + shippingCostSAR);
 
   const handleCheckout = () => {
-    addToast('جاري تحويلك إلى بوابة الدفع الآمنة المشفرة...', 'info');
+    if (!user) {
+      addToast('يرجى تسجيل الدخول أو إنشاء حسابك أولاً لإتمام طلبك ومتابعة شحنتك في صفحتك الخاصة', 'warning');
+      setIsCartOpen(false);
+      setIsAuthOpen(true);
+      return;
+    }
+    setIsCheckoutOpen(true);
   };
 
   return (
-    <div
-      className={`fixed inset-0 bg-rawaa-dark/60 backdrop-blur-sm z-50 flex justify-start transition-opacity duration-300 ease-in-out ${
-        isCartOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-      }`}
-      onClick={() => setIsCartOpen(false)}
-      aria-hidden={!isCartOpen}
-    >
+    <>
+      <div
+        className={`fixed inset-0 bg-rawaa-dark/60 backdrop-blur-sm z-50 flex justify-start transition-opacity duration-300 ease-in-out ${
+          isCartOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsCartOpen(false)}
+        aria-hidden={!isCartOpen}
+      >
       <aside
         className={`w-full max-w-md h-full bg-white flex flex-col shadow-soft-xl transform transition-transform duration-300 ease-in-out ${
           isCartOpen ? 'translate-x-0' : 'translate-x-full'
@@ -235,7 +283,9 @@ export default function CartDrawer() {
 
               {appliedPromo && (
                 <div className="flex justify-between text-rawaa-sage font-medium">
-                  <span>كود الخصم ({appliedPromo.code} - 10%):</span>
+                  <span>
+                    كود الخصم ({appliedPromo.code} - {appliedPromo.type === 'fixed' ? formatPrice(appliedPromo.amount || 0) : `${appliedPromo.percent}%`}):
+                  </span>
                   <span>- {formatPrice(promoDiscountSAR)}</span>
                 </div>
               )}
@@ -257,14 +307,43 @@ export default function CartDrawer() {
               </div>
             </div>
 
+            {/* Login verification status block */}
+            {!user ? (
+              <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 text-xs text-amber-900 flex items-start gap-2.5 mb-2.5 shadow-2xs">
+                <Lock size={15} className="text-amber-600 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <strong className="block font-bold mb-0.5 text-amber-950">تسجيل الدخول مطلوب لإتمام الشراء:</strong>
+                  <span className="text-[11px] text-amber-800">
+                    يلزم تسجيل الدخول أو إنشاء حسابك لضمان حفظ بياناتك ومتابعة شحنتك لحظة بلحظة في صفحتك الخاصة.
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl p-2.5 text-xs text-emerald-900 flex items-center justify-between gap-2 mb-2.5 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="font-medium">الطلب مرتبط بحسابك: <strong className="font-bold text-emerald-800">{user.name}</strong></span>
+                </div>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">حساب موثق</span>
+              </div>
+            )}
+
             {/* Primary checkout action button */}
             <button
               type="button"
-              className="w-full bg-rawaa-primary hover:bg-rawaa-primary-hover text-white text-sm font-bold py-3 px-4 rounded-full flex items-center justify-center gap-2 shadow-soft-sm hover:shadow-soft-md transition-all hover:-translate-y-0.5"
+              className={`w-full text-white text-sm font-bold py-3 px-4 rounded-full flex items-center justify-center gap-2 shadow-soft-sm hover:shadow-soft-md transition-all hover:-translate-y-0.5 cursor-pointer ${
+                !user
+                  ? 'bg-amber-600 hover:bg-amber-700'
+                  : 'bg-rawaa-primary hover:bg-rawaa-primary-hover'
+              }`}
               onClick={handleCheckout}
             >
               <Lock size={16} />
-              <span>متابعة إتمام الطلب الآمن ({formatPrice(finalTotalSAR)})</span>
+              <span>
+                {!user
+                  ? `تسجيل الدخول ومتابعة إتمام الطلب (${formatPrice(finalTotalSAR)})`
+                  : `متابعة إتمام الطلب الآمن (${formatPrice(finalTotalSAR)})`}
+              </span>
             </button>
 
             <button
@@ -282,6 +361,22 @@ export default function CartDrawer() {
           </div>
         )}
       </aside>
-    </div>
+      </div>
+
+      {/* Egyptian Checkout Modal rendered as a separate layer */}
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        cart={cart}
+        totalAmount={finalTotalSAR}
+        subtotal={cartTotalSAR}
+        shippingFee={shippingCostSAR}
+        discountAmount={promoDiscountSAR}
+        onOrderSuccess={() => {
+          setIsCartOpen(false);
+        }}
+      />
+    </>
   );
 }
+

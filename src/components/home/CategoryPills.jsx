@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
 import {
+  Bed,
   Grid,
   HeartPulse,
   Package,
@@ -23,6 +24,7 @@ import {
 } from 'lucide-react';
 
 const ICON_MAP = {
+  Bed,
   Grid,
   HeartPulse,
   Package,
@@ -42,8 +44,22 @@ const ICON_MAP = {
   Flame
 };
 
+const getCategoryCountLabel = (count) => {
+  if (count === 1) return 'قسم واحد معتمد';
+  if (count === 2) return 'قسمان معتمدان';
+  if (count >= 3 && count <= 10) return `${count} أقسام معتمدة`;
+  return `${count} قسماً معتمداً`;
+};
+
+const getCategorySubtext = (count) => {
+  if (count === 1) return 'قسم متخصص يلبي متطلبات رحلة الأمومة ونمو طفلك بأعلى المعايير';
+  if (count === 2) return 'قسمان متخصصان يلبيان متطلبات رحلة الأمومة ونمو طفلك بأعلى المعايير';
+  if (count >= 3 && count <= 10) return `${count} أقسام رئيسية تلبي كافة متطلبات رحلة الأمومة ونمو طفلك بأعلى المعايير`;
+  return `${count} قسماً متخصصاً تلبي كافة متطلبات رحلة الأمومة ونمو طفلك بأعلى المعايير`;
+};
+
 export default function CategoryPills() {
-  const { categories, selectedCategory, setSelectedCategory, setSelectedSubcategory } = useShop();
+  const { categories, selectedCategory, setSelectedCategory, setSelectedSubcategory, isLoadingProducts } = useShop();
   const [isPressed, setIsPressed] = useState(false);
   const navigate = useNavigate();
 
@@ -97,6 +113,8 @@ export default function CategoryPills() {
             className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded-md shrink-0 border whitespace-nowrap ${
               isActive
                 ? 'bg-white/20 text-white border-white/30'
+                : cat.isComingSoon
+                ? 'bg-amber-100 text-amber-900 border-amber-300'
                 : 'bg-rawaa-primary-light text-rawaa-primary border-rawaa-primary/20'
             }`}
           >
@@ -106,6 +124,13 @@ export default function CategoryPills() {
       </button>
     );
   };
+
+  const availableCount = categories.filter((c) => !c.isComingSoon).length;
+  const comingSoonCount = categories.filter((c) => c.isComingSoon).length;
+
+  const displayTrack = categories.length > 0 && categories.length < 6
+    ? [...categories, ...categories]
+    : categories;
 
   return (
     <section className="bg-white py-6 sm:py-10 border-b border-rawaa-border overflow-hidden relative" aria-label="أقسام المتجر الشاملة">
@@ -121,16 +146,22 @@ export default function CategoryPills() {
               أقسام المتجر الشاملة
             </h2>
             <p className="text-xs sm:text-sm text-rawaa-muted mt-0.5">
-              17 قسماً متخصصاً تلبي كافة متطلبات رحلة الأمومة ونمو طفلك بأعلى المعايير
+              تصفحي تشكيلة بيبي زون المتوفرة حالياً وتعرفي على الأقسام المعتمدة القادمة قريباً
             </p>
           </div>
 
           {/* Category count and motion badge */}
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-rawaa-soft text-rawaa-dark border border-rawaa-border shadow-soft-xs">
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-soft-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>17 قسماً معتمداً</span>
+              <span>{availableCount} متوفرة الآن</span>
             </span>
+            {comingSoonCount > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 shadow-soft-xs">
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <span>{comingSoonCount} قادمة قريباً</span>
+              </span>
+            )}
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-bold bg-rawaa-primary-light text-rawaa-primary border border-rawaa-primary/20 shadow-soft-xs">
               <InfinityIcon size={14} className="animate-pulse" />
               <span>حركة إنفينتي</span>
@@ -159,20 +190,30 @@ export default function CategoryPills() {
             onMouseUp={() => setIsPressed(false)}
             onMouseLeave={() => setIsPressed(false)}
           >
-            {/* Primary category track */}
-            <div className="flex shrink-0 items-center gap-3 pr-3 animate-marquee-seamless">
-              {categories.map((cat) => renderCategoryPill(cat, 't1'))}
-            </div>
+            {categories.length === 0 && isLoadingProducts ? (
+              <div className="flex items-center gap-3 w-full py-1">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="h-10 w-44 rounded-xl bg-rawaa-border/50 animate-pulse shrink-0" />
+                ))}
+              </div>
+            ) : (
+              <>
+                {/* Primary category track */}
+                <div className="flex shrink-0 items-center gap-3 pr-3 animate-marquee-seamless">
+                  {displayTrack.map((cat, idx) => renderCategoryPill(cat, `t1-${idx}`))}
+                </div>
 
-            {/* Second cloned track */}
-            <div className="flex shrink-0 items-center gap-3 pr-3 animate-marquee-seamless" aria-hidden="true">
-              {categories.map((cat) => renderCategoryPill(cat, 't2'))}
-            </div>
+                {/* Second cloned track */}
+                <div className="flex shrink-0 items-center gap-3 pr-3 animate-marquee-seamless" aria-hidden="true">
+                  {displayTrack.map((cat, idx) => renderCategoryPill(cat, `t2-${idx}`))}
+                </div>
 
-            {/* Third cloned track */}
-            <div className="flex shrink-0 items-center gap-3 pr-3 animate-marquee-seamless" aria-hidden="true">
-              {categories.map((cat) => renderCategoryPill(cat, 't3'))}
-            </div>
+                {/* Third cloned track */}
+                <div className="flex shrink-0 items-center gap-3 pr-3 animate-marquee-seamless" aria-hidden="true">
+                  {displayTrack.map((cat, idx) => renderCategoryPill(cat, `t3-${idx}`))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
+import { useAdmin } from '../../context/AdminContext';
 import {
+  Bed,
   X,
   ChevronDown,
   ChevronLeft,
@@ -32,6 +34,7 @@ import {
 } from 'lucide-react';
 
 const ICON_MAP = {
+  Bed,
   Grid,
   HeartPulse,
   Package,
@@ -64,6 +67,9 @@ export default function MobileNav() {
     setIsCartOpen,
     setIsWishlistOpen
   } = useShop();
+
+  const { isAuthenticated, currentAdmin } = useAdmin();
+  const isUserAdmin = Boolean(user && user.isAdmin && isAuthenticated && currentAdmin);
 
   const [expandedCat, setExpandedCat] = useState(null);
   const navigate = useNavigate();
@@ -188,6 +194,7 @@ export default function MobileNav() {
               <Baby size={14} />
             </span>
             <span className="whitespace-nowrap">حقيبة الولادة</span>
+            <span className="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.2 rounded-full font-bold">قريباً</span>
           </Link>
           <Link
             to="/track-order"
@@ -197,7 +204,7 @@ export default function MobileNav() {
             <span className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
               <Truck size={14} />
             </span>
-            <span className="whitespace-nowrap">تتبع طلبيتك</span>
+            <span className="whitespace-nowrap">{user ? 'صفحتي وطلباتي' : 'تتبع طلبيتك'}</span>
           </Link>
         </div>
 
@@ -205,7 +212,7 @@ export default function MobileNav() {
         <div className="flex-1 overflow-y-auto p-3.5 sm:p-4">
           <div className="flex items-center justify-between mb-3 px-1">
             <span className="text-[11px] font-bold text-rawaa-subtle uppercase tracking-wider">
-              أقسام المتجر الـ 17
+              أقسام المتجر ({categories.length})
             </span>
             <span className="text-[10px] text-rawaa-muted font-medium">
               شامل لجميع المستلزمات
@@ -240,7 +247,13 @@ export default function MobileNav() {
                             {cat.name}
                           </span>
                           {cat.badge && (
-                            <span className="text-[10px] font-bold text-rawaa-sage bg-rawaa-sage-light px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${
+                                cat.isComingSoon
+                                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                  : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              }`}
+                            >
                               {cat.badge}
                             </span>
                           )}
@@ -322,11 +335,23 @@ export default function MobileNav() {
               <PhoneCall size={18} className="shrink-0 text-rawaa-sage" />
               <div className="flex-1">
                 <span className="block font-bold text-rawaa-sage">خدمة العملاء والطلب عبر واتساب</span>
-                <a href="tel:01211735629" className="font-bold text-sm text-rawaa-sage hover:underline block mt-0.5" dir="ltr">
-                  012-1173-5629
+                <a href="tel:01035401549" className="font-bold text-sm text-rawaa-sage hover:underline block mt-0.5" dir="ltr">
+                  0103 540 1549
                 </a>
               </div>
             </div>
+
+            {/* Direct administrative access button only if admin is authenticated */}
+            {isUserAdmin && (
+              <Link
+                to="/admin"
+                onClick={() => setIsMobileNavOpen(false)}
+                className="flex items-center justify-center gap-2 p-3 bg-rawaa-dark hover:bg-black text-white rounded-2xl text-xs font-bold transition-all shadow-sm"
+              >
+                <ShieldCheck size={16} className="text-rawaa-primary" />
+                <span>لوحة الإدارة والتحكم (Admin Dashboard)</span>
+              </Link>
+            )}
           </div>
         </div>
       </div>

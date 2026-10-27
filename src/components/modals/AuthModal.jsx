@@ -1,16 +1,37 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
-import { X, User, Mail, Lock, Heart, CheckCircle2, LogOut } from 'lucide-react';
+import { useAdmin } from '../../context/AdminContext';
+import { ordersApi } from '../../services/api';
+import {
+  X,
+  User,
+  Mail,
+  Lock,
+  Heart,
+  CheckCircle2,
+  LogOut,
+  ShieldCheck,
+  ArrowLeft,
+  AlertCircle,
+  Package,
+  Truck,
+  Sparkles
+} from 'lucide-react';
 
 export default function AuthModal() {
-  const { isAuthOpen, setIsAuthOpen, user, login, logout } = useShop();
+  const { isAuthOpen, setIsAuthOpen, user, login, logout, formatPrice } = useShop();
+  const { isAuthenticated, currentAdmin, admins, loginAdmin, logoutAdmin } = useAdmin();
 
   // Active tab state for login and registration views
   const [activeTab, setActiveTab] = useState('login');
+  const [userOrders, setUserOrders] = useState([]);
+  const [isLoadingUserOrders, setIsLoadingUserOrders] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [babyStage, setBabyStage] = useState('expecting');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const [isRendered, setIsRendered] = useState(isAuthOpen);
   const [isVisible, setIsVisible] = useState(false);
@@ -18,6 +39,7 @@ export default function AuthModal() {
   useEffect(() => {
     if (isAuthOpen) {
       setIsRendered(true);
+      setErrorMessage('');
       const timer = setTimeout(() => setIsVisible(true), 20);
       return () => clearTimeout(timer);
     } else {
@@ -27,11 +49,41 @@ export default function AuthModal() {
     }
   }, [isAuthOpen]);
 
+  // Fetch real customer stats from Supabase Cloud when modal is open
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCustomerStats() {
+      if (!user || (!user.email && !user.phone)) {
+        setUserOrders([]);
+        return;
+      }
+      try {
+        setIsLoadingUserOrders(true);
+        const data = await ordersApi.getByCustomer(user.email, user.phone);
+        if (isMounted && Array.isArray(data)) {
+          setUserOrders(data);
+        }
+      } catch (err) {
+        console.warn('Error loading customer orders in modal:', err);
+      } finally {
+        if (isMounted) setIsLoadingUserOrders(false);
+      }
+    }
+
+    if (isAuthOpen && user && !user.isAdmin) {
+      loadCustomerStats();
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthOpen, user]);
+
   const handleClose = () => {
     setIsVisible(false);
     setTimeout(() => {
       setIsAuthOpen(false);
       setIsRendered(false);
+      setErrorMessage('');
     }, 300);
   };
 
@@ -47,14 +99,70 @@ export default function AuthModal() {
 
   if (!isRendered) return null;
 
+  const isAdmin = Boolean(
+    isAuthenticated && currentAdmin && (user?.isAdmin || currentAdmin)
+  );
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (activeTab === 'login') {
-      login(email || 'om_rayan@example.com', name || 'أم ريان');
-    } else {
-      login(email || 'new_mother@example.com', name || 'أميرة');
+    setErrorMessage('');
+
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      setErrorMessage('يرجى إدخال البريد الإلكتروني');
+      return;
     }
-    handleClose();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setErrorMessage('صيغة البريد الإلكتروني غير صحيحة (مثال: name@example.com)');
+      return;
+    }
+
+    // Check if the email belongs to any registered admin member
+    const matchingAdmin = (admins || []).find(
+      (a) => a.email && a.email.trim().toLowerCase() === cleanEmail.toLowerCase()
+    );
+
+    if (matchingAdmin) {
+      if (!password) {
+        setErrorMessage('يرجى إدخال كلمة المرور لتسجيل الدخول كمدير');
+        return;
+      }
+      const res = loginAdmin(cleanEmail, password);
+      const isSuccess = typeof res === 'boolean' ? res : res?.success;
+      if (!isSuccess) {
+        setErrorMessage(res?.error || 'كلمة المرور الخاصة بمدير النظام غير صحيحة');
+        return;
+      }
+      login(cleanEmail, matchingAdmin.name, {
+        isAdmin: true,
+        role: matchingAdmin.role,
+        permissions: matchingAdmin.permissions || ['all']
+      });
+      handleClose();
+      return;
+    }
+
+    if (activeTab === 'login') {
+      const derivedName = cleanEmail.split('@')[0] || 'عميل بيبي زون';
+      login(cleanEmail, derivedName).then((res) => {
+        if (res) handleClose();
+      });
+    } else {
+      const cleanName = name.trim();
+      if (!cleanName || cleanName.length < 2) {
+        setErrorMessage('يرجى كتابة الاسم الكريم (حرفين على الأقل)');
+        return;
+      }
+      if (password && password.length < 6) {
+        setErrorMessage('كلمة المرور يجب أن لا تقل عن 6 خانات للأمان');
+        return;
+      }
+      login(cleanEmail, cleanName, { babyStage }).then((res) => {
+        if (res) handleClose();
+      });
+    }
   };
 
   return (
@@ -83,38 +191,170 @@ export default function AuthModal() {
 
         {user ? (
           <div className="text-center py-4">
-            <div className="w-16 h-16 rounded-full bg-rawaa-primary-light text-rawaa-primary flex items-center justify-center mx-auto mb-3">
-              <User size={32} />
-            </div>
-            <h3 className="font-heading text-xl font-bold text-rawaa-dark">أهلاً بكِ، {user.name}!</h3>
-            <p className="text-xs text-rawaa-muted mb-6">{user.email}</p>
+            {isAdmin ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-rawaa-primary/10 border-2 border-rawaa-primary/30 text-rawaa-primary flex items-center justify-center mx-auto mb-3 shadow-soft-xs">
+                  <ShieldCheck size={32} />
+                </div>
+                <h3 className="font-heading text-xl font-bold text-rawaa-dark">
+                  أهلاً بك، {currentAdmin?.name || user.name || 'مدير النظام'}!
+                </h3>
+                <div className="flex items-center justify-center gap-2 mt-1 mb-4">
+                  <span className="text-xs text-rawaa-muted">{currentAdmin?.email || user.email}</span>
+                  <span className="text-[10px] font-bold bg-rawaa-sage/15 text-rawaa-sage px-2.5 py-0.5 rounded-full border border-rawaa-sage/30">
+                    {currentAdmin?.role || 'مشرف إداري'}
+                  </span>
+                </div>
 
-            <div className="bg-rawaa-soft rounded-card p-4 text-right flex flex-col gap-2.5 mb-6 text-xs text-rawaa-dark">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-rawaa-sage shrink-0" />
-                <span>عضوية نادي بيبي زون للأمهات مفعلة</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-rawaa-sage shrink-0" />
-                <span>رصيد نقاط الولاء: <strong className="font-bold">250 نقطة</strong></span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-rawaa-sage shrink-0" />
-                <span>شحن مجاني دائم على كافة الطلبيات</span>
-              </div>
-            </div>
+                <div className="bg-rawaa-soft border border-rawaa-border rounded-xl p-3.5 text-right flex flex-col gap-2 mb-4 text-xs text-rawaa-dark">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-rawaa-border">
+                    <span className="font-bold text-[11px]">حالة الحساب الإداري:</span>
+                    <span className="text-emerald-700 font-bold flex items-center gap-1.5 text-[11px]">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      صلاحيات مفعلة
+                    </span>
+                  </div>
+                  <div className="pt-1">
+                    <span className="font-semibold text-rawaa-dark text-[11px] block mb-1.5">الصلاحيات المتاحة لك:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {(currentAdmin?.permissions || ['all']).includes('all') || (currentAdmin?.permissions || []).includes('*') ? (
+                        <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded font-bold">
+                          ⚡ كامل صلاحيات لوحة التحكم (Super Admin)
+                        </span>
+                      ) : (
+                        (currentAdmin?.permissions || []).map((perm) => (
+                          <span key={perm} className="bg-white border border-rawaa-border text-rawaa-dark text-[10px] px-2 py-0.5 rounded font-medium shadow-2xs">
+                            {perm === 'orders' ? 'الطلبات والمبيعات' :
+                             perm === 'products' ? 'إدارة المنتجات' :
+                             perm === 'inventory' ? 'المخزون' :
+                             perm === 'customers' ? 'العملاء' :
+                             perm === 'coupons' ? 'كوبونات الخصم' :
+                             perm === 'reviews' ? 'التقييمات' :
+                             perm === 'analytics' ? 'التقارير والإحصائيات' :
+                             perm === 'settings' ? 'إعدادات المتجر' :
+                             perm === 'admins' ? 'فريق الإدارة' : perm}
+                          </span>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-            <button
-              type="button"
-              className="w-full border border-rawaa-border hover:border-red-300 hover:bg-red-50 text-red-600 text-xs font-bold py-2.5 px-4 rounded-full flex items-center justify-center gap-2 transition-colors cursor-pointer"
-              onClick={() => {
-                logout();
-                handleClose();
-              }}
-            >
-              <LogOut size={16} />
-              <span>تسجيل الخروج من الحساب</span>
-            </button>
+                <Link
+                  to="/admin"
+                  onClick={handleClose}
+                  className="w-full bg-rawaa-primary hover:bg-rawaa-primary-hover text-white text-xs font-bold py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all shadow-soft-sm hover:shadow-soft-md hover:-translate-y-0.5 cursor-pointer mb-2.5"
+                >
+                  <ShieldCheck size={16} />
+                  <span>الانتقال إلى لوحة الإدارة والتحكم</span>
+                  <ArrowLeft size={14} />
+                </Link>
+
+                <button
+                  type="button"
+                  className="w-full border border-rawaa-border hover:border-red-300 hover:bg-red-50 text-red-600 text-xs font-bold py-2.5 px-4 rounded-full flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  onClick={() => {
+                    logout();
+                    logoutAdmin();
+                    handleClose();
+                  }}
+                >
+                  <LogOut size={16} />
+                  <span>تسجيل الخروج من الحساب</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-2xl bg-rawaa-primary-light text-rawaa-primary flex items-center justify-center mx-auto mb-3 font-heading font-black text-2xl shadow-soft-xs border border-rawaa-primary/20">
+                  {user.name ? user.name.charAt(0) : <User size={30} />}
+                </div>
+                <div className="flex items-center justify-center gap-2 mb-1 flex-wrap">
+                  <h3 className="font-heading text-xl font-black text-rawaa-dark">أهلاً بكِ، {user.name}!</h3>
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                    user.isVip || userOrders.reduce((sum, ord) => sum + (ord.status !== 'ملغي' ? (Number(ord.total_amount) || 0) : 0), 0) >= 1300
+                      ? 'bg-amber-50 text-amber-900 border-amber-300'
+                      : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  }`}>
+                    {user.isVip || userOrders.reduce((sum, ord) => sum + (ord.status !== 'ملغي' ? (Number(ord.total_amount) || 0) : 0), 0) >= 1300
+                      ? '⭐ عضوية VIP الذهبية'
+                      : 'عضوية مسجلة'}
+                  </span>
+                </div>
+                <p className="text-xs text-rawaa-muted mb-4 font-mono">{user.email}</p>
+
+                {/* Real User Stats Grid */}
+                <div className="grid grid-cols-3 gap-2.5 mb-4">
+                  <div className="bg-rawaa-soft/80 border border-rawaa-border/70 rounded-2xl p-2.5 text-center">
+                    <span className="text-[10px] text-rawaa-muted font-bold block mb-1">الطلبات المسجلة</span>
+                    <strong className="font-heading text-lg font-black text-rawaa-dark block">
+                      {isLoadingUserOrders ? '...' : userOrders.length}
+                    </strong>
+                  </div>
+                  <div className="bg-purple-50/70 border border-purple-200/80 rounded-2xl p-2.5 text-center">
+                    <span className="text-[10px] text-purple-800 font-medium block mb-1">إجمالي المشتريات</span>
+                    <strong className="font-heading text-xs sm:text-sm font-black text-purple-950 block truncate">
+                      {isLoadingUserOrders
+                        ? '...'
+                        : `${userOrders.reduce((sum, ord) => sum + (ord.status !== 'ملغي' ? (Number(ord.total_amount) || 0) : 0), 0).toLocaleString()} ج.م`}
+                    </strong>
+                  </div>
+                  <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-2.5 text-center">
+                    <span className="text-[10px] text-amber-800 font-medium block mb-1">قيد التوصيل</span>
+                    <strong className="font-heading text-lg font-black text-amber-900 block">
+                      {isLoadingUserOrders
+                        ? '...'
+                        : userOrders.filter((o) => o.status !== 'تم التسليم' && o.status !== 'ملغي').length}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Real Customer Contact Card */}
+                <div className="bg-rawaa-soft rounded-2xl p-3.5 text-right flex flex-col gap-2 mb-4 text-xs text-rawaa-dark border border-rawaa-border/60">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-rawaa-muted">رقم الهاتف المعتمد:</span>
+                    <strong className="text-rawaa-dark font-mono font-bold" dir="ltr">
+                      {user.phone || 'لم يُسجل هاتف بعد'}
+                    </strong>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-rawaa-border/60">
+                    <span className="text-rawaa-muted">المحافظة والعنوان:</span>
+                    <strong className="text-rawaa-dark font-bold">
+                      {user.city ? `${user.city}${user.address ? ` - ${user.address}` : ''}` : 'لم تُحدد المحافظة'}
+                    </strong>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-rawaa-border/60">
+                    <span className="text-rawaa-muted">حالة السيرفر:</span>
+                    <span className="text-emerald-700 font-bold flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      متصل ومسجل بالسيرفر السحابي
+                    </span>
+                  </div>
+                </div>
+
+                <Link
+                  to="/track-order"
+                  onClick={handleClose}
+                  className="w-full bg-rawaa-primary hover:bg-rawaa-primary-hover text-white text-xs font-bold py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-all shadow-soft-sm hover:shadow-soft-md hover:-translate-y-0.5 cursor-pointer mb-2.5"
+                >
+                  <Package size={16} />
+                  <span>صفحتي الخاصة وسجل طلباتي ({userOrders.length})</span>
+                  <ArrowLeft size={14} />
+                </Link>
+
+                <button
+                  type="button"
+                  className="w-full border border-rawaa-border hover:border-red-300 hover:bg-red-50 text-red-600 text-xs font-bold py-2.5 px-4 rounded-full flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  onClick={() => {
+                    logout();
+                    logoutAdmin();
+                    handleClose();
+                  }}
+                >
+                  <LogOut size={16} />
+                  <span>تسجيل الخروج من الحساب</span>
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div>
@@ -129,7 +369,7 @@ export default function AuthModal() {
             </div>
 
             {/* Tab switch between login and registration */}
-            <div className="flex bg-rawaa-soft rounded-full p-1 mb-5 text-xs font-bold">
+            <div className="flex bg-rawaa-soft rounded-full p-1 mb-4 text-xs font-bold">
               <button
                 type="button"
                 className={`flex-1 py-2 rounded-full transition-all cursor-pointer ${
@@ -137,7 +377,10 @@ export default function AuthModal() {
                     ? 'bg-white text-rawaa-primary shadow-soft-xs'
                     : 'text-rawaa-muted hover:text-rawaa-dark'
                 }`}
-                onClick={() => setActiveTab('login')}
+                onClick={() => {
+                  setActiveTab('login');
+                  setErrorMessage('');
+                }}
               >
                 تسجيل الدخول
               </button>
@@ -148,17 +391,27 @@ export default function AuthModal() {
                     ? 'bg-white text-rawaa-primary shadow-soft-xs'
                     : 'text-rawaa-muted hover:text-rawaa-dark'
                 }`}
-                onClick={() => setActiveTab('register')}
+                onClick={() => {
+                  setActiveTab('register');
+                  setErrorMessage('');
+                }}
               >
                 إنشاء حساب جديد
               </button>
             </div>
 
+            {errorMessage && (
+              <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle size={16} className="text-red-500 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
               {activeTab === 'register' && (
                 <div>
                   <label htmlFor="reg-name" className="block text-xs font-semibold text-rawaa-dark mb-1">
-                    اسم الأم أو الأب:
+                    الاسم:
                   </label>
                   <div className="flex items-center bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 focus-within:border-rawaa-primary focus-within:bg-white">
                     <User size={16} className="text-rawaa-muted ml-2" />

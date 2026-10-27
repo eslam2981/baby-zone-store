@@ -1,4 +1,3 @@
-// Hospital bag and newborn preparation checklist page with interactive progress tracking
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
@@ -10,213 +9,15 @@ import {
   Printer,
   Share2,
   RotateCcw,
-  Heart,
-  Baby,
-  Bed,
-  Car,
   ChevronLeft,
   CheckCircle2,
   ShieldCheck,
   Stethoscope,
-  Info
+  Info,
+  Lock
 } from 'lucide-react';
-
-// Checklist data categorized with medical tips and linked store products
-const CHECKLIST_CATEGORIES = [
-  {
-    id: 'baby_first',
-    name: 'حقيبة المولود الأولى (أول 48 ساعة)',
-    icon: Baby,
-    description: 'المستلزمات الحيوية للطفل فور الولادة وأثناء التواجد في المستشفى',
-    items: [
-      {
-        id: 'b1',
-        title: 'طقمين سالوبيت داخلي قطن عضوي 100% طبيعي',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي',
-        tip: 'احرصي على خامات قطنية معتمدة من Oeko-Tex لعدم تهيج بشرة حديثي الولادة الحساسة',
-        productId: 'p3',
-        productName: 'طقم سالوبيت مواليد قطن عضوي 100% طبيعي'
-      },
-      {
-        id: 'b2',
-        title: 'ببرونة زجاجية طبية مع حلمة تحاكي الرضاعة الطبيعية',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي',
-        tip: 'ضرورية للرضعات الأولى في حال تأخر تدفق حليب الأم بعد الولادة القيصرية',
-        productId: 'p5',
-        productName: 'مجموعة رضّاعات زجاجية طبية كوموتومو'
-      },
-      {
-        id: 'b3',
-        title: 'بطانية استقبال ناعمة ومسامية للتقميط الهادئ',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي',
-        tip: 'التقميط يحاكي بيئة رحم الأم ويمنع فزع المولود أثناء النوم في الساعات الأولى',
-        productId: null
-      },
-      {
-        id: 'b4',
-        title: 'حفاضات مقاس حديثي الولادة (Newborn) بفتحة الحبل السري',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي',
-        tip: 'اختاري حفاضات تحتوي على انحناء خاص لحماية منطقة السرة من الاحتكاك',
-        productId: null
-      },
-      {
-        id: 'b5',
-        title: 'قفازات قطنية ناعمة وجوارب دافئة وقبعة قطن',
-        importance: 'recommended',
-        importanceLabel: 'موصى به طبياً',
-        tip: 'تنظيم حرارة الرضيع يبدأ من تدفئة الرأس والأطراف لحمايته من تيارات التكييف',
-        productId: null
-      },
-      {
-        id: 'b6',
-        title: 'مناديل مبللة بالماء النقي 99.9% بدون كحول أو عطور',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي',
-        tip: 'تجنبي أي مناديل معطرة لحماية طبقة الجلد الأولى الرقيقة من التحسس',
-        productId: null
-      }
-    ]
-  },
-  {
-    id: 'mom_hospital',
-    name: 'حقيبة الأم للولادة والإقامة بالمستشفى',
-    icon: Heart,
-    description: 'كل ما تحتاجه الأم للشعور بالراحة والرعاية بعد رحلة الولادة المباركة',
-    items: [
-      {
-        id: 'm1',
-        title: 'مضخة ثدي كهربائية طبية ذكية وهادئة',
-        importance: 'recommended',
-        importanceLabel: 'موصى به طبياً',
-        tip: 'تحفيز إدرار الحليب مبكراً يقي الأم من تحجر الثدي ويشجع الرضاعة الطبيعية',
-        productId: 'p7',
-        productName: 'مضخة ثدي كهربائية مزدوجة ذكية ميديلا'
-      },
-      {
-        id: 'm2',
-        title: 'ثوبين نوم فضفاضين بفتحة أمامية مريحة للرضاعة',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي',
-        tip: 'اختاري قماش قطني ناعم لتسهيل التلامس الجسدي المباشر مع طفلك بعد الولادة',
-        productId: null
-      },
-      {
-        id: 'm3',
-        title: 'حمالات صدر قطنية مخصصة للرضاعة الطبيعية مع وسادات',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي',
-        tip: 'الوسادات القطنية تمتص أي تسرب مبكر للحليب وتحافظ على نظافة وجفاف الثدي',
-        productId: null
-      },
-      {
-        id: 'm4',
-        title: 'فوط صحية عالية الامتصاص مخصصة لفترة النفاس',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي',
-        tip: 'تكون أكبر حجماً وأكثر نعومة لحماية منطقة الجرح أثناء المشي والحركة',
-        productId: null
-      },
-      {
-        id: 'm5',
-        title: 'ملف الأوراق الرسمية وتقارير متابعة الحمل وتحاليل المستشفى',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي',
-        tip: 'احتفظي ببطاقة الهوية والتحاليل في جيب منفصل وسهل الوصول لمرافقي الولادة',
-        productId: null
-      },
-      {
-        id: 'm6',
-        title: 'حقيبة العناية الشخصية ومرطب شفاه وزيت التدليك الطبيعي',
-        importance: 'optional',
-        importanceLabel: 'راحة إضافية',
-        tip: 'جفاف الشفاه شائع جداً بسبب التنفس العميق أثناء المخاض وتكييف غرف العمليات',
-        productId: null
-      }
-    ]
-  },
-  {
-    id: 'travel_safety',
-    name: 'الخروج الآمن والتنقل بالسيارة',
-    icon: Car,
-    description: 'تجهيزات الخروج من المستشفى والانتقال الآمن إلى المنزل',
-    items: [
-      {
-        id: 't1',
-        title: 'مقعد سيارة مخصص لحديثي الولادة بمعيار الأمان الأوروبي i-Size',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي قانونياً',
-        tip: 'لا يُسمح طبياً بنقل المولود بالسيارة في حضن الأم لخطورة الصدمات الفجائية',
-        productId: 'p2',
-        productName: 'مقعد سيارة سايبكس سيلونا دوار 360 درجة'
-      },
-      {
-        id: 't2',
-        title: 'عربة أطفال خفيفة الوزن سهلة الطي بيد واحدة مع مهد مسطح',
-        importance: 'recommended',
-        importanceLabel: 'موصى به طبياً',
-        tip: 'المهد المسطح بزاوية 180 درجة ضروري لفتح مجرى تنفس الرضيع وتطوير العمود الفقري',
-        productId: 'p1',
-        productName: 'عربة أطفال ستوك يويو³ خفيفة الوزن'
-      },
-      {
-        id: 't3',
-        title: 'حقيبة تنظيم حفاضات وتنقل واسعة وعازلة للحرارة',
-        importance: 'recommended',
-        importanceLabel: 'موصى به طبياً',
-        tip: 'تحتوي على جيوب معزولة تحفظ درجة حرارة رضعات الحليب وبساط غيار معقم',
-        productId: 'p10',
-        productName: 'حقيبة حفاضات وتنقل للأمهات مقاومة للماء'
-      }
-    ]
-  },
-  {
-    id: 'nursery_home',
-    name: 'استقبال المولود في المنزل وغرفة النوم',
-    icon: Bed,
-    description: 'تجهيزات النوم الهادئ والرعاية الصحية في الأسابيع الأولى',
-    items: [
-      {
-        id: 'n1',
-        title: 'سرير مواليد جانبي ملحق لسرير الأم متعدد الارتفاعات',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي',
-        tip: 'يوفر نوماً آمناً للمولود بمفرده مع سهولة إرضاعه ليلاً دون مغادرة سريرك',
-        productId: 'p4',
-        productName: 'سرير مواليد جانبي ملحق لسرير الأم'
-      },
-      {
-        id: 'n2',
-        title: 'جهاز مراقبة الأطفال الذكي بالفيديو وكاميرا الرؤية الليلية',
-        importance: 'recommended',
-        importanceLabel: 'موصى به طبياً',
-        tip: 'حساسات الحرارة والصوت تمنحكِ راحة البال ومتابعة تنفس الطفل أثناء النوم',
-        productId: 'p9',
-        productName: 'جهاز مراقبة الأطفال بالفيديو مع كاميرا ليلية'
-      },
-      {
-        id: 'n3',
-        title: 'مقياس حرارة رقمي سريع ودقيق بالأشعة تحت الحمراء',
-        importance: 'essential',
-        importanceLabel: 'أساسي وإلزامي',
-        tip: 'قياس الحرارة الدقيق بدون إيقاظ الرضيع من أهم أدوات الإسعافات المنزلية',
-        productId: null
-      },
-      {
-        id: 'n4',
-        title: 'كرسي تغذية مريح للأطفال للمراحل اللاحقة',
-        importance: 'optional',
-        importanceLabel: 'تجهيز مستقبلي',
-        tip: 'يدعم الجلوس المستقيم وتناول الأطعمة الأولى بأمان عند بلوغ 4 إلى 6 أشهر',
-        productId: 'p8',
-        productName: 'كرسي إطعام للأطفال ستوك تريب تراب'
-      }
-    ]
-  }
-];
+import ConfirmModal from '../components/common/ConfirmModal';
+import { CHECKLIST_CATEGORIES } from '../data/hospitalBagData';
 
 export default function HospitalBagPage() {
   const { allProducts, addToCart, addToast } = useShop();
@@ -226,6 +27,7 @@ export default function HospitalBagPage() {
 
   // Filter option between all essential and remaining
   const [filterMode, setFilterMode] = useState('all');
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   // Local storage persisted set of checked item IDs
   const [checkedItems, setCheckedItems] = useState(() => {
@@ -269,10 +71,13 @@ export default function HospitalBagPage() {
 
   // Reset all checked items
   const handleResetChecklist = () => {
-    if (window.confirm('هل تودين حقاً إعادة تعيين القائمة والبدء من جديد؟')) {
-      setCheckedItems([]);
-      addToast('تمت إعادة تعيين القائمة بنجاح', 'info');
-    }
+    setIsResetConfirmOpen(true);
+  };
+
+  const handleConfirmReset = () => {
+    setCheckedItems([]);
+    setIsResetConfirmOpen(false);
+    addToast('تمت إعادة تعيين القائمة بنجاح', 'info');
   };
 
   // Trigger browser print window for printable checklist
@@ -313,83 +118,129 @@ export default function HospitalBagPage() {
 
         {/* Hero title banner */}
         <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
-          <div className="inline-flex items-center gap-2 bg-rawaa-primary-light text-rawaa-primary text-xs font-bold px-4 py-1.5 rounded-full mb-3 shadow-soft-xs">
-            <Stethoscope size={14} />
-            <span>معتمد ومراجع من أطباء واستشاريي طب الأطفال وحديثي الولادة</span>
+          <div className="flex items-center justify-center gap-2 mb-3 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black px-4 py-1.5 rounded-full shadow-soft-xs">
+              <Sparkles size={14} className="text-amber-600 animate-pulse" />
+              <span>قريباً في بيبي زون (Coming Soon)</span>
+            </span>
+            <div className="inline-flex items-center gap-1.5 bg-rawaa-primary-light text-rawaa-primary text-xs font-bold px-4 py-1.5 rounded-full shadow-soft-xs">
+              <Stethoscope size={14} />
+              <span>معتمد ومراجع من أطباء واستشاريي طب الأطفال</span>
+            </div>
           </div>
           <h1 className="font-heading text-2xl sm:text-4xl font-extrabold text-rawaa-dark mb-3 tracking-tight">
             دليل وقائمة تجهيز حقيبة المستشفى والمولود
           </h1>
           <p className="text-sm sm:text-base text-rawaa-muted leading-relaxed">
-            خططي ليوم ولادتكِ باطمئنان وسعادة تامة، دون قلق من نسيان أي غرض أساسي لطفلكِ ولكِ مع إمكانية إضافة النواقص لسلتك بلمسة واحدة.
+            نعمل حالياً على تجهيز باقات حقيبة الولادة المتكاملة وتوفير كافة المستلزمات الطبية المعتمدة قريباً. استكشفي القائمة النموذجية الآن أو اطلبي تجهيزاً خاصاً عبر الواتساب.
           </p>
         </div>
 
-        {/* Progress meter and action buttons card */}
-        <div className="bg-white rounded-2xl shadow-soft-md border border-rawaa-border p-5 sm:p-7 mb-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            {/* Progress calculation */}
-            <div className="w-full md:max-w-md">
-              <div className="flex items-center justify-between text-xs font-bold mb-2">
-                <span className="text-rawaa-dark flex items-center gap-1.5">
-                  <CheckCircle2 size={16} className="text-emerald-600" />
-                  <span>نسبة جاهزية حقيبتكِ:</span>
-                </span>
-                <span className="text-rawaa-primary font-mono text-sm">{completionPercentage}% مكتمل</span>
-              </div>
-
-              {/* Progress bar line */}
-              <div className="w-full h-3 bg-rawaa-soft rounded-full overflow-hidden p-0.5">
-                <div
-                  className="h-full bg-gradient-to-l from-emerald-500 to-rawaa-primary rounded-full transition-all duration-500"
-                  style={{ width: `${completionPercentage}%` }}
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-[11px] text-rawaa-muted mt-2">
-                <span>تم إنجاز {completedCount} من أصل {totalCount} غرض</span>
-                <span>
-                  {completionPercentage === 100
-                    ? 'حقيبتك مكتملة 100%، مستعدة تماماً ليومك الكبير!'
-                    : completionPercentage > 50
-                    ? 'أحسنتِ! أنجزتِ أكثر من نصف القائمة'
-                    : 'ابدئي بتجهيز الأغراض الأساسية أولاً'}
-                </span>
-              </div>
+        {/* Disabled / Coming Soon Section Alert Banner */}
+        <div className="bg-gradient-to-r from-amber-50 via-amber-100/60 to-amber-50 border-2 border-amber-300 rounded-3xl p-5 sm:p-7 mb-8 flex flex-col md:flex-row items-center justify-between gap-5 shadow-soft-sm text-center md:text-right">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-amber-200 text-amber-950 border border-amber-300 flex items-center justify-center shrink-0 shadow-soft-xs">
+              <Lock size={26} className="text-amber-900" />
             </div>
-
-            {/* Quick action tools */}
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="bg-[#FAF7F2] hover:bg-white border border-rawaa-border hover:border-rawaa-primary text-rawaa-dark text-xs font-bold px-3.5 py-2.5 rounded-xl flex items-center gap-2 transition-all cursor-pointer shadow-soft-xs"
-              >
-                <Printer size={15} />
-                <span>طباعة القائمة</span>
-              </button>
-
-              <a
-                href={`https://wa.me/201211735629?text=${encodeURIComponent(`مرحباً بيبي زون، لقد جهزت ${completionPercentage}% من حقيبة الولادة وأود الاستفسار عن توفير باقي المنتجات`)}`}
-                target="_blank"
-                rel="noreferrer"
-                className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold px-3.5 py-2.5 rounded-xl flex items-center gap-2 transition-all cursor-pointer"
-              >
-                <Share2 size={15} />
-                <span>مشاركة على الواتساب</span>
-              </a>
-
-              <button
-                type="button"
-                onClick={handleResetChecklist}
-                className="bg-rawaa-soft hover:bg-rose-50 text-rawaa-muted hover:text-rose-600 text-xs font-bold px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
-                title="إعادة تعيين القائمة"
-              >
-                <RotateCcw size={14} />
-              </button>
+            <div>
+              <div className="flex items-center gap-2 justify-center md:justify-start flex-wrap">
+                <span className="font-heading font-black text-base sm:text-lg text-amber-950">
+                  قسم حقيبة الولادة معطّل ومغلق حالياً (قيد التجهيز والتطوير)
+                </span>
+                <span className="bg-amber-300 text-amber-950 text-xs font-black px-3 py-0.5 rounded-full border border-amber-400">
+                  Coming Soon · قريباً
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-amber-900/80 mt-1 max-w-2xl leading-relaxed">
+                نعمل حالياً على تجهيز باقات الولادة الطبية المتكاملة مع مستلزمات المستشفى وتحديث كافة الأسعار والخيارات. كافة أدوات التفاعل والإضافة للسلة معطلة مؤقتاً لحين التدشين الرسمي.
+              </p>
             </div>
           </div>
+
+          <a
+            href={`https://wa.me/201035401549?text=${encodeURIComponent('مرحباً بيبي زون، أود الاستفسار عن موعد توفر حقيبة الولادة وطلب تجهيز مخصص')}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold px-5 py-3 rounded-2xl shadow-soft-sm transition-all shrink-0 cursor-pointer"
+          >
+            <span>طلب تجهيز عبر الواتساب</span>
+            <ChevronLeft size={16} />
+          </a>
         </div>
+
+        {/* Disabled Checklist Section Container */}
+        <div className="relative">
+          {/* Top lock badge floating on disabled area */}
+          <div className="mb-4 inline-flex items-center gap-2 bg-amber-100 text-amber-950 border border-amber-300 px-3.5 py-1.5 rounded-full text-xs font-black">
+            <Lock size={14} className="text-amber-800" />
+            <span>عناصر هذا القسم للعرض الاسترشادي فقط · التفاعل معطّل حالياً</span>
+          </div>
+
+          <div className="opacity-60 pointer-events-none select-none filter grayscale-[15%] space-y-6">
+            {/* Progress meter and action buttons card */}
+            <div className="bg-white rounded-2xl shadow-soft-md border border-rawaa-border p-5 sm:p-7">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                {/* Progress calculation */}
+                <div className="w-full md:max-w-md">
+                  <div className="flex items-center justify-between text-xs font-bold mb-2">
+                    <span className="text-rawaa-dark flex items-center gap-1.5">
+                      <CheckCircle2 size={16} className="text-emerald-600" />
+                      <span>نسبة جاهزية حقيبتكِ:</span>
+                    </span>
+                    <span className="text-rawaa-primary font-mono text-sm">{completionPercentage}% مكتمل</span>
+                  </div>
+
+                  {/* Progress bar line */}
+                  <div className="w-full h-3 bg-rawaa-soft rounded-full overflow-hidden p-0.5">
+                    <div
+                      className="h-full bg-gradient-to-l from-emerald-500 to-rawaa-primary rounded-full transition-all duration-500"
+                      style={{ width: `${completionPercentage}%` }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-rawaa-muted mt-2">
+                    <span>تم إنجاز {completedCount} من أصل {totalCount} غرض</span>
+                    <span>
+                      {completionPercentage === 100
+                        ? 'حقيبتك مكتملة 100%، مستعدة تماماً ليومك الكبير!'
+                        : completionPercentage > 50
+                        ? 'أحسنتِ! أنجزتِ أكثر من نصف القائمة'
+                        : 'ابدئي بتجهيز الأغراض الأساسية أولاً'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quick action tools */}
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  <button
+                    type="button"
+                    disabled
+                    className="bg-[#FAF7F2] border border-rawaa-border text-rawaa-muted text-xs font-bold px-3.5 py-2.5 rounded-xl flex items-center gap-2 cursor-not-allowed shadow-soft-xs"
+                  >
+                    <Printer size={15} />
+                    <span>طباعة القائمة</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled
+                    className="bg-emerald-50 border border-emerald-200 text-emerald-800/70 text-xs font-bold px-3.5 py-2.5 rounded-xl flex items-center gap-2 cursor-not-allowed"
+                  >
+                    <Share2 size={15} />
+                    <span>مشاركة على الواتساب</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled
+                    className="bg-rawaa-soft text-rawaa-muted text-xs font-bold px-3 py-2.5 rounded-xl flex items-center gap-1.5 cursor-not-allowed"
+                    title="معطل"
+                  >
+                    <RotateCcw size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
 
         {/* Category tabs navigation */}
         <div className="flex overflow-x-auto no-scrollbar gap-2 mb-6 pb-2">
@@ -550,11 +401,11 @@ export default function HospitalBagPage() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => handleAddToCart(item.productId)}
-                        className="bg-rawaa-primary hover:bg-rawaa-primary-hover text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-soft-xs cursor-pointer"
+                        disabled
+                        className="bg-rawaa-soft text-rawaa-muted border border-rawaa-border text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 cursor-not-allowed opacity-75"
                       >
-                        <ShoppingBag size={14} />
-                        <span>أضيفي للسلة</span>
+                        <Lock size={13} />
+                        <span>معطّل (قريباً)</span>
                       </button>
                     </div>
                   ) : (
@@ -566,6 +417,8 @@ export default function HospitalBagPage() {
               );
             })
           )}
+        </div>
+          </div>
         </div>
 
         {/* Quality and care banner bottom */}
@@ -582,7 +435,7 @@ export default function HospitalBagPage() {
             </p>
             <div className="pt-2">
               <a
-                href="https://wa.me/201211735629?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20%D8%B1%D9%8E%D9%88%D8%A7%D8%A1%D8%8C%20%D8%A3%D8%AD%D8%AA%D8%A7%D8%AC%20%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A9%20%D9%81%D9%8A%20%D8%AA%D8%AC%D9%87%D9%8A%D8%B2%20%D9%82%D8%A7%D8%A6%D9%85%D8%A9%20%D8%AD%D9%82%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%88%D9%84%D8%A7%D8%AF%D8%A9"
+                href="https://wa.me/201035401549?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20%D8%A8%D9%8A%D8%A8%D9%8A%20%D8%B2%D9%88%D9%86%D8%8C%20%D8%A3%D8%AD%D8%AA%D8%A7%D8%AC%20%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A9%20%D9%81%D9%8A%20%D8%AA%D8%AC%D9%87%D9%8A%D8%B2%20%D9%82%D8%A7%D8%A6%D9%85%D8%A9%20%D8%AD%D9%82%D9%8A%D8%A8%D8%A9%20%D8%A7%D9%84%D9%88%D9%84%D8%A7%D8%AF%D8%A9"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-bold px-6 py-3 rounded-full shadow-soft-md transition-all cursor-pointer"
@@ -594,6 +447,18 @@ export default function HospitalBagPage() {
           </div>
         </div>
       </div>
+
+      {/* Confirmation modal for checklist reset */}
+      <ConfirmModal
+        isOpen={isResetConfirmOpen}
+        title="إعادة تعيين القائمة"
+        message="هل تودين حقاً إعادة تعيين قائمة حقيبة الولادة والبدء من جديد؟"
+        confirmText="نعم، ابدأ من جديد"
+        cancelText="إلغاء"
+        isDestructive={false}
+        onConfirm={handleConfirmReset}
+        onCancel={() => setIsResetConfirmOpen(false)}
+      />
     </div>
   );
 }

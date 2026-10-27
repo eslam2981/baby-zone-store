@@ -2,7 +2,7 @@
 
 export default function WhatsAppButton() {
   // Egyptian WhatsApp customer support details and default inquiry
-  const phoneNumber = '201211735629';
+  const phoneNumber = '201035401549';
   const defaultMessage = 'السلام عليكم، أود الاستفسار عن منتجات متجر بيبي زون (Baby Zone)';
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(defaultMessage)}`;
 

@@ -37,10 +37,11 @@ export default function TopAnnouncement() {
         <div className="flex items-center gap-2 sm:gap-4 md:gap-6 shrink-0">
           <Link
             to="/hospital-bag"
-            className="hidden md:inline-flex items-center gap-1 text-white/90 hover:text-amber-200 transition-colors"
+            className="hidden md:inline-flex items-center gap-1.5 text-white/90 hover:text-amber-200 transition-colors"
           >
             <Baby size={13} className="text-amber-300" />
             <span>حقيبة الولادة</span>
+            <span className="bg-amber-300 text-amber-950 text-[9px] px-1.5 py-0.2 rounded-full font-black">قريباً</span>
           </Link>
 
           <Link
@@ -58,8 +59,8 @@ export default function TopAnnouncement() {
 
           <div className="hidden xl:flex items-center gap-1.5">
             <PhoneCall size={13} className="text-amber-300" />
-            <a href="tel:01211735629" className="underline underline-offset-2 hover:text-amber-200 transition-colors">
-              خدمة العملاء والطلب: 012-1173-5629
+            <a href="tel:01035401549" className="underline underline-offset-2 hover:text-amber-200 transition-colors">
+              خدمة العملاء والطلب: 0103 540 1549
             </a>
           </div>
 

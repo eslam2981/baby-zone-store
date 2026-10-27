@@ -1,13 +1,36 @@
-// Category definitions and taxonomy data for store departments
-export const categories = [
+// Complete taxonomy and roadmap of store departments for Baby Zone
+// Live categories from Supabase take top priority, while other categories remain visible as 'Coming Soon'
+
+export const DEFAULT_CATALOG_CATEGORIES = [
   {
-    id: "all",
-    name: "جميع المنتجات",
-    slug: "all",
-    icon: "Grid",
-    description: "تصفح التشكيلة الكاملة المختارة بعناية لأطفالك",
-    badge: "شامل",
-    subcategories: ["وصل حديثاً", "الأعلى تقييماً", "الموصى به طبياً", "عروض مميزة"]
+    id: "bedding",
+    name: "أسرّة، مفارش ومستلزمات النوم",
+    slug: "bedding",
+    icon: "Bed",
+    description: "بيبي نيست، أسرّة ومفارش نوم مريحة وآمنة لراحة رضيعك",
+    badge: "راحة وأمان",
+    subcategories: ["بيبي نيست ومفارش", "أسرّة ومفارش", "وسائد ومخدات"],
+    isComingSoon: false
+  },
+  {
+    id: "feeding",
+    name: "الرضاعة وتغذية الرضيع",
+    slug: "feeding",
+    icon: "Soup",
+    description: "مخدات الرضاعة الطبية ومستلزمات تغذية الرضيع المريحة",
+    badge: "أمومة ورعاية",
+    subcategories: ["مخدات ووسائد الرضاعة", "تغذية الرضيع", "مستلزمات الأمومة"],
+    isComingSoon: false
+  },
+  {
+    id: "diapers",
+    name: "الحفاضات ومستلزمات الغيار",
+    slug: "diapers",
+    icon: "Package",
+    description: "مفارش غيار ووتر بروف ومستلزمات التغيير اليومية للرضيع",
+    badge: "يومي وعملي",
+    subcategories: ["مفارش غيار ووتر بروف", "حفاضات ومناديل", "مستلزمات الغيار"],
+    isComingSoon: false
   },
   {
     id: "baby-care",
@@ -15,26 +38,9 @@ export const categories = [
     slug: "baby-care",
     icon: "HeartPulse",
     description: "منتجات طبية مرخصة وخالية من الكيماويات لصحة رضيعك",
-    badge: "طبي",
-    subcategories: ["كريمات الترطيب والوقاية", "موازين الحرارة وشفاطات الأنف", "العناية بالأظافر والشعر", "الإسعافات الأولية للرضيع"]
-  },
-  {
-    id: "diapers",
-    name: "الحفاضات ومستلزمات الغيار",
-    slug: "diapers",
-    icon: "Package",
-    description: "حفاضات فائقة الامتصاص ومناديل مائية نقية 99%",
-    badge: "يومي",
-    subcategories: ["حفاضات حديثي الولادة", "حفاضات سحب كلوت", "مناديل مبللة نقية", "مفارش تغيير الحفاض المقاومة للماء", "سلات وأكياس التخلص المعطرة"]
-  },
-  {
-    id: "feeding",
-    name: "الرضاعة الطبيعية وتغذية الرضيع",
-    slug: "feeding",
-    icon: "Soup",
-    description: "أجهزة شفط الحليب، وسائد الرضاعة وأوعية تحضير الأطعمة الأولى",
-    badge: "أمومة",
-    subcategories: ["مضخات الحليب الكهربائية واليدوية", "وسائد الرضاعة الطبية", "أكياس حفظ وتجميد الحليب", "محضرات طعام الأطفال وملاعق السيليكون"]
+    badge: "قريباً",
+    subcategories: ["كريمات الترطيب والوقاية", "موازين الحرارة وشفاطات الأنف", "العناية بالأظافر والشعر", "الإسعافات الأولية للرضيع"],
+    isComingSoon: true
   },
   {
     id: "bottles",
@@ -42,8 +48,9 @@ export const categories = [
     slug: "bottles",
     icon: "Milk",
     description: "رضّاعات زجاجية ومضادة للمغص مع أجهزة التعقيم والتسخين الذكية",
-    badge: "مضاد للمغص",
-    subcategories: ["رضّاعات زجاج وطبية خالية من BPA", "حلمات تدفق بطيء وسريع", "أجهزة التعقيم بالبخار والـ UV", "سخانات الرضّاعات السريعة", "فرش التنظيف والتجفيف"]
+    badge: "قريباً",
+    subcategories: ["رضّاعات زجاج وطبية خالية من BPA", "حلمات تدفق بطيء وسريع", "أجهزة التعقيم بالبخار والـ UV", "سخانات الرضّاعات السريعة", "فرش التنظيف والتجفيف"],
+    isComingSoon: true
   },
   {
     id: "clothing",
@@ -51,17 +58,9 @@ export const categories = [
     slug: "clothing",
     icon: "Shirt",
     description: "أقطان عضوية 100% GOTS معتمدة وناعمة على بشرة حديثي الولادة",
-    badge: "قطن عضوي",
-    subcategories: ["أفرولات وبدلات حديثي الولادة", "أطقم قطنية للمستشفى", "قبعات وكفوف قطنية", "أرواب وبيجامات قطيفة دافئة", "أحذية المشي الأولى"]
-  },
-  {
-    id: "bedding",
-    name: "أسرّة، مفارش ومستلزمات النوم الهانئ",
-    slug: "bedding",
-    icon: "Moon",
-    description: "أكياس نوم لتقليل الفزع، مهود جانبية، ومراتب تنفسية آمنة",
-    badge: "نوم آمن",
-    subcategories: ["مهود مواليد ملحقة بسرير الأم", "أكياس وقماطات النوم الذاتية", "مراتب تنفسية مضادة للبكتيريا", "أغطية ومفارش الخيزران العضوية", "أجهزة الضوضاء البيضاء للتهدئة"]
+    badge: "قريباً",
+    subcategories: ["أفرولات وبدلات حديثي الولادة", "أطقم قطنية للمستشفى", "قبعات وكفوف قطنية", "أرواب وبيجامات قطيفة دافئة", "أحذية المشي الأولى"],
+    isComingSoon: true
   },
   {
     id: "strollers",
@@ -69,8 +68,9 @@ export const categories = [
     slug: "strollers",
     icon: "Compass",
     description: "عربات خفيفة الوزن للطي بيد واحدة وأنظمة سفر متكاملة",
-    badge: "تنقل ذكي",
-    subcategories: ["عربات الطائرة والوزن الخفيف", "أنظمة السفر المتكاملة 3 في 1", "عربات التوائم والأطفال المتقاربين", "حقائب سفر وإكسسوارات العربة"]
+    badge: "قريباً",
+    subcategories: ["عربات الطائرة والوزن الخفيف", "أنظمة السفر المتكاملة 3 في 1", "عربات التوائم والأطفال المتقاربين", "حقائب سفر وإكسسوارات العربة"],
+    isComingSoon: true
   },
   {
     id: "car-seats",
@@ -78,8 +78,9 @@ export const categories = [
     slug: "car-seats",
     icon: "ShieldCheck",
     description: "مقاعد معتمدة بمعايير الأمان الأوروبية i-Size وقواعد آيزوفيكس",
-    badge: "i-Size آمن",
-    subcategories: ["مقاعد المواليد (0 إلى 15 شهر)", "مقاعد دوارة 360 درجة", "مقاعد معززة Booster للطفولة المبكرة", "مرايا مراقبة الطفل في السيارة"]
+    badge: "قريباً",
+    subcategories: ["مقاعد المواليد (0 إلى 15 شهر)", "مقاعد دوارة 360 درجة", "مقاعد معززة Booster للطفولة المبكرة", "مرايا مراقبة الطفل في السيارة"],
+    isComingSoon: true
   },
   {
     id: "carriers",
@@ -87,8 +88,9 @@ export const categories = [
     slug: "carriers",
     icon: "Footprints",
     description: "حمّالات مريحة لصحة الحوض والظهر تدعم وضعية الجلوس M",
-    badge: "أرجونوميك",
-    subcategories: ["حمّالات أطفال مريحة للظهر", "شالات وقماطات اللف القطنية", "حمّالات للمشي والأنشطة الخارجية", "واقيات الرياح والمطر للحمّالات"]
+    badge: "قريباً",
+    subcategories: ["حمّالات أطفال مريحة للظهر", "شالات وقماطات اللف القطنية", "حمّالات للمشي والأنشطة الخارجية", "واقيات الرياح والمطر للحمّالات"],
+    isComingSoon: true
   },
   {
     id: "toys",
@@ -96,8 +98,9 @@ export const categories = [
     slug: "toys",
     icon: "Sparkles",
     description: "ألعاب منتسوري خشبية وتطوير حسي حركي آمن خالٍ من الرصاص",
-    badge: "منتسوري",
-    subcategories: ["ألعاب التحفيز الحسي للمواليد", "خشخيشات وعضاضات سيليكون طبية", "ألعاب الترتيب والتركيب الخشبية", "سجادات اللعب والأنشطة التفاعلية"]
+    badge: "قريباً",
+    subcategories: ["ألعاب التحفيز الحسي للمواليد", "خشخيشات وعضاضات سيليكون طبية", "ألعاب الترتيب والتركيب الخشبية", "سجادات اللعب والأنشطة التفاعلية"],
+    isComingSoon: true
   },
   {
     id: "bath",
@@ -105,8 +108,9 @@ export const categories = [
     slug: "bath",
     icon: "Droplets",
     description: "أحواض استحمام ذكية مزودة بميزان حرارة، ومناشف قطنية ناعمة",
-    badge: "خالٍ من الدموع",
-    subcategories: ["أحواض استحمام قابلة للطي", "شامبو وغسول استحمام طبيعي", "مناشف بقبعة رأس قطيفة", "ألعاب مائية آمنة وخالية من العفن"]
+    badge: "قريباً",
+    subcategories: ["أحواض استحمام قابلة للطي", "شامبو وغسول استحمام طبيعي", "مناشف بقبعة رأس قطيفة", "ألعاب مائية آمنة وخالية من العفن"],
+    isComingSoon: true
   },
   {
     id: "nursery",
@@ -114,8 +118,9 @@ export const categories = [
     slug: "nursery",
     icon: "Home",
     description: "تصاميم خشبية نوردية هادئة، وحدات تنظيم وخزائن حفاضات",
-    badge: "خشب طبيعي",
-    subcategories: ["طاولات تبديل الحفاض الخشبية", "كراسي الرضاعة الهزازة المريحة", "صناديق ومنظمات الألعاب والملابس", "إضاءات ليلية خافتة للرضاعة"]
+    badge: "قريباً",
+    subcategories: ["طاولات تبديل الحفاض الخشبية", "كراسي الرضاعة الهزازة المريحة", "صناديق ومنظمات الألعاب والملابس", "إضاءات ليلية خافتة للرضاعة"],
+    isComingSoon: true
   },
   {
     id: "monitors",
@@ -123,8 +128,9 @@ export const categories = [
     slug: "monitors",
     icon: "Camera",
     description: "كاميرات ذكية برؤية ليلية فائقة وأجهزة استشعار تنفس وحرارة",
-    badge: "حماية ذكية",
-    subcategories: ["كاميرات المراقبة بالواي فاي والصوت", "أجهزة مراقبة التنفس ومعدل النبض", "بوابات أمان الأدراج والأبواب", "أقفال الزوايا وحماية المقابس الكهربائية"]
+    badge: "قريباً",
+    subcategories: ["كاميرات المراقبة بالواي فاي والصوت", "أجهزة مراقبة التنفس ومعدل النبض", "بوابات أمان الأدراج والأبواب", "أقفال الزوايا وحماية المقابس الكهربائية"],
+    isComingSoon: true
   },
   {
     id: "maternity",
@@ -132,8 +138,9 @@ export const categories = [
     slug: "maternity",
     icon: "Flower2",
     description: "كل ما تحتاجه الأم الجديدة للتعافي والراحة والعناية بالذات",
-    badge: "رعاية الأم",
-    subcategories: ["حقيبة المستشفى الشاملة للولادة", "حمالات وملابس الرضاعة المرنة", "مستحضرات العناية بتشققات الرضاعة", "أحزمة دعم البطن والظهر بعد الولادة"]
+    badge: "قريباً",
+    subcategories: ["حقيبة المستشفى الشاملة للولادة", "حمالات وملابس الرضاعة المرنة", "مستحضرات العناية بتشققات الرضاعة", "أحزمة دعم البطن والظهر بعد الولادة"],
+    isComingSoon: true
   },
   {
     id: "gifts",
@@ -141,8 +148,9 @@ export const categories = [
     slug: "gifts",
     icon: "Gift",
     description: "صناديق هدايا فاخرة مغلفة بأناقة ومخصصة لاستقبال المواليد",
-    badge: "تغليف هدايا",
-    subcategories: ["صناديق المولود الجديد الفاخرة", "باقات هدايا استحمام الطفل (Baby Shower)", "بطاقات إهداء مخصصة ومجموعات تذكارية", "أطقم تذكار البصمة والصور"]
+    badge: "قريباً",
+    subcategories: ["صناديق المولود الجديد الفاخرة", "باقات هدايا استحمام الطفل (Baby Shower)", "بطاقات إهداء مخصصة ومجموعات تذكارية", "أطقم تذكار البصمة والصور"],
+    isComingSoon: true
   },
   {
     id: "offers",
@@ -150,7 +158,48 @@ export const categories = [
     slug: "offers",
     icon: "Flame",
     description: "عروض موسمية وتخفيضات تصل إلى 40% على أفضل الماركات",
-    badge: "خصم حتى 40%",
-    subcategories: ["عروض الأسبوع الكبرى", "باقات التوفير العائلية", "تصفية نهاية الموسم", "المنتجات الأكثر طلباً في مصر"]
+    badge: "قريباً",
+    subcategories: ["عروض الأسبوع الكبرى", "باقات التوفير العائلية", "تصفية نهاية الموسم", "المنتجات الأكثر طلباً في مصر"],
+    isComingSoon: true
   }
 ];
+
+/**
+ * Merges live categories from Supabase with the store roadmap.
+ * Categories currently in Supabase are marked `isComingSoon: false`.
+ * Other roadmap categories remain visible as `isComingSoon: true` with badge 'قريباً'.
+ */
+export function mergeCategoriesWithLive(liveCategories = []) {
+  if (!Array.isArray(liveCategories) || liveCategories.length === 0) {
+    return DEFAULT_CATALOG_CATEGORIES;
+  }
+
+  const liveMap = new Map();
+  liveCategories.forEach((cat) => {
+    liveMap.set(cat.id, {
+      ...cat,
+      isComingSoon: false
+    });
+  });
+
+  // 1. Live categories from Supabase come first
+  const result = liveCategories.map((cat) => ({
+    ...cat,
+    isComingSoon: false
+  }));
+
+  // 2. Append all other roadmap categories as Coming Soon
+  DEFAULT_CATALOG_CATEGORIES.forEach((roadmapCat) => {
+    if (!liveMap.has(roadmapCat.id)) {
+      result.push({
+        ...roadmapCat,
+        isComingSoon: true,
+        badge: 'قريباً'
+      });
+    }
+  });
+
+  return result;
+}
+
+export const categories = DEFAULT_CATALOG_CATEGORIES;

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
+import { useAdmin } from '../../context/AdminContext';
 import {
   Search,
   Heart,
@@ -11,7 +12,8 @@ import {
   ChevronDown,
   ArrowLeft,
   Baby,
-  Truck
+  Truck,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function Header({ onOpenMegaMenu, isMegaMenuOpen }) {
@@ -27,8 +29,12 @@ export default function Header({ onOpenMegaMenu, isMegaMenuOpen }) {
     setIsAuthOpen,
     setIsMobileNavOpen,
     user,
-    allProducts
+    allProducts,
+    categories
   } = useShop();
+
+  const { isAuthenticated, currentAdmin } = useAdmin();
+  const isUserAdmin = Boolean(user && user.isAdmin && isAuthenticated && currentAdmin);
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -215,7 +221,7 @@ export default function Header({ onOpenMegaMenu, isMegaMenuOpen }) {
             aria-expanded={isMegaMenuOpen}
             aria-label="تصفح جميع أقسام المتجر"
           >
-            <span>الأقسام (17)</span>
+            <span>الأقسام ({categories?.length || 0})</span>
             <ChevronDown size={14} className={`transition-transform duration-200 ${isMegaMenuOpen ? 'rotate-180' : ''}`} />
           </button>
 
@@ -230,21 +236,33 @@ export default function Header({ onOpenMegaMenu, isMegaMenuOpen }) {
           {/* Direct link to hospital bag checklist */}
           <Link
             to="/hospital-bag"
-            className="hidden lg:inline-flex items-center gap-1.5 text-xs font-bold text-rawaa-primary bg-rawaa-primary-light hover:bg-rawaa-primary hover:text-white px-3 py-1.5 rounded-full transition-all whitespace-nowrap shadow-soft-xs group"
+            className="hidden lg:inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-600 hover:text-white border border-amber-200/80 px-3 py-1.5 rounded-full transition-all whitespace-nowrap shadow-soft-xs group"
           >
             <Baby size={14} className="transition-transform group-hover:scale-110" />
             <span>حقيبة الولادة</span>
-            <span className="text-[10px] bg-white text-rawaa-primary px-1.5 py-0.2 rounded-full font-bold group-hover:bg-white/20 group-hover:text-white transition-colors">جديد</span>
+            <span className="text-[10px] bg-amber-200/90 text-amber-950 px-1.5 py-0.2 rounded-full font-bold group-hover:bg-white group-hover:text-amber-800 transition-colors">قريباً</span>
           </Link>
 
-          {/* Direct link to live order tracking */}
+          {/* Direct link to live order tracking / customer page */}
           <Link
             to="/track-order"
             className="hidden xl:inline-flex items-center gap-1.5 text-xs font-semibold text-rawaa-dark hover:text-rawaa-primary px-2.5 py-1.5 rounded-lg hover:bg-rawaa-soft transition-colors whitespace-nowrap group"
           >
             <Truck size={14} className="text-rawaa-muted group-hover:text-rawaa-primary transition-colors" />
-            <span>تتبع طلبيتك</span>
+            <span>{user ? 'صفحتي وطلباتي' : 'تتبع طلبيتك'}</span>
           </Link>
+
+          {/* Direct link to admin dashboard only for authenticated admin */}
+          {isUserAdmin && (
+            <Link
+              to="/admin"
+              className="hidden xl:inline-flex items-center gap-1.5 text-xs font-semibold text-rawaa-sage bg-rawaa-sage/10 hover:bg-rawaa-sage hover:text-white px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap group border border-rawaa-sage/20"
+              title="لوحة الإدارة والتحكم"
+            >
+              <ShieldCheck size={14} className="shrink-0" />
+              <span>لوحة الإدارة</span>
+            </Link>
+          )}
 
           {/* Wishlist button with count badge */}
           <button

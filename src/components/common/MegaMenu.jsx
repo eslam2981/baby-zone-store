@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
 import {
+  Bed,
   Grid,
   HeartPulse,
   Package,
@@ -27,6 +28,7 @@ import {
 } from 'lucide-react';
 
 const ICON_MAP = {
+  Bed,
   Grid,
   HeartPulse,
   Package,
@@ -116,7 +118,13 @@ export default function MegaMenu({ isOpen, onClose }) {
               جميع أقسام ومستلزمات متجر بيبي زون
             </h3>
             <p className="text-xs text-rawaa-muted mt-0.5">
-              17 قسماً رئيسياً مدروساً بعناية لمرافقة كل خطوة في رحلة نمو طفلك
+              {categories.length === 1
+                ? 'قسم رئيسي مدروس بعناية لمرافقة كل خطوة في رحلة نمو طفلك'
+                : categories.length === 2
+                ? 'قسمان رئيسيان مدروسان بعناية لمرافقة كل خطوة في رحلة نمو طفلك'
+                : categories.length >= 3 && categories.length <= 10
+                ? `${categories.length} أقسام رئيسية مدروسة بعناية لمرافقة كل خطوة في رحلة نمو طفلك`
+                : `${categories.length} قسماً رئيسياً مدروساً بعناية لمرافقة كل خطوة في رحلة نمو طفلك`}
             </p>
           </div>
           <button
@@ -143,7 +151,7 @@ export default function MegaMenu({ isOpen, onClose }) {
             >
               <Baby size={14} className="shrink-0" />
               <span>دليل تجهيز حقيبة الولادة</span>
-              <span className="bg-amber-100 text-amber-900 text-[10px] px-1.5 py-0.2 rounded-full font-bold">تفاعلي</span>
+              <span className="bg-amber-200 text-amber-950 text-[10px] px-2 py-0.5 rounded-full font-bold">قريباً</span>
             </button>
             <button
               type="button"
@@ -184,7 +192,13 @@ export default function MegaMenu({ isOpen, onClose }) {
                       {cat.name}
                     </span>
                     {cat.badge && (
-                      <span className="inline-block text-[10px] font-bold text-rawaa-sage bg-rawaa-sage-light px-2 py-0.5 rounded-full mt-0.5">
+                      <span
+                        className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-0.5 ${
+                          cat.isComingSoon
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                            : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        }`}
+                      >
                         {cat.badge}
                       </span>
                     )}
@@ -247,7 +261,7 @@ export default function MegaMenu({ isOpen, onClose }) {
             onClick={() => {
               handleSmoothClose();
               window.open(
-                `https://wa.me/201211735629?text=${encodeURIComponent('السلام عليكم، محتاجة مساعدة بخصوص منتجات متجر بيبي زون (Baby Zone)')}`,
+                `https://wa.me/201035401549?text=${encodeURIComponent('السلام عليكم، محتاجة مساعدة بخصوص منتجات متجر بيبي زون (Baby Zone)')}`,
                 '_blank'
               );
             }}

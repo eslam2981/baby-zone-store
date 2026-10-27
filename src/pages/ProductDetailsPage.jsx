@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link} from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
+import { reviewsApi } from '../services/api';
 import ProductCard from '../components/catalog/ProductCard';
+import { ReviewSkeleton, ProductDetailSkeleton } from '../components/common/Skeletons';
 import {
   Star,
   Heart,
@@ -15,19 +17,24 @@ import {
   Plus,
   Share2,
   Award,
-  Info
+  Info,
+  MessageSquare,
+  Send,
+  User
 } from 'lucide-react';
 
 export default function ProductDetailsPage() {
   const { productId } = useParams();
   const {
     allProducts,
+    isLoadingProducts,
     formatPrice,
     addToCart,
     toggleWishlist,
     isInWishlist,
     categories,
-    addToast
+    addToast,
+    user
   } = useShop();
 
   const product = allProducts.find((p) => p.id === productId);
@@ -38,6 +45,74 @@ export default function ProductDetailsPage() {
   const [activeTab, setActiveTab] = useState('features');
   const [isAdding, setIsAdding] = useState(false);
 
+  // Live reviews state from Supabase Cloud
+  const [productReviews, setProductReviews] = useState([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  const [newReview, setNewReview] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    rating: 5,
+    comment: ''
+  });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadProductReviews() {
+      if (!productId) return;
+      try {
+        setIsLoadingReviews(true);
+        const data = await reviewsApi.getByProductId(productId);
+        if (isMounted && Array.isArray(data)) {
+          setProductReviews(data);
+        }
+      } catch (e) {
+        console.warn('Reviews load notice:', e.message);
+      } finally {
+        if (isMounted) setIsLoadingReviews(false);
+      }
+    }
+    loadProductReviews();
+    return () => { isMounted = false; };
+  }, [productId]);
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!newReview.name.trim() || !newReview.comment.trim()) {
+      addToast('يرجى كتابة الاسم والتعليق لإرسال التقييم', 'warning');
+      return;
+    }
+
+    try {
+      setIsSubmittingReview(true);
+      const reviewPayload = {
+        id: `rev-${Date.now()}`,
+        productId,
+        productName: product?.name || '',
+        customerName: newReview.name.trim(),
+        customerEmail: newReview.email.trim() || user?.email || '',
+        rating: Number(newReview.rating) || 5,
+        comment: newReview.comment.trim(),
+        isApproved: true
+      };
+
+      await reviewsApi.create(reviewPayload);
+      setProductReviews((prev) => [reviewPayload, ...prev]);
+      setNewReview({
+        name: user?.name || '',
+        email: user?.email || '',
+        rating: 5,
+        comment: ''
+      });
+      addToast('شكراً لمشاركتك! تم تسجيل تقييمك على السيرفر بنجاح', 'success');
+    } catch (err) {
+      console.error('Review submit error:', err);
+      addToast('حدث خطأ أثناء حفظ التقييم', 'error');
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (product) {
@@ -46,6 +121,10 @@ export default function ProductDetailsPage() {
       setSelectedColor(product.colors && product.colors.length > 0 ? product.colors[0] : null);
     }
   }, [productId, product]);
+
+  if (isLoadingProducts) {
+    return <ProductDetailSkeleton />;
+  }
 
   if (!product) {
     return (
@@ -344,19 +423,33 @@ export default function ProductDetailsPage() {
                 </button>
               </div>
 
-              {/* Primary add to cart button */}
-              <button
-                type="button"
-                className={`flex-1 inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-full font-bold text-sm shadow-soft-md transition-all duration-200 cursor-pointer ${
-                  isAdding
-                    ? 'bg-emerald-600 text-white scale-[0.98]'
-                    : 'bg-rawaa-primary hover:bg-rawaa-primary-hover text-white hover:-translate-y-0.5'
-                }`}
-                onClick={handleAddToCart}
-              >
-                <ShoppingBag size={18} />
-                <span>{isAdding ? 'تمت الإضافة بنجاح' : `أضف إلى السلة (${formatPrice(product.price * quantity)})`}</span>
-              </button>
+              {/* Primary add to cart button or coming soon inquiry */}
+              {product.inStock ? (
+                <button
+                  type="button"
+                  className={`flex-1 inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-full font-bold text-sm shadow-soft-md transition-all duration-200 cursor-pointer ${
+                    isAdding
+                      ? 'bg-emerald-600 text-white scale-[0.98]'
+                      : 'bg-rawaa-primary hover:bg-rawaa-primary-hover text-white hover:-translate-y-0.5'
+                  }`}
+                  onClick={handleAddToCart}
+                >
+                  <ShoppingBag size={18} />
+                  <span>{isAdding ? 'تمت الإضافة بنجاح' : `أضف إلى السلة (${formatPrice(product.price * quantity)})`}</span>
+                </button>
+              ) : (
+                <a
+                  href={`https://wa.me/201035401549?text=${encodeURIComponent(
+                    `مرحباً بيبي زون، أود الاستفسار عن موعد توفر منتج «${product.name}» (كود #${product.id})`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-full font-bold text-sm bg-amber-500 hover:bg-amber-600 text-white shadow-soft-md transition-all duration-200 hover:-translate-y-0.5"
+                >
+                  <Sparkles size={18} />
+                  <span>قريباً في بيبي زون · اطلب توفيره عبر واتساب</span>
+                </a>
+              )}
             </div>
 
             {/* Tabbed specifications and shipping information */}
@@ -398,6 +491,19 @@ export default function ProductDetailsPage() {
                     <span className="absolute bottom-0 right-0 left-0 h-0.5 bg-rawaa-primary rounded" />
                   )}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('reviews')}
+                  className={`pb-2 transition-colors relative flex items-center gap-1 ${
+                    activeTab === 'reviews' ? 'text-rawaa-primary font-black' : 'text-rawaa-muted hover:text-rawaa-dark'
+                  }`}
+                >
+                  <MessageSquare size={13} />
+                  <span>التقييمات ({productReviews.length})</span>
+                  {activeTab === 'reviews' && (
+                    <span className="absolute bottom-0 right-0 left-0 h-0.5 bg-rawaa-primary rounded" />
+                  )}
+                </button>
               </div>
 
               {activeTab === 'features' && (
@@ -424,6 +530,88 @@ export default function ProductDetailsPage() {
                   <p>• حاصل على شهادة الفحص الطبي وخالٍ تماماً من مادة BPA والفثالات والسموم.</p>
                   <p>• مطابق للمعايير الأوروبية المعتمدة (EN 1888 للأمان وحماية الطفل).</p>
                   <p>• أقمشة قطنية نقية 100% حاصلة على ترخيص معيار المنسوجات العضوية GOTS.</p>
+                </div>
+              )}
+
+              {activeTab === 'reviews' && (
+                <div className="space-y-4">
+                  {/* Reviews list */}
+                  {isLoadingReviews ? (
+                    <div className="space-y-2.5">
+                      <ReviewSkeleton />
+                      <ReviewSkeleton />
+                      <ReviewSkeleton />
+                    </div>
+                  ) : productReviews.length === 0 ? (
+                    <div className="py-3 text-center text-xs text-rawaa-muted bg-[#FAF8F5] rounded-lg">
+                      لا توجد تقييمات مسجلة بعد لهذا المنتج. كوني أول من يقيم!
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                      {productReviews.map((rev) => (
+                        <div key={rev.id} className="bg-[#FAF8F5] p-3 rounded-lg border border-rawaa-border/60 text-xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-rawaa-dark flex items-center gap-1.5">
+                              <User size={12} className="text-rawaa-muted" />
+                              {rev.customer_name || rev.customerName}
+                            </span>
+                            <div className="flex text-amber-400">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  size={11}
+                                  className={i < (rev.rating || 5) ? 'fill-amber-400' : 'text-gray-300'}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-rawaa-muted leading-relaxed">{rev.comment}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add review form */}
+                  <form onSubmit={handleReviewSubmit} className="pt-3 border-t border-rawaa-border/60 space-y-2.5">
+                    <span className="text-xs font-bold text-rawaa-dark block">أضيفي تقييمك للمنتج:</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="الاسم الكريم *"
+                        value={newReview.name}
+                        onChange={(e) => setNewReview({ ...newReview, name: e.target.value })}
+                        className="text-xs p-2 rounded-lg border border-rawaa-border bg-white focus:outline-none focus:ring-1 focus:ring-rawaa-primary"
+                        required
+                      />
+                      <select
+                        value={newReview.rating}
+                        onChange={(e) => setNewReview({ ...newReview, rating: Number(e.target.value) })}
+                        className="text-xs p-2 rounded-lg border border-rawaa-border bg-white focus:outline-none focus:ring-1 focus:ring-rawaa-primary"
+                      >
+                        <option value={5}>⭐⭐⭐⭐⭐ ممتاز (5 نجوم)</option>
+                        <option value={4}>⭐⭐⭐⭐ جيد جداً (4 نجوم)</option>
+                        <option value={3}>⭐⭐⭐ متوسط (3 نجوم)</option>
+                        <option value={2}>⭐⭐ مقبول (نجمتان)</option>
+                        <option value={1}>⭐ سيء (نجمة واحدة)</option>
+                      </select>
+                    </div>
+                    <textarea
+                      placeholder="اكتبي تجربتك مع المنتج لمساعدة الأمهات الأخريات... *"
+                      value={newReview.comment}
+                      onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                      rows={2}
+                      className="w-full text-xs p-2 rounded-lg border border-rawaa-border bg-white focus:outline-none focus:ring-1 focus:ring-rawaa-primary resize-none"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSubmittingReview}
+                      className="w-full py-2 bg-rawaa-primary hover:bg-rawaa-primary-hover text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+                    >
+                      <Send size={13} />
+                      <span>{isSubmittingReview ? 'جارٍ الإرسال...' : 'إرسال التقييم للسيرفر'}</span>
+                    </button>
+                  </form>
                 </div>
               )}
             </div>

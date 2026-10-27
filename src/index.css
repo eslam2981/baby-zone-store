@@ -116,3 +116,26 @@
     overflow-x: hidden;
   }
 }
+
+/* Premium Skeleton Shimmer Effect */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #F4EFEB 0%,
+    #E8DFD7 35%,
+    #FCFAF7 50%,
+    #E8DFD7 65%,
+    #F4EFEB 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}

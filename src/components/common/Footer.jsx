@@ -88,7 +88,7 @@ export default function Footer() {
             <div className="flex flex-col gap-2 text-xs text-white/75">
               <div className="flex items-center gap-2">
                 <PhoneCall size={14} className="text-amber-300" />
-                <span>خدمة العملاء والواتساب 012-1173-5629</span>
+                <span>خدمة العملاء والواتساب 0103 540 1549</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail size={14} className="text-emerald-300" />
@@ -182,11 +182,20 @@ export default function Footer() {
 
       {/* Copyright and bottom disclaimer bar */}
       <div className="border-t border-white/10 py-4 px-4 sm:px-6 lg:px-8 text-[11px] text-white/50">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 xl:px-12 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-right">
-          <p>
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-8 xl:px-12 grid grid-cols-1 md:grid-cols-3 items-center gap-3 text-center">
+          <p className="md:text-right">
             جميع الحقوق محفوظة &copy; {new Date().getFullYear()} لمتجر <strong>بيبي زون (Baby Zone)</strong> 
           </p>
-          <div className="flex items-center gap-1.5 justify-center">
+
+          {/* Centered developer copyright in the exact middle */}
+          <div className="flex items-center justify-center gap-1.5 text-xs text-white/80">
+            <span>برمجة وتطوير</span>
+            <span className="font-heading font-black text-amber-300 tracking-wide text-sm">
+              Eslam Gamil
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 justify-center md:justify-end">
             <span>صُنِع بكل الحب لراحة أمهات وأطفال الوطن العربي</span>
             <Heart size={13} className="text-rawaa-primary fill-rawaa-primary" />
           </div>

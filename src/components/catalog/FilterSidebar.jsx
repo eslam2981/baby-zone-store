@@ -153,7 +153,9 @@ export default function FilterSidebar({ isMobileOpen = false, onCloseMobile = ()
                   {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-rawaa-primary" />}
                 </span>
                 <span className="flex-1 truncate">{cat.name}</span>
-                <span className="text-[11px] text-rawaa-subtle">({count})</span>
+                <span className={`text-[11px] ${cat.isComingSoon ? 'text-amber-700 font-bold' : 'text-rawaa-subtle'}`}>
+                  {cat.isComingSoon ? 'قريباً' : `(${count})`}
+                </span>
               </button>
             );
           })}

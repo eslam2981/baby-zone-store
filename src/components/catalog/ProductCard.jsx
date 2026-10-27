@@ -148,8 +148,8 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
               متوفر
             </span>
           ) : (
-            <span className="mr-auto text-[11px] font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-              نفد
+            <span className="mr-auto text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full">
+              قريباً
             </span>
           )}
         </div>
@@ -203,19 +203,37 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
           </div>
         </div>
 
-        {/* Add to cart interactive trigger */}
+        {/* Add to cart interactive trigger or coming soon inquiry */}
         <div className="mt-3">
           <button
             type="button"
             className={`w-full text-xs sm:text-sm font-bold py-2 sm:py-2.5 px-4 rounded-full flex items-center justify-center gap-2 transition-all duration-200 border cursor-pointer ${
-              isAdding
+              !product.inStock
+                ? 'bg-amber-50 border-amber-200 text-amber-900 hover:bg-amber-100'
+                : isAdding
                 ? 'bg-emerald-600 border-emerald-600 text-white'
                 : 'bg-rawaa-soft border-rawaa-border text-rawaa-dark hover:bg-rawaa-primary hover:border-rawaa-primary hover:text-white shadow-soft-xs hover:shadow-soft-sm'
             }`}
-            onClick={handleAddToCart}
-            disabled={!product.inStock}
+            onClick={(e) => {
+              if (!product.inStock) {
+                e.stopPropagation();
+                window.open(
+                  `https://wa.me/201035401549?text=${encodeURIComponent(
+                    `مرحباً بيبي زون، أود الاستفسار عن موعد توفر منتج «${product.name}» (كود #${product.id})`
+                  )}`,
+                  '_blank'
+                );
+              } else {
+                handleAddToCart(e);
+              }
+            }}
           >
-            {isAdding ? (
+            {!product.inStock ? (
+              <>
+                <Sparkles size={14} className="text-amber-600" />
+                <span>قريباً · استفسار واتساب</span>
+              </>
+            ) : isAdding ? (
               <>
                 <Check size={16} />
                 <span>تمت الإضافة بنجاح</span>

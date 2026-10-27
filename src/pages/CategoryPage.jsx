@@ -102,10 +102,17 @@ export default function CategoryPage() {
           <div className="absolute top-0 left-0 w-64 h-64 bg-rawaa-primary/5 rounded-full blur-3xl -z-10" />
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex-1 text-right">
-              <div className="inline-flex items-center gap-2 bg-rawaa-primary-light text-rawaa-primary text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-soft-xs">
-                <Sparkles size={14} />
-                <span>تشكيلة حصرية ومضمونة</span>
-              </div>
+              {currentCategory?.isComingSoon ? (
+                <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-soft-xs">
+                  <Sparkles size={14} className="text-amber-600 animate-pulse" />
+                  <span>قريباً في بيبي زون (Coming Soon)</span>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-2 bg-rawaa-primary-light text-rawaa-primary text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-soft-xs">
+                  <Sparkles size={14} />
+                  <span>تشكيلة حصرية ومضمونة</span>
+                </div>
+              )}
               <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-black text-rawaa-dark mb-2">
                 {categoryTitle}
               </h1>
