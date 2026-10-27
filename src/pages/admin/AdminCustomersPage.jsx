@@ -1,6 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAdmin } from '../../context/AdminContext';
+import { useShop } from '../../context/ShopContext';
+import {
+  validateEmail,
+  validateEgyptianPhone,
+  validatePersonName,
+  normalizeEgyptianPhone,
+  sanitizeText
+} from '../../utils/validators';
 import {
   Users,
   Search,
@@ -88,6 +96,7 @@ export default function AdminCustomersPage() {
     addCustomer,
     deleteCustomer
   } = useAdmin();
+  const { addToast } = useShop();
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -209,20 +218,46 @@ export default function AdminCustomersPage() {
   // Save changes to Supabase Cloud server
   const handleSaveCustomerToServer = async () => {
     if (!selectedCustomer) return;
+
+    const cleanName = sanitizeText(selectedCustomer.name);
+    const nameErr = validatePersonName(cleanName, true, 2, 70);
+    if (nameErr) {
+      if (addToast) addToast(nameErr, 'warning');
+      return;
+    }
+
+    const cleanEmail = sanitizeText(selectedCustomer.email);
+    const emailErr = validateEmail(cleanEmail, true);
+    if (emailErr) {
+      if (addToast) addToast(emailErr, 'warning');
+      return;
+    }
+
+    let cleanPhone = sanitizeText(selectedCustomer.phone);
+    if (cleanPhone) {
+      const phoneErr = validateEgyptianPhone(cleanPhone, false);
+      if (phoneErr) {
+        if (addToast) addToast(phoneErr, 'warning');
+        return;
+      }
+      cleanPhone = normalizeEgyptianPhone(cleanPhone);
+    }
+
     try {
       setIsSavingOnServer(true);
       await updateCustomer(selectedCustomer.id, {
-        name: selectedCustomer.name,
-        email: selectedCustomer.email,
-        phone: selectedCustomer.phone,
+        name: cleanName,
+        email: cleanEmail,
+        phone: cleanPhone,
         city: selectedCustomer.city,
-        address: selectedCustomer.address,
+        address: sanitizeText(selectedCustomer.address),
         role: selectedCustomer.role,
         permissions: selectedCustomer.permissions,
         isVip: selectedCustomer.isVip,
         status: selectedCustomer.status,
-        notes: selectedCustomer.notes
+        notes: sanitizeText(selectedCustomer.notes)
       });
+      if (addToast) addToast('تم حفظ وتحديث بيانات العميل بنجاح', 'success');
     } finally {
       setIsSavingOnServer(false);
     }
@@ -231,13 +266,42 @@ export default function AdminCustomersPage() {
   // Handle adding new customer on server
   const handleCreateCustomerSubmit = async (e) => {
     e.preventDefault();
-    if (!newCustomerForm.name.trim() || !newCustomerForm.email.trim()) return;
+
+    const cleanName = sanitizeText(newCustomerForm.name);
+    const nameErr = validatePersonName(cleanName, true, 2, 70);
+    if (nameErr) {
+      if (addToast) addToast(nameErr, 'warning');
+      return;
+    }
+
+    const cleanEmail = sanitizeText(newCustomerForm.email);
+    const emailErr = validateEmail(cleanEmail, true);
+    if (emailErr) {
+      if (addToast) addToast(emailErr, 'warning');
+      return;
+    }
+
+    let cleanPhone = '';
+    if (newCustomerForm.phone && newCustomerForm.phone.trim()) {
+      const phoneErr = validateEgyptianPhone(newCustomerForm.phone, false);
+      if (phoneErr) {
+        if (addToast) addToast(phoneErr, 'warning');
+        return;
+      }
+      cleanPhone = normalizeEgyptianPhone(newCustomerForm.phone);
+    }
 
     await addCustomer({
       ...newCustomerForm,
+      name: cleanName,
+      email: cleanEmail,
+      phone: cleanPhone,
+      address: sanitizeText(newCustomerForm.address),
+      notes: sanitizeText(newCustomerForm.notes),
       isVip: newCustomerForm.role === 'vip_customer' || newCustomerForm.isVip
     });
 
+    if (addToast) addToast('تم إضافة العميل الجديد بنجاح', 'success');
     setIsAddModalOpen(false);
     setNewCustomerForm({
       name: '',

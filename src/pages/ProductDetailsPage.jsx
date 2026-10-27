@@ -4,6 +4,7 @@ import { useShop } from '../context/ShopContext';
 import { reviewsApi } from '../services/api';
 import ProductCard from '../components/catalog/ProductCard';
 import { ReviewSkeleton, ProductDetailSkeleton } from '../components/common/Skeletons';
+import { validatePersonName, validateEmail, sanitizeText, REGEX_PATTERNS } from '../utils/validators';
 import {
   Star,
   Heart,
@@ -78,10 +79,34 @@ export default function ProductDetailsPage() {
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
-    if (!newReview.name.trim() || !newReview.comment.trim()) {
-      addToast('يرجى كتابة الاسم والتعليق لإرسال التقييم', 'warning');
+
+    const cleanName = sanitizeText(newReview.name);
+    const nameErr = validatePersonName(cleanName, true, 2, 60);
+    if (nameErr) {
+      addToast(nameErr, 'warning');
       return;
     }
+
+    const cleanComment = sanitizeText(newReview.comment);
+    if (!cleanComment || cleanComment.length < 3) {
+      addToast('يرجى كتابة تعليق لا يقل عن 3 أحرف لإفادة الأمهات', 'warning');
+      return;
+    }
+    if (cleanComment.length > 500) {
+      addToast('التعليق طويل جداً (الحد الأقصى 500 حرف)', 'warning');
+      return;
+    }
+
+    let cleanEmail = sanitizeText(newReview.email || user?.email || '');
+    if (cleanEmail) {
+      const emailErr = validateEmail(cleanEmail, false);
+      if (emailErr) {
+        addToast(emailErr, 'warning');
+        return;
+      }
+    }
+
+    const rating = Math.min(5, Math.max(1, Number(newReview.rating) || 5));
 
     try {
       setIsSubmittingReview(true);
@@ -89,10 +114,10 @@ export default function ProductDetailsPage() {
         id: `rev-${Date.now()}`,
         productId,
         productName: product?.name || '',
-        customerName: newReview.name.trim(),
-        customerEmail: newReview.email.trim() || user?.email || '',
-        rating: Number(newReview.rating) || 5,
-        comment: newReview.comment.trim(),
+        customerName: cleanName,
+        customerEmail: cleanEmail,
+        rating,
+        comment: cleanComment,
         isApproved: true
       };
 

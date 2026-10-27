@@ -10,6 +10,7 @@ import {
   Lock,
   ShieldCheck
 } from 'lucide-react';
+import { validateEmail, sanitizeText } from '../../utils/validators';
 
 export default function Footer() {
   const { addToast } = useShop();
@@ -18,11 +19,16 @@ export default function Footer() {
 
   const handleSubscribe = (e) => {
     e.preventDefault();
-    if (newsletterEmail.trim()) {
-      setSubscribed(true);
-      addToast('شكراً لانضمامكِ لمجتمع بيبي زون! تم إرسال دليل تجهيز حقيبة الولادة المجاني لبريدك الإلكتروني', 'success');
-      setNewsletterEmail('');
+    const cleanEmail = sanitizeText(newsletterEmail);
+    const emailErr = validateEmail(cleanEmail);
+    if (emailErr) {
+      addToast(emailErr, 'warning');
+      return;
     }
+
+    setSubscribed(true);
+    addToast('شكراً لانضمامكِ لمجتمع بيبي زون! تم إرسال دليل تجهيز حقيبة الولادة المجاني لبريدك الإلكتروني', 'success');
+    setNewsletterEmail('');
   };
 
   return (

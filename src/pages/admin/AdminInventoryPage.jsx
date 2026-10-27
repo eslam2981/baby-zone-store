@@ -20,10 +20,11 @@ import {
 } from 'lucide-react';
 
 import { TableRowSkeleton } from '../../components/common/Skeletons';
+import { REGEX_PATTERNS } from '../../utils/validators';
 
 /* Inventory management page provides stock level audits and instant replenishment tools */
 export default function AdminInventoryPage() {
-  const { allProducts, isLoadingProducts, updateProductStock, categories } = useShop();
+  const { allProducts, isLoadingProducts, updateProductStock, categories, addToast } = useShop();
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilter, setStockFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -89,8 +90,17 @@ export default function AdminInventoryPage() {
     e.preventDefault();
     if (!selectedProduct) return;
 
-    const amount = Number(adjustmentAmount);
-    if (isNaN(amount) || amount <= 0) return;
+    const strAmount = String(adjustmentAmount).trim();
+    if (!REGEX_PATTERNS.POSITIVE_INTEGER.test(strAmount)) {
+      if (addToast) addToast('يرجى إدخال عدد صحيح موجب لكمية التسوية', 'warning');
+      return;
+    }
+
+    const amount = Number(strAmount);
+    if (isNaN(amount) || amount < 1 || amount > 50000) {
+      if (addToast) addToast('كمية التسوية يجب أن تكون بين 1 و 50,000 قطعة', 'warning');
+      return;
+    }
 
     const currentStock = Number(selectedProduct.stockCount ?? selectedProduct.stock ?? 0);
     const newStock =
@@ -99,6 +109,12 @@ export default function AdminInventoryPage() {
         : Math.max(0, currentStock - amount);
 
     updateProductStock(selectedProduct.id, newStock);
+    if (addToast) {
+      addToast(
+        `تم ${adjustmentType === 'add' ? 'إضافة' : 'خصم'} ${amount} قطعة للمنتج ${selectedProduct.name} (الرصيد الجديد: ${newStock})`,
+        'success'
+      );
+    }
     setSelectedProduct(null);
   };
 

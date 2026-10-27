@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
+import { useShop } from '../../context/ShopContext';
+import {
+  validateEmail,
+  validateEgyptianPhone,
+  validatePrice,
+  sanitizeText,
+  normalizeEgyptianPhone
+} from '../../utils/validators';
 import {
   Settings,
   Store,
@@ -19,6 +27,7 @@ import {
 /* Store settings and administrative configuration interface */
 export default function AdminSettingsPage() {
   const { storeSettings, updateStoreSettings } = useAdmin();
+  const { addToast } = useShop();
   const [formData, setFormData] = useState({
     storeName: storeSettings?.storeName || 'بيبي زون | BABY ZONE',
     tagline: storeSettings?.tagline || 'عالم متكامل لأجود مستلزمات الأم والطفل في مصر',
@@ -61,8 +70,51 @@ export default function AdminSettingsPage() {
   /* Handle form submission */
   const handleSubmit = (e) => {
     e.preventDefault();
-    updateStoreSettings(formData);
+
+    const cleanStoreName = sanitizeText(formData.storeName);
+    if (!cleanStoreName || cleanStoreName.length < 2) {
+      if (addToast) addToast('يرجى إدخال اسم صحيح للمتجر (حرفين على الأقل)', 'warning');
+      return;
+    }
+
+    const cleanEmail = sanitizeText(formData.supportEmail);
+    if (cleanEmail) {
+      const emailErr = validateEmail(cleanEmail, false);
+      if (emailErr) {
+        if (addToast) addToast(emailErr, 'warning');
+        return;
+      }
+    }
+
+    let cleanPhone = sanitizeText(formData.supportPhone);
+    if (cleanPhone) {
+      const phoneErr = validateEgyptianPhone(cleanPhone, false);
+      if (phoneErr) {
+        if (addToast) addToast(phoneErr, 'warning');
+        return;
+      }
+      cleanPhone = normalizeEgyptianPhone(cleanPhone);
+    }
+
+    const freeThreshold = Math.max(0, Number(formData.freeShippingThreshold) || 0);
+    const cairoShipping = Math.max(0, Number(formData.cairoShippingCost) || 0);
+    const otherShipping = Math.max(0, Number(formData.otherGovernoratesShippingCost) || 0);
+
+    const payload = {
+      ...formData,
+      storeName: cleanStoreName,
+      tagline: sanitizeText(formData.tagline),
+      supportEmail: cleanEmail,
+      supportPhone: cleanPhone,
+      address: sanitizeText(formData.address),
+      freeShippingThreshold: freeThreshold,
+      cairoShippingCost: cairoShipping,
+      otherGovernoratesShippingCost: otherShipping
+    };
+
+    updateStoreSettings(payload);
     setSavedSuccess(true);
+    if (addToast) addToast('تم حفظ إعدادات المتجر بنجاح', 'success');
     setTimeout(() => setSavedSuccess(false), 3000);
   };
 

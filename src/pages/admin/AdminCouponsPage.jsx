@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useAdmin } from '../../context/AdminContext';
+import { useShop } from '../../context/ShopContext';
+import {
+  validateCouponCode,
+  validateDiscountValue,
+  normalizeCouponCode,
+  sanitizeText
+} from '../../utils/validators';
 import {
   Tag,
   Plus,
@@ -24,6 +31,7 @@ import { CouponCardSkeleton } from '../../components/common/Skeletons';
 /* Coupons and marketing discount promotions management interface */
 export default function AdminCouponsPage() {
   const { coupons, isLoadingCoupons, addCoupon, updateCoupon, deleteCoupon, toggleCouponStatus } = useAdmin();
+  const { addToast } = useShop();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
@@ -107,30 +115,47 @@ export default function AdminCouponsPage() {
   /* Submit handler for save coupon */
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.code.trim()) return;
+
+    const codeErr = validateCouponCode(formData.code);
+    if (codeErr) {
+      if (addToast) addToast(codeErr, 'warning');
+      return;
+    }
+
+    const discountErr = validateDiscountValue(formData.discountValue, formData.discountType);
+    if (discountErr) {
+      if (addToast) addToast(discountErr, 'warning');
+      return;
+    }
+
+    const minSpend = Math.max(0, Number(formData.minSpend) || 0);
+    const maxUses = Math.max(1, Number(formData.maxUses) || 100);
 
     const isPercent = formData.discountType === 'percentage';
     const numVal = Number(formData.discountValue) || 0;
+    const cleanCode = normalizeCouponCode(formData.code);
 
     const payload = {
       ...formData,
-      code: formData.code.toUpperCase().trim(),
+      code: cleanCode,
       discountType: formData.discountType,
       type: formData.discountType,
       discountValue: numVal,
       discountPercent: isPercent ? numVal : 0,
       discountAmount: !isPercent ? numVal : 0,
-      minSpend: Number(formData.minSpend) || 0,
-      maxUses: Number(formData.maxUses) || 100,
-      maxUsage: Number(formData.maxUses) || 100,
+      minSpend,
+      maxUses,
+      maxUsage: maxUses,
       expiryDate: formData.expiryDate || '2026-12-31',
       endDate: formData.expiryDate || '2026-12-31'
     };
 
     if (editingCoupon) {
       updateCoupon(editingCoupon.id, payload);
+      if (addToast) addToast(`تم تحديث كوبون الخصم ${cleanCode} بنجاح`, 'success');
     } else {
       addCoupon(payload);
+      if (addToast) addToast(`تم إنشاء كوبون الخصم الجديد ${cleanCode} بنجاح`, 'success');
     }
 
     handleCloseModal();

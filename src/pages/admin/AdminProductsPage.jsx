@@ -25,6 +25,12 @@ import { useAdmin } from '../../context/AdminContext';
 import { storageApi } from '../../services/api';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import { TableRowSkeleton } from '../../components/common/Skeletons';
+import {
+  validateProductName,
+  validatePrice,
+  validateStock,
+  sanitizeText
+} from '../../utils/validators';
 
 export default function AdminProductsPage() {
   const {
@@ -34,7 +40,8 @@ export default function AdminProductsPage() {
     addProduct,
     updateProduct,
     deleteProduct,
-    updateProductStock
+    updateProductStock,
+    addToast
   } = useShop();
 
   const { addActivity } = useAdmin();
@@ -229,19 +236,60 @@ export default function AdminProductsPage() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.mainImage) {
-      setUploadError('يرجى رفع صورة للمنتج من الجهاز أو لصق رابط الصورة');
+    setUploadError('');
+
+    const cleanName = sanitizeText(formData.name);
+    const nameErr = validateProductName(cleanName, 3, 150);
+    if (nameErr) {
+      setUploadError(nameErr);
+      if (addToast) addToast(nameErr, 'warning');
       return;
     }
 
-    const priceNum = parseFloat(formData.price) || 0;
-    const origPriceNum = parseFloat(formData.originalPrice) || priceNum;
-    const discount = origPriceNum > priceNum ? Math.round(((origPriceNum - priceNum) / origPriceNum) * 100) : 0;
+    const priceErr = validatePrice(formData.price, 'سعر البيع', 0.5, 500000);
+    if (priceErr) {
+      setUploadError(priceErr);
+      if (addToast) addToast(priceErr, 'warning');
+      return;
+    }
+
+    let origPriceNum = parseFloat(formData.originalPrice);
+    if (formData.originalPrice !== '' && formData.originalPrice !== null && formData.originalPrice !== undefined) {
+      const origErr = validatePrice(formData.originalPrice, 'السعر الأصلي', 0.5, 500000);
+      if (origErr) {
+        setUploadError(origErr);
+        if (addToast) addToast(origErr, 'warning');
+        return;
+      }
+    } else {
+      origPriceNum = parseFloat(formData.price);
+    }
+
+    const stockErr = validateStock(formData.stockCount, 0, 99999);
+    if (stockErr) {
+      setUploadError(stockErr);
+      if (addToast) addToast(stockErr, 'warning');
+      return;
+    }
+
+    if (!formData.mainImage || !formData.mainImage.trim()) {
+      setUploadError('يرجى رفع صورة للمنتج من الجهاز أو لصق رابط الصورة');
+      if (addToast) addToast('يرجى إضافة صورة للمنتج', 'warning');
+      return;
+    }
+
+    const priceNum = parseFloat(formData.price);
+    const finalOrigPrice = !isNaN(origPriceNum) && origPriceNum > 0 ? origPriceNum : priceNum;
+    const discount = finalOrigPrice > priceNum ? Math.round(((finalOrigPrice - priceNum) / finalOrigPrice) * 100) : 0;
 
     const payload = {
       ...formData,
+      name: cleanName,
+      brand: sanitizeText(formData.brand) || 'بيبي زون',
+      shortDesc: sanitizeText(formData.shortDesc),
+      badge: sanitizeText(formData.badge),
       price: priceNum,
-      originalPrice: origPriceNum,
+      originalPrice: finalOrigPrice,
       discountPercent: discount,
       stockCount: parseInt(formData.stockCount, 10) || 0,
       inStock: parseInt(formData.stockCount, 10) > 0,
@@ -251,9 +299,11 @@ export default function AdminProductsPage() {
     if (editingProduct) {
       await updateProduct(editingProduct.id, payload);
       addActivity('تعديل منتج', `المنتج: ${payload.name}`, 'product');
+      if (addToast) addToast('تم تعديل المنتج بنجاح', 'success');
     } else {
       await addProduct(payload);
       addActivity('إضافة منتج جديد', `المنتج: ${payload.name}`, 'product');
+      if (addToast) addToast('تم إضافة المنتج بنجاح', 'success');
     }
 
     handleCloseModal();

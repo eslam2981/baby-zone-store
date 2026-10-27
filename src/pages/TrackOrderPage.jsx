@@ -4,6 +4,7 @@ import { useShop } from '../context/ShopContext';
 import { ordersApi } from '../services/api';
 import { supabase } from '../lib/supabase';
 import { syncBus } from '../utils/syncBus';
+import { sanitizeText, normalizeEgyptianPhone, REGEX_PATTERNS } from '../utils/validators';
 import { OrderCardSkeleton, TrackingResultSkeleton } from '../components/common/Skeletons';
 import { GOVERNORATES } from '../data/shippingData';
 import {
@@ -266,15 +267,31 @@ export default function TrackOrderPage() {
   // Handle tracking form submission via ordersApi service
   const handleSearch = async (e) => {
     e?.preventDefault();
-    const cleanQuery = searchInput.trim();
-    if (!cleanQuery) {
+    const rawInput = searchInput.trim();
+    if (!rawInput) {
       addToast('يرجى إدخال رقم الطلب أو رقم الهاتف للاستعلام', 'warning');
       return;
     }
 
+    const cleanQuery = sanitizeText(rawInput);
+    if (REGEX_PATTERNS.DANGEROUS_HTML.test(rawInput)) {
+      addToast('إدخال غير صالح، يحتوي على رموز غير مسموح بها', 'warning');
+      return;
+    }
+
+    if (cleanQuery.length < 3 || cleanQuery.length > 35) {
+      addToast('يرجى التأكد من كتابة رقم الطلب أو رقم الموبايل بشكل صحيح (3 إلى 35 خانة)', 'warning');
+      return;
+    }
+
+    // If it looks like a phone, normalize it
+    const normalizedQuery = /^\+?[0-9\s\-]+$/.test(cleanQuery)
+      ? normalizeEgyptianPhone(cleanQuery)
+      : cleanQuery;
+
     setIsSearching(true);
     try {
-      const raw = await ordersApi.track(cleanQuery);
+      const raw = await ordersApi.track(normalizedQuery);
 
       if (raw) {
         const mapped = mapDbOrderToTracking(raw);

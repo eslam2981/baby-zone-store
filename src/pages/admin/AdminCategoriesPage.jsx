@@ -14,6 +14,12 @@ import {
 import { useShop } from '../../context/ShopContext';
 import { useAdmin } from '../../context/AdminContext';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import {
+  validateCategoryName,
+  generateSlug,
+  sanitizeText,
+  REGEX_PATTERNS
+} from '../../utils/validators';
 
 export default function AdminCategoriesPage() {
   const { categories, allProducts, addCategory, updateCategory, deleteCategory, addToast } = useShop();
@@ -96,33 +102,54 @@ export default function AdminCategoriesPage() {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
+
+    const cleanName = sanitizeText(formData.name);
+    const nameErr = validateCategoryName(cleanName, 2, 60);
+    if (nameErr) {
+      if (addToast) addToast(nameErr, 'warning');
+      return;
+    }
+
+    let slug = formData.slug.trim().toLowerCase().replace(/\s+/g, '-');
+    if (!slug) {
+      slug = generateSlug(cleanName) || `cat-${Date.now()}`;
+    }
+
+    if (!REGEX_PATTERNS.SLUG.test(slug)) {
+      if (addToast) addToast('الرابط الثابت (Slug) يجب أن يحتوي على أحرف إنجليزية صغيرة وأرقام وشرطات فقط بدون مسافات', 'warning');
+      return;
+    }
+
     const subs = formData.subcategoriesStr
       .split(',')
-      .map((s) => s.trim())
+      .map((s) => sanitizeText(s))
       .filter(Boolean);
 
-    const slug = formData.slug.trim() || formData.name.trim().toLowerCase().replace(/\s+/g, '-');
+    const cleanBadge = sanitizeText(formData.badge);
+    const cleanDesc = sanitizeText(formData.description);
 
     if (editingCategory) {
       updateCategory(editingCategory.id, {
-        name: formData.name,
+        name: cleanName,
         slug,
-        badge: formData.badge,
-        description: formData.description,
+        badge: cleanBadge,
+        description: cleanDesc,
         subcategories: subs
       });
-      addActivity('تعديل قسم', `قسم: ${formData.name}`, 'category');
+      addActivity('تعديل قسم', `قسم: ${cleanName}`, 'category');
+      if (addToast) addToast('تم تعديل القسم بنجاح', 'success');
     } else {
       addCategory({
         id: slug,
-        name: formData.name,
+        name: cleanName,
         slug,
         icon: 'Grid',
-        badge: formData.badge,
-        description: formData.description,
+        badge: cleanBadge,
+        description: cleanDesc,
         subcategories: subs
       });
-      addActivity('إضافة قسم جديد', `قسم: ${formData.name}`, 'category');
+      addActivity('إضافة قسم جديد', `قسم: ${cleanName}`, 'category');
+      if (addToast) addToast('تم إنشاء القسم بنجاح', 'success');
     }
 
     setIsModalOpen(false);

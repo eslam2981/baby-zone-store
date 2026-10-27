@@ -19,6 +19,13 @@ import {
 import { ordersApi, customersApi } from '../../services/api';
 import { useShop } from '../../context/ShopContext';
 import { syncBus } from '../../utils/syncBus';
+import {
+  validateEmail,
+  validateEgyptianPhone,
+  validatePersonName,
+  normalizeEgyptianPhone,
+  sanitizeText
+} from '../../utils/validators';
 
 export default function CheckoutModal({ isOpen, onClose, cart, totalAmount, subtotal, shippingFee, discountAmount, onOrderSuccess }) {
   const { formatPrice, addToast, clearCart, user, setUser, setIsAuthOpen } = useShop();
@@ -117,19 +124,20 @@ export default function CheckoutModal({ isOpen, onClose, cart, totalAmount, subt
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const cleanName = formData.name.trim();
-    const cleanPhone = formData.phone.trim();
-    const cleanAddress = formData.address.trim();
-    const cleanEmail = formData.email.trim();
+    const cleanName = sanitizeText(formData.name);
+    const cleanPhone = normalizeEgyptianPhone(formData.phone);
+    const cleanAddress = sanitizeText(formData.address);
+    const cleanEmail = sanitizeText(formData.email);
 
-    if (!cleanName || cleanName.length < 3) {
-      addToast('يرجى إدخال الاسم بالكامل (3 أحرف على الأقل)', 'warning');
+    const nameErr = validatePersonName(cleanName, true, 3, 70);
+    if (nameErr) {
+      addToast(nameErr, 'warning');
       return;
     }
 
-    const egyptianPhoneRegex = /^01[0125][0-9]{8}$/;
-    if (!egyptianPhoneRegex.test(cleanPhone)) {
-      addToast('يرجى إدخال رقم موبايل مصري صحيح مكون من 11 رقماً (مثال: 01012345678)', 'warning');
+    const phoneErr = validateEgyptianPhone(cleanPhone);
+    if (phoneErr) {
+      addToast(phoneErr, 'warning');
       return;
     }
 
@@ -139,9 +147,9 @@ export default function CheckoutModal({ isOpen, onClose, cart, totalAmount, subt
     }
 
     if (cleanEmail) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(cleanEmail)) {
-        addToast('صيغة البريد الإلكتروني غير صحيحة', 'warning');
+      const emailErr = validateEmail(cleanEmail);
+      if (emailErr) {
+        addToast(emailErr, 'warning');
         return;
       }
     }

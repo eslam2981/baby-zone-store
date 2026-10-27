@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAdmin } from '../../context/AdminContext';
+import { useShop } from '../../context/ShopContext';
+import {
+  validateEmail,
+  validateEgyptianPhone,
+  validatePersonName,
+  validatePassword,
+  normalizeEgyptianPhone,
+  sanitizeText
+} from '../../utils/validators';
 import {
   ShieldCheck,
   UserPlus,
@@ -21,6 +30,7 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 /* Administrator team members management and role based access control */
 export default function AdminAdminsPage() {
   const { admins, addAdmin, updateAdmin, deleteAdmin, currentAdmin } = useAdmin();
+  const { addToast } = useShop();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState(null);
   const [editingAdminPassword, setEditingAdminPassword] = useState(null);
@@ -50,18 +60,54 @@ export default function AdminAdminsPage() {
   /* Submit handler for adding new administrator */
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.email.trim()) return;
-    if (!formData.password || formData.password.trim().length < 6) {
-      alert('يرجى تحديد كلمة مرور آمنة للمشرف الجديد (6 أحرف أو أكثر)');
+
+    const cleanName = sanitizeText(formData.name);
+    const nameErr = validatePersonName(cleanName, true, 2, 70);
+    if (nameErr) {
+      if (addToast) addToast(nameErr, 'warning');
       return;
+    }
+
+    const cleanEmail = sanitizeText(formData.email);
+    const emailErr = validateEmail(cleanEmail, true);
+    if (emailErr) {
+      if (addToast) addToast(emailErr, 'warning');
+      return;
+    }
+
+    // Check if email is already taken
+    const exists = (admins || []).some((a) => a.email && a.email.toLowerCase() === cleanEmail.toLowerCase());
+    if (exists) {
+      if (addToast) addToast('هذا البريد الإلكتروني مسجل بالفعل لمشرف آخر', 'warning');
+      return;
+    }
+
+    const passErr = validatePassword(formData.password, 6);
+    if (passErr) {
+      if (addToast) addToast(passErr, 'warning');
+      return;
+    }
+
+    let cleanPhone = '';
+    if (formData.phone && formData.phone.trim()) {
+      const phoneErr = validateEgyptianPhone(formData.phone, false);
+      if (phoneErr) {
+        if (addToast) addToast(phoneErr, 'warning');
+        return;
+      }
+      cleanPhone = normalizeEgyptianPhone(formData.phone);
     }
 
     addAdmin({
       ...formData,
+      name: cleanName,
+      email: cleanEmail,
+      phone: cleanPhone,
       password: formData.password.trim(),
       createdAt: new Date().toISOString().split('T')[0]
     });
 
+    if (addToast) addToast(`تم إضافة المشرف الجديد ${cleanName} بنجاح`, 'success');
     setIsModalOpen(false);
     setFormData({
       name: '',
@@ -92,11 +138,20 @@ export default function AdminAdminsPage() {
   /* Handler for updating an admin's password */
   const handleSavePassword = (e) => {
     e.preventDefault();
-    if (!editingAdminPassword || !newPasswordValue.trim()) return;
+    if (!editingAdminPassword) return;
+
+    const passErr = validatePassword(newPasswordValue, 6);
+    if (passErr) {
+      if (addToast) addToast(passErr, 'warning');
+      return;
+    }
+
     updateAdmin(editingAdminPassword.id, {
       password: newPasswordValue.trim(),
       permissions: editingAdminPassword.permissions
     });
+
+    if (addToast) addToast(`تم تحديث كلمة المرور للمشرف ${editingAdminPassword.name} بنجاح`, 'success');
     setEditingAdminPassword(null);
     setNewPasswordValue('');
   };

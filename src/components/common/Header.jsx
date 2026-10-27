@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
 import { useAdmin } from '../../context/AdminContext';
+import { sanitizeText } from '../../utils/validators';
 import {
   Search,
   Heart,
@@ -73,8 +74,9 @@ export default function Header({ onOpenMegaMenu, isMegaMenuOpen }) {
     e.preventDefault();
     setIsSearchFocused(false);
     setIsMobileSearchOpen(false);
-    if (searchQuery.trim()) {
-      navigate(`/category/all?q=${encodeURIComponent(searchQuery.trim())}`);
+    const clean = sanitizeText(searchQuery);
+    if (clean) {
+      navigate(`/category/all?q=${encodeURIComponent(clean)}`);
     } else {
       navigate('/category/all');
     }

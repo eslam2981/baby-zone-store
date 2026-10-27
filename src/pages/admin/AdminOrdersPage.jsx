@@ -24,6 +24,14 @@ import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import { TableRowSkeleton } from '../../components/common/Skeletons';
+import {
+  validateEmail,
+  validateEgyptianPhone,
+  validatePersonName,
+  normalizeEgyptianPhone,
+  sanitizeText,
+  REGEX_PATTERNS
+} from '../../utils/validators';
 
 const formatOrderDateTime = (dateVal) => {
   if (!dateVal) return 'غير محدد';
@@ -54,7 +62,7 @@ const formatShortDateTime = (dateVal) => {
 
 export default function AdminOrdersPage() {
   const { orders, updateOrderStatus, deleteOrder, addOrder, refreshOrders, isLoadingOrders } = useAdmin();
-  const { allProducts } = useShop();
+  const { allProducts, addToast } = useShop();
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -137,19 +145,54 @@ export default function AdminOrdersPage() {
 
   const handleCreateManualOrder = async (e) => {
     e.preventDefault();
-    const product = allProducts.find((p) => p.id === manualOrder.productId) || allProducts[0];
-    const qty = parseInt(manualOrder.quantity, 10) || 1;
+
+    const cleanName = sanitizeText(manualOrder.customerName);
+    const nameErr = validatePersonName(cleanName, true, 2, 70);
+    if (nameErr) {
+      if (addToast) addToast(nameErr, 'warning');
+      return;
+    }
+
+    const cleanPhone = normalizeEgyptianPhone(manualOrder.customerPhone);
+    const phoneErr = validateEgyptianPhone(cleanPhone);
+    if (phoneErr) {
+      if (addToast) addToast(phoneErr, 'warning');
+      return;
+    }
+
+    const cleanEmail = sanitizeText(manualOrder.customerEmail);
+    if (cleanEmail) {
+      const emailErr = validateEmail(cleanEmail);
+      if (emailErr) {
+        if (addToast) addToast(emailErr, 'warning');
+        return;
+      }
+    }
+
+    const cleanAddress = sanitizeText(manualOrder.address);
+    if (!cleanAddress || cleanAddress.length < 5) {
+      if (addToast) addToast('يرجى كتابة عنوان التوصيل بالتفصيل (5 أحرف على الأقل)', 'warning');
+      return;
+    }
+
+    const qty = parseInt(manualOrder.quantity, 10);
+    if (isNaN(qty) || qty < 1 || qty > 100) {
+      if (addToast) addToast('الكمية المطلوبة يجب أن تكون بين 1 و 100', 'warning');
+      return;
+    }
+
+    const product = (allProducts || []).find((p) => p.id === manualOrder.productId) || (allProducts || [])[0];
     const price = product ? product.price : 0;
     const total = price * qty;
 
     const orderPayload = {
-      customerName: manualOrder.customerName.trim(),
-      customerPhone: manualOrder.customerPhone.trim(),
-      customerEmail: manualOrder.customerEmail.trim(),
-      city: manualOrder.city,
-      address: manualOrder.address.trim(),
+      customerName: cleanName,
+      customerPhone: cleanPhone,
+      customerEmail: cleanEmail,
+      city: manualOrder.city || 'القاهرة',
+      address: cleanAddress,
       total,
-      paymentMethod: manualOrder.paymentMethod,
+      paymentMethod: manualOrder.paymentMethod || 'الدفع عند الاستلام (COD)',
       deliveryStatus: 'بانتظار التأكيد',
       items: [
         {
@@ -161,11 +204,23 @@ export default function AdminOrdersPage() {
           image: product ? product.mainImage : ''
         }
       ],
-      notes: manualOrder.notes.trim()
+      notes: sanitizeText(manualOrder.notes || '')
     };
 
     await addOrder(orderPayload);
+    if (addToast) addToast('تم تسجيل الطلب اليدوي بنجاح', 'success');
     setIsAddModalOpen(false);
+    setManualOrder({
+      customerName: '',
+      customerPhone: '',
+      customerEmail: '',
+      city: 'القاهرة',
+      address: '',
+      productId: '',
+      quantity: 1,
+      paymentMethod: 'الدفع عند الاستلام (COD)',
+      notes: ''
+    });
   };
 
   const handleConfirmDeleteOrder = () => {

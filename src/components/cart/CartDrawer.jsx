@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
 import { couponsApi } from '../../services/api';
+import { validateCouponCode, normalizeCouponCode } from '../../utils/validators';
 import FreeShippingBar from './FreeShippingBar';
 import CheckoutModal from './CheckoutModal';
 import {
@@ -42,8 +43,14 @@ export default function CartDrawer() {
 
   const handleApplyPromo = async (e) => {
     e.preventDefault();
-    const clean = promoInput.trim().toUpperCase();
+    const clean = normalizeCouponCode(promoInput);
     if (!clean) return;
+
+    const codeErr = validateCouponCode(clean);
+    if (codeErr) {
+      addToast(codeErr, 'warning');
+      return;
+    }
 
     if (clean === 'BABY10' || clean === 'ZONE10' || clean === 'BABYZONE10' || clean === 'RAWAA10') {
       setAppliedPromo({ code: clean, type: 'percentage', percent: 10, amount: 0 });

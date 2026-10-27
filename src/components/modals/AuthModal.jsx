@@ -17,6 +17,14 @@ import {
   AlertCircle,
   Package,
 } from 'lucide-react';
+import {
+  validateEmail,
+  validateEgyptianPhone,
+  validatePersonName,
+  validatePassword,
+  sanitizeText,
+  normalizeEgyptianPhone
+} from '../../utils/validators';
 
 export default function AuthModal() {
   const { isAuthOpen, setIsAuthOpen, user, login, logout } = useShop();
@@ -109,15 +117,10 @@ export default function AuthModal() {
     if (isSubmitting) return;
     setErrorMessage('');
 
-    const cleanEmail = email.trim();
-    if (!cleanEmail) {
-      setErrorMessage('يرجى إدخال البريد الإلكتروني');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
-      setErrorMessage('صيغة البريد الإلكتروني غير صحيحة (مثال: name@example.com)');
+    const cleanEmail = sanitizeText(email);
+    const emailErr = validateEmail(cleanEmail);
+    if (emailErr) {
+      setErrorMessage(emailErr);
       return;
     }
 
@@ -159,21 +162,38 @@ export default function AuthModal() {
           setErrorMessage('هذا الحساب غير مسجل أو تم حذفه من قِبل الإدارة. يمكنك إنشاء حساب جديد من تبويب "إنشاء حساب جديد".');
         }
       } else {
-        const cleanName = name.trim();
-        if (!cleanName || cleanName.length < 2) {
-          setErrorMessage('يرجى كتابة الاسم الكريم (حرفين على الأقل)');
+        const cleanName = sanitizeText(name);
+        const nameErr = validatePersonName(cleanName, true, 2, 70);
+        if (nameErr) {
+          setErrorMessage(nameErr);
           setIsSubmitting(false);
           return;
         }
-        if (password && password.length < 6) {
-          setErrorMessage('كلمة المرور يجب أن لا تقل عن 6 خانات للأمان');
-          setIsSubmitting(false);
-          return;
+
+        if (password) {
+          const passErr = validatePassword(password, 6);
+          if (passErr) {
+            setErrorMessage(passErr);
+            setIsSubmitting(false);
+            return;
+          }
         }
+
+        let cleanPhone = undefined;
+        if (phone && phone.trim()) {
+          const phoneErr = validateEgyptianPhone(phone);
+          if (phoneErr) {
+            setErrorMessage(phoneErr);
+            setIsSubmitting(false);
+            return;
+          }
+          cleanPhone = normalizeEgyptianPhone(phone);
+        }
+
         const res = await login(cleanEmail, cleanName, {
           isRegistration: true,
           babyStage,
-          phone: phone.trim() || undefined
+          phone: cleanPhone
         });
         if (res) {
           handleClose();

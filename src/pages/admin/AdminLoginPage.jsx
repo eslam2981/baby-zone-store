@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
+import { validateEmail, sanitizeText } from '../../utils/validators';
 
 /* Secure administrative login portal with one click demo access */
 export default function AdminLoginPage() {
@@ -41,14 +42,21 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError('');
 
-    if (!email.trim() || !password.trim()) {
+    const cleanEmail = sanitizeText(email);
+    if (!cleanEmail || !password.trim()) {
       setError('يرجى إدخال البريد الإلكتروني وكلمة المرور');
+      return;
+    }
+
+    const emailErr = validateEmail(cleanEmail);
+    if (emailErr) {
+      setError(emailErr);
       return;
     }
 
     setIsLoading(true);
     try {
-      const res = await loginAdmin(email, password);
+      const res = await loginAdmin(cleanEmail, password);
       const isSuccess = typeof res === 'boolean' ? res : res?.success;
       if (isSuccess) {
         navigate(destination, { replace: true });
