@@ -305,7 +305,7 @@ export default function Header({ onOpenMegaMenu, isMegaMenuOpen }) {
           {/* User account button */}
           <button
             type="button"
-            className="hidden sm:flex relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rawaa-soft hover:bg-rawaa-primary-light hover:text-rawaa-primary text-rawaa-dark items-center justify-center transition-all duration-200"
+            className="flex relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rawaa-soft hover:bg-rawaa-primary-light hover:text-rawaa-primary text-rawaa-dark items-center justify-center transition-all duration-200 cursor-pointer"
             onClick={() => setIsAuthOpen(true)}
             aria-label="حسابي"
             title={user ? `حساب: ${user.name}` : 'تسجيل الدخول'}

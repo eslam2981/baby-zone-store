@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
 import { useAdmin } from '../../context/AdminContext';
@@ -8,6 +9,7 @@ import {
   User,
   Mail,
   Lock,
+  Phone,
   Heart,
   CheckCircle2,
   LogOut,
@@ -29,9 +31,11 @@ export default function AuthModal() {
   const [isLoadingUserOrders, setIsLoadingUserOrders] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [babyStage, setBabyStage] = useState('expecting');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isRendered, setIsRendered] = useState(isAuthOpen);
   const [isVisible, setIsVisible] = useState(false);
@@ -97,7 +101,7 @@ export default function AuthModal() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isVisible]);
 
-  if (!isRendered) return null;
+  if (!isRendered || typeof document === 'undefined') return null;
 
   const isAdmin = Boolean(
     isAuthenticated && currentAdmin && (user?.isAdmin || currentAdmin)
@@ -105,6 +109,7 @@ export default function AuthModal() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setErrorMessage('');
 
     const cleanEmail = email.trim();
@@ -124,55 +129,71 @@ export default function AuthModal() {
       (a) => a.email && a.email.trim().toLowerCase() === cleanEmail.toLowerCase()
     );
 
-    if (matchingAdmin) {
-      if (!password) {
-        setErrorMessage('يرجى إدخال كلمة المرور لتسجيل الدخول كمدير');
-        return;
-      }
-      try {
+    setIsSubmitting(true);
+    try {
+      if (matchingAdmin) {
+        if (!password) {
+          setErrorMessage('يرجى إدخال كلمة المرور لتسجيل الدخول كمدير');
+          setIsSubmitting(false);
+          return;
+        }
         const res = await loginAdmin(cleanEmail, password);
         const isSuccess = typeof res === 'boolean' ? res : res?.success;
         if (!isSuccess) {
           setErrorMessage(res?.error || 'كلمة المرور الخاصة بمدير النظام غير صحيحة');
+          setIsSubmitting(false);
           return;
         }
-        login(cleanEmail, matchingAdmin.name, {
+        await login(cleanEmail, matchingAdmin.name, {
           isAdmin: true,
           role: matchingAdmin.role,
           permissions: matchingAdmin.permissions || ['all']
         });
         handleClose();
         return;
-      } catch (err) {
-        setErrorMessage(err?.message || 'حدث خطأ أثناء تسجيل الدخول');
-        return;
       }
-    }
 
-    if (activeTab === 'login') {
-      const derivedName = cleanEmail.split('@')[0] || 'عميل بيبي زون';
-      login(cleanEmail, derivedName).then((res) => {
-        if (res) handleClose();
-      });
-    } else {
-      const cleanName = name.trim();
-      if (!cleanName || cleanName.length < 2) {
-        setErrorMessage('يرجى كتابة الاسم الكريم (حرفين على الأقل)');
-        return;
+      if (activeTab === 'login') {
+        const derivedName = cleanEmail.split('@')[0] || 'عميل بيبي زون';
+        const res = await login(cleanEmail, derivedName);
+        if (res) {
+          handleClose();
+        } else {
+          setErrorMessage('تعذر تسجيل الدخول، يرجى التحقق من صحة البريد الإلكتروني');
+        }
+      } else {
+        const cleanName = name.trim();
+        if (!cleanName || cleanName.length < 2) {
+          setErrorMessage('يرجى كتابة الاسم الكريم (حرفين على الأقل)');
+          setIsSubmitting(false);
+          return;
+        }
+        if (password && password.length < 6) {
+          setErrorMessage('كلمة المرور يجب أن لا تقل عن 6 خانات للأمان');
+          setIsSubmitting(false);
+          return;
+        }
+        const res = await login(cleanEmail, cleanName, {
+          babyStage,
+          phone: phone.trim() || undefined
+        });
+        if (res) {
+          handleClose();
+        } else {
+          setErrorMessage('تعذر إنشاء الحساب، يرجى المحاولة مرة أخرى');
+        }
       }
-      if (password && password.length < 6) {
-        setErrorMessage('كلمة المرور يجب أن لا تقل عن 6 خانات للأمان');
-        return;
-      }
-      login(cleanEmail, cleanName, { babyStage }).then((res) => {
-        if (res) handleClose();
-      });
+    } catch (err) {
+      console.error('Auth submit error:', err);
+      setErrorMessage(err?.message || 'حدث خطأ غير متوقع أثناء معالجة الطلب');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className={`fixed inset-0 bg-rawaa-dark/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300 ease-out ${
+      className={`fixed inset-0 bg-rawaa-dark/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain transition-opacity duration-300 ease-out ${
         isVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
       }`}
       onClick={handleClose}
@@ -180,7 +201,7 @@ export default function AuthModal() {
       aria-modal="true"
     >
       <div
-        className={`bg-white rounded-panel max-w-md w-full p-6 sm:p-8 shadow-soft-xl relative border border-rawaa-border transition-all duration-300 ease-out transform ${
+        className={`bg-white rounded-2xl sm:rounded-panel max-w-md w-full p-5 sm:p-8 shadow-soft-xl relative border border-rawaa-border my-auto max-h-[92vh] overflow-y-auto overscroll-contain transition-all duration-300 ease-out transform ${
           isVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -453,21 +474,42 @@ export default function AuthModal() {
 
               <div>
                 <label htmlFor="auth-password" className="block text-xs font-semibold text-rawaa-dark mb-1">
-                  كلمة المرور:
+                  {activeTab === 'register' ? 'كلمة المرور (6 خانات على الأقل):' : 'كلمة المرور:'}
                 </label>
-                <div className="flex items-center bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 focus-within:border-rawaa-primary focus-within:bg-white">
-                  <Lock size={16} className="text-rawaa-muted ml-2" />
+                <div className="flex items-center bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2.5 focus-within:border-rawaa-primary focus-within:bg-white">
+                  <Lock size={16} className="text-rawaa-muted ml-2 shrink-0" />
                   <input
                     id="auth-password"
                     type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
+                    required={activeTab === 'register'}
+                    minLength={activeTab === 'register' ? 6 : undefined}
                     className="w-full bg-transparent text-xs text-rawaa-dark outline-none"
                   />
                 </div>
               </div>
+
+              {activeTab === 'register' && (
+                <div>
+                  <label htmlFor="reg-phone" className="block text-xs font-semibold text-rawaa-dark mb-1">
+                    رقم الهاتف (اختياري لتأكيد الشحن والتواصل):
+                  </label>
+                  <div className="flex items-center bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2.5 focus-within:border-rawaa-primary focus-within:bg-white">
+                    <Phone size={16} className="text-rawaa-muted ml-2 shrink-0" />
+                    <input
+                      id="reg-phone"
+                      type="tel"
+                      placeholder="01xxxxxxxxx"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full bg-transparent text-xs text-rawaa-dark outline-none font-mono"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+              )}
 
               {activeTab === 'register' && (
                 <div>
@@ -490,9 +532,17 @@ export default function AuthModal() {
 
               <button
                 type="submit"
-                className="w-full bg-rawaa-primary hover:bg-rawaa-primary-hover text-white text-xs font-bold py-3 rounded-full mt-2 shadow-soft-sm hover:shadow-soft-md transition-all hover:-translate-y-0.5 cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full bg-rawaa-primary hover:bg-rawaa-primary-hover disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold py-3.5 sm:py-3 rounded-full mt-2 shadow-soft-sm hover:shadow-soft-md transition-all hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
               >
-                {activeTab === 'login' ? 'دخول إلى حسابي' : 'إنشاء الحساب وبدء التجربة'}
+                {isSubmitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>جاري معالجة الحساب...</span>
+                  </>
+                ) : (
+                  <span>{activeTab === 'login' ? 'دخول إلى حسابي' : 'إنشاء الحساب وبدء التجربة'}</span>
+                )}
               </button>
             </form>
 
@@ -502,6 +552,7 @@ export default function AuthModal() {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

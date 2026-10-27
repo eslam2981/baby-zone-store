@@ -135,7 +135,9 @@ export default function MobileNav() {
             className="flex flex-col items-center justify-center gap-1 py-2 px-1 bg-rawaa-soft hover:bg-rawaa-primary-light rounded-xl text-rawaa-dark transition-colors cursor-pointer"
             onClick={() => {
               setIsMobileNavOpen(false);
-              setIsAuthOpen(true);
+              setTimeout(() => {
+                setIsAuthOpen(true);
+              }, 120);
             }}
           >
             <User size={18} className="text-rawaa-primary" />

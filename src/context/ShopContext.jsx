@@ -7,6 +7,7 @@ import { calculateCartTotals, DEFAULT_FREE_SHIPPING_LIMIT } from '../utils/cartC
 import { filterAndSortProducts, countActiveFilters } from '../utils/productFilters';
 import { useToasts } from '../hooks/useToasts';
 import { DEFAULT_CATALOG_CATEGORIES, mergeCategoriesWithLive } from '../data/categories';
+import { syncBus } from '../utils/syncBus';
 
 const ShopContext = createContext(null);
 
@@ -221,6 +222,75 @@ export function ShopProvider({ children }) {
       console.error(e);
     }
   }, [user]);
+
+  // Real-time customer session termination when account is deleted from admin dashboard
+  useEffect(() => {
+    // 1. Instant intra-app & cross-tab syncBus notification
+    const unsubDelete = syncBus.on('CUSTOMER_DELETED', ({ customerId, email, phone }) => {
+      if (!user || user.isAdmin) return;
+      const cleanEmail = email ? email.toLowerCase().trim() : '';
+      const userEmail = user.email ? user.email.toLowerCase().trim() : '';
+      const matchId = customerId && user.id === customerId;
+      const matchEmail = cleanEmail && userEmail && cleanEmail === userEmail;
+      const matchPhone = phone && user.phone && phone === user.phone;
+
+      if (matchId || matchEmail || matchPhone) {
+        setUser(null);
+        try {
+          localStorage.removeItem('rawaa_user');
+          sessionStorage.removeItem('babyzone_admin_auth');
+          sessionStorage.removeItem('babyzone_admin_user');
+        } catch {}
+        addToast('تم حذف حسابك وإنهاء الجلسة من قِبل إدارة المتجر', 'warning');
+      }
+    });
+
+    // 2. Real-time Supabase websocket listener on customers table
+    const custChannel = supabase
+      .channel('realtime_customer_deletion_guard')
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'customers' },
+        (payload) => {
+          if (!user || user.isAdmin) return;
+          const old = payload.old;
+          if (!old) return;
+          const userEmail = user.email ? user.email.toLowerCase().trim() : '';
+          const matchId = old.id && user.id === old.id;
+          const matchEmail = old.email && userEmail && old.email.toLowerCase().trim() === userEmail;
+          const matchPhone = old.phone && user.phone && old.phone === user.phone;
+
+          if (matchId || matchEmail || matchPhone) {
+            setUser(null);
+            try {
+              localStorage.removeItem('rawaa_user');
+            } catch {}
+            addToast('تم حذف حسابك وإنهاء الجلسة من قِبل إدارة المتجر', 'warning');
+          }
+        }
+      )
+      .subscribe();
+
+    // 3. Database session integrity check on mount/user change
+    if (user && !user.isAdmin && (user.id || user.email)) {
+      customersApi
+        .findByEmailOrPhone(user.email, user.phone)
+        .then((existing) => {
+          if (!existing) {
+            setUser(null);
+            try {
+              localStorage.removeItem('rawaa_user');
+            } catch {}
+          }
+        })
+        .catch(() => {});
+    }
+
+    return () => {
+      unsubDelete();
+      supabase.removeChannel(custChannel);
+    };
+  }, [user, addToast]);
 
   // Currency formatting helper functions
   const currentCurrency = CURRENCIES.EGP;

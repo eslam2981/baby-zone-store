@@ -967,12 +967,37 @@ export function AdminProvider({ children }) {
   };
 
   const deleteCustomer = async (customerId) => {
+    // 1. Locate customer object first before state removal
+    const target = customers.find((c) => c.id === customerId);
+    const targetEmail = target?.email ? target.email.toLowerCase().trim() : null;
+    const targetPhone = target?.phone ? target.phone.trim() : null;
+
     setCustomers((prev) => prev.filter((c) => c.id !== customerId));
     addActivity('حذف عميل', `رقم العميل ${customerId}`, 'customer');
     if (addToast) {
-      addToast('تم حذف العميل من قاعدة البيانات', 'info');
+      addToast('تم حذف العميل من قاعدة البيانات وإنهاء جلسته', 'info');
     }
 
+    // 2. Broadcast instant wipeout to customer session across all tabs and intra-app
+    syncBus.emit('CUSTOMER_DELETED', {
+      customerId,
+      email: targetEmail,
+      phone: targetPhone,
+      timestamp: Date.now()
+    });
+
+    // 3. If currently logged in storefront user matches this customer, log them out immediately
+    if (user && !user.isAdmin) {
+      const isMatch = user.id === customerId || (targetEmail && user.email?.toLowerCase().trim() === targetEmail);
+      if (isMatch && setUser) {
+        setUser(null);
+        try {
+          localStorage.removeItem('rawaa_user');
+        } catch {}
+      }
+    }
+
+    // 4. Delete from Supabase database
     try {
       await customersApi.delete(customerId);
     } catch (e) {
