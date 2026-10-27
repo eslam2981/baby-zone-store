@@ -60,7 +60,7 @@ export function ShopProvider({ children }) {
       if (channel) {
         try {
           supabase.removeChannel(channel);
-        } catch {}
+        } catch (e){console.log(e)}
       }
 
       channel = supabase

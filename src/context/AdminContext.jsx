@@ -368,13 +368,13 @@ export function AdminProvider({ children }) {
           if (!isMounted) return;
           if (status === 'SUBSCRIBED') {
             setIsRealtimeConnected(true);
-          } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
             setIsRealtimeConnected(false);
             console.warn(`Realtime channel ${status}, scheduling auto-reconnect...`, err || '');
             clearTimeout(reconnectTimeout);
             reconnectTimeout = setTimeout(() => {
               if (isMounted) setupRealtimeChannel();
-            }, 3500);
+            }, 3000);
           }
         });
     }
@@ -399,7 +399,12 @@ export function AdminProvider({ children }) {
       setOrders((prev) => prev.filter((o) => o.id !== orderId));
     });
 
-    const unsubCustSync = syncBus.on('CUSTOMER_UPDATED', () => {
+    const unsubCustSync = syncBus.on('CUSTOMER_UPDATED', (payload) => {
+      if (payload?.action === 'delete') {
+        const delId = String(payload.customerId);
+        setCustomers((prev) => prev.filter((c) => String(c.id) !== delId));
+        return;
+      }
       customersApi.getAll().then((data) => {
         if (isMounted && Array.isArray(data)) setCustomers(data.map(formatDbCustomer));
       }).catch(() => {});
