@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import {
   initialStoreSettings,
@@ -27,6 +27,12 @@ import {
   formatDbSettings
 } from '../utils/mappers';
 import { syncBus } from '../utils/syncBus';
+import {
+  playOrderAlertChime,
+  playUpdateChime,
+  isAudioAlertEnabled,
+  setAudioAlertEnabled
+} from '../utils/audioAlert';
 export function AdminProvider({ children }) {
   const { allProducts, categories, addToast, user, setUser } = useShop();
 
@@ -73,73 +79,309 @@ export function AdminProvider({ children }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // Reactive orders state synchronized with Supabase
-  const [orders, setOrders] = useState([]);
-  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  // Real-time connection and sync health indicators
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(() => new Date());
+  const [isAudioAlertsEnabled, setIsAudioAlertsEnabled] = useState(() => isAudioAlertEnabled());
 
-  // Initial fetch and real-time synchronization from Supabase orders table
+  // Toggle audio alerts with instant preference persistence and feedback
+  const toggleAudioAlerts = useCallback(() => {
+    setIsAudioAlertsEnabled((prev) => {
+      const next = !prev;
+      setAudioAlertEnabled(next);
+      if (next) playOrderAlertChime();
+      if (addToast) {
+        addToast(next ? 'تم تفعيل التنبيه الصوتي للطلبات الجديدة 🔔' : 'تم كتم التنبيه الصوتي 🔕', 'info');
+      }
+      return next;
+    });
+  }, [addToast]);
+
+  // Reactive data states synchronized with Supabase Cloud
+  const [orders, setOrders] = useState([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [customers, setCustomers] = useState([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
+  const [coupons, setCoupons] = useState([]);
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState(true);
+  const [reviews, setReviews] = useState([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const [storeSettings, setStoreSettings] = useState(initialStoreSettings);
+  const [admins, setAdmins] = useState(initialAdmins);
+  const [activityLog, setActivityLog] = useState([]);
+
+  // Comprehensive silent background reconciliation across all administrative entities
+  const refreshAllRealtimeData = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setIsSyncing(true);
+      const [ordData, custData, coupData, revData, settsData, admData, actData] = await Promise.allSettled([
+        ordersApi.getAll(),
+        customersApi.getAll(),
+        couponsApi.getAll(),
+        reviewsApi.getAll(),
+        storeSettingsApi.get(),
+        adminsApi.getAll(),
+        activityLogApi.getAll()
+      ]);
+
+      if (ordData.status === 'fulfilled' && Array.isArray(ordData.value)) {
+        const active = ordData.value.filter(
+          (o) => o.status !== 'محذوف' && !o.id.startsWith('EGY-TEST') && o.id !== 'EGY-98421'
+        );
+        setOrders(active.map(formatDbOrder));
+      }
+
+      if (custData.status === 'fulfilled' && Array.isArray(custData.value)) {
+        setCustomers(custData.value.map(formatDbCustomer));
+      }
+
+      if (coupData.status === 'fulfilled' && Array.isArray(coupData.value)) {
+        setCoupons(coupData.value.map(formatDbCoupon));
+      }
+
+      if (revData.status === 'fulfilled' && Array.isArray(revData.value)) {
+        setReviews(revData.value.map(formatDbReview));
+      }
+
+      if (settsData.status === 'fulfilled' && settsData.value) {
+        setStoreSettings(formatDbSettings(settsData.value));
+      }
+
+      if (admData.status === 'fulfilled' && Array.isArray(admData.value) && admData.value.length > 0) {
+        setAdmins((prev) => {
+          const apiAdmins = admData.value.map(formatDbAdmin);
+          const merged = apiAdmins.map((adm) => {
+            const localMatch = prev.find(
+              (p) => p.id === adm.id || p.email.toLowerCase() === adm.email.toLowerCase()
+            );
+            return {
+              ...adm,
+              password: adm.password || localMatch?.password || null
+            };
+          });
+          for (const p of prev) {
+            if (!merged.some((m) => m.id === p.id || m.email.toLowerCase() === p.email.toLowerCase())) {
+              merged.push(p);
+            }
+          }
+          return merged;
+        });
+      }
+
+      if (actData.status === 'fulfilled' && Array.isArray(actData.value)) {
+        setActivityLog(actData.value.map((entry) => ({
+          id: entry.id,
+          adminName: entry.admin_name,
+          action: entry.action,
+          target: entry.target,
+          time: entry.created_at ? new Date(entry.created_at).toLocaleTimeString('ar-EG') : 'الآن',
+          type: entry.type || 'general'
+        })));
+      }
+
+      setLastSyncTime(new Date());
+      if (!silent && addToast) {
+        addToast('تمت المزامنة اللحظية لكافة بيانات المتجر بنجاح ⚡', 'success');
+      }
+    } catch (err) {
+      console.warn('Realtime refresh error:', err);
+    } finally {
+      if (!silent) setIsSyncing(false);
+      setIsLoadingOrders(false);
+      setIsLoadingCustomers(false);
+      setIsLoadingCoupons(false);
+      setIsLoadingReviews(false);
+    }
+  }, [addToast]);
+
+  // Unified resilient Supabase Realtime Hub with auto-reconnect, visibility sync & heartbeat
   useEffect(() => {
     let isMounted = true;
-    async function loadOrders() {
-      try {
-        setIsLoadingOrders(true);
-        const data = await ordersApi.getAll();
+    let reconnectTimeout = null;
+    let channel = null;
 
-        if (isMounted) {
-          if (Array.isArray(data)) {
-            const active = data.filter(
-              (o) => o.status !== 'محذوف' && !o.id.startsWith('EGY-TEST') && o.id !== 'EGY-98421'
-            );
-            setOrders(active.map(formatDbOrder));
-          } else {
-            setOrders([]);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching orders from Supabase:', err);
-      } finally {
-        if (isMounted) setIsLoadingOrders(false);
+    // Initial data fetch
+    refreshAllRealtimeData(true);
+
+    function setupRealtimeChannel() {
+      if (channel) {
+        try {
+          supabase.removeChannel(channel);
+        } catch {}
       }
+
+      const channelName = `realtime_admin_hub_${Date.now()}`;
+      channel = supabase
+        .channel(channelName)
+        // 1. Live Orders Listener
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'orders' },
+          (payload) => {
+            if (!isMounted) return;
+            if (payload.eventType === 'INSERT') {
+              if (payload.new.status !== 'محذوف' && !payload.new.id.startsWith('EGY-TEST') && payload.new.id !== 'EGY-98421') {
+                const newOrd = formatDbOrder(payload.new);
+                setOrders((prev) => [newOrd, ...prev.filter((o) => o.id !== newOrd.id)]);
+                playOrderAlertChime();
+                if (addToast) {
+                  addToast(`🔔 طلب جديد وارد لحظياً! #${newOrd.id} بقيمة ${newOrd.total} ج.م للعميل ${newOrd.customerName}`, 'success');
+                }
+                syncBus.emit('ORDER_ADDED', { orderId: newOrd.id, order: newOrd, timestamp: Date.now() });
+              }
+            } else if (payload.eventType === 'UPDATE') {
+              if (payload.new.status === 'محذوف') {
+                setOrders((prev) => prev.filter((o) => o.id !== payload.new.id));
+                syncBus.emit('ORDER_DELETED', { orderId: payload.new.id, timestamp: Date.now() });
+              } else {
+                const updatedOrd = formatDbOrder(payload.new);
+                setOrders((prev) =>
+                  prev.map((o) => (o.id === updatedOrd.id ? updatedOrd : o))
+                );
+                playUpdateChime();
+                syncBus.emit('ORDER_UPDATED', {
+                  orderId: payload.new.id,
+                  newStatus: payload.new.status,
+                  timestamp: Date.now()
+                });
+              }
+            } else if (payload.eventType === 'DELETE') {
+              setOrders((prev) => prev.filter((o) => o.id !== payload.old.id));
+              syncBus.emit('ORDER_DELETED', { orderId: payload.old.id, timestamp: Date.now() });
+            }
+          }
+        )
+        // 2. Live Customers Listener
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'customers' },
+          (payload) => {
+            if (!isMounted) return;
+            if (payload.eventType === 'INSERT') {
+              const newCust = formatDbCustomer(payload.new);
+              setCustomers((prev) => [newCust, ...prev.filter((c) => c.id !== newCust.id)]);
+            } else if (payload.eventType === 'UPDATE') {
+              const updatedCust = formatDbCustomer(payload.new);
+              setCustomers((prev) =>
+                prev.map((c) => (c.id === updatedCust.id ? updatedCust : c))
+              );
+            } else if (payload.eventType === 'DELETE') {
+              const deletedId = payload.old?.id;
+              const deletedEmail = payload.old?.email ? payload.old.email.toLowerCase().trim() : null;
+              setCustomers((prev) =>
+                prev.filter(
+                  (c) =>
+                    String(c.id) !== String(deletedId) &&
+                    (!deletedEmail || c.email?.toLowerCase().trim() !== deletedEmail)
+                )
+              );
+            }
+          }
+        )
+        // 3. Live Coupons Listener
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'coupons' },
+          (payload) => {
+            if (!isMounted) return;
+            if (payload.eventType === 'INSERT') {
+              const cp = formatDbCoupon(payload.new);
+              setCoupons((prev) => [cp, ...prev.filter((c) => c.id !== cp.id)]);
+            } else if (payload.eventType === 'UPDATE') {
+              const cp = formatDbCoupon(payload.new);
+              setCoupons((prev) => prev.map((c) => (c.id === cp.id ? cp : c)));
+            } else if (payload.eventType === 'DELETE') {
+              setCoupons((prev) => prev.filter((c) => c.id !== payload.old.id));
+            }
+          }
+        )
+        // 4. Live Reviews Listener
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'reviews' },
+          (payload) => {
+            if (!isMounted) return;
+            if (payload.eventType === 'INSERT') {
+              const rev = formatDbReview(payload.new);
+              setReviews((prev) => [rev, ...prev.filter((r) => r.id !== rev.id)]);
+              playUpdateChime();
+              if (addToast) {
+                addToast(`⭐ تقييم جديد وصل للتو من ${rev.customerName} على ${rev.productName}`, 'info');
+              }
+            } else if (payload.eventType === 'UPDATE') {
+              const rev = formatDbReview(payload.new);
+              setReviews((prev) => prev.map((r) => (r.id === rev.id ? rev : r)));
+            } else if (payload.eventType === 'DELETE') {
+              setReviews((prev) => prev.filter((r) => r.id !== payload.old.id));
+            }
+          }
+        )
+        // 5. Live Store Settings Listener
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'store_settings' },
+          (payload) => {
+            if (!isMounted) return;
+            if (payload.new) {
+              setStoreSettings(formatDbSettings(payload.new));
+            }
+          }
+        )
+        // 6. Live Admins Listener
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'admins' },
+          (payload) => {
+            if (!isMounted) return;
+            if (payload.eventType === 'INSERT') {
+              const adm = formatDbAdmin(payload.new);
+              setAdmins((prev) => [adm, ...prev.filter((a) => a.id !== adm.id && a.email.toLowerCase() !== adm.email.toLowerCase())]);
+            } else if (payload.eventType === 'UPDATE') {
+              const adm = formatDbAdmin(payload.new);
+              setAdmins((prev) => prev.map((a) => (a.id === adm.id ? { ...a, ...adm } : a)));
+            } else if (payload.eventType === 'DELETE') {
+              setAdmins((prev) => prev.filter((a) => a.id !== payload.old.id));
+            }
+          }
+        )
+        // 7. Live Activity Log Listener
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'activity_log' },
+          (payload) => {
+            if (!isMounted) return;
+            if (payload.eventType === 'INSERT') {
+              const entry = {
+                id: payload.new.id,
+                adminName: payload.new.admin_name,
+                action: payload.new.action,
+                target: payload.new.target,
+                time: 'الآن',
+                type: payload.new.type || 'general'
+              };
+              setActivityLog((prev) => [entry, ...prev.filter((a) => a.id !== entry.id)]);
+            }
+          }
+        )
+        .subscribe((status, err) => {
+          if (!isMounted) return;
+          if (status === 'SUBSCRIBED') {
+            setIsRealtimeConnected(true);
+          } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            setIsRealtimeConnected(false);
+            console.warn(`Realtime channel ${status}, scheduling auto-reconnect...`, err || '');
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = setTimeout(() => {
+              if (isMounted) setupRealtimeChannel();
+            }, 3500);
+          }
+        });
     }
 
-    loadOrders();
+    setupRealtimeChannel();
 
-    const channel = supabase
-      .channel('realtime_orders')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'orders' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            if (payload.new.status !== 'محذوف') {
-              const newOrd = formatDbOrder(payload.new);
-              setOrders((prev) => [newOrd, ...prev.filter((o) => o.id !== newOrd.id)]);
-              syncBus.emit('ORDER_ADDED', { orderId: newOrd.id, order: newOrd, timestamp: Date.now() });
-            }
-          } else if (payload.eventType === 'UPDATE') {
-            if (payload.new.status === 'محذوف') {
-              setOrders((prev) => prev.filter((o) => o.id !== payload.new.id));
-              syncBus.emit('ORDER_DELETED', { orderId: payload.new.id, timestamp: Date.now() });
-            } else {
-              const updatedOrd = formatDbOrder(payload.new);
-              setOrders((prev) =>
-                prev.map((o) => (o.id === updatedOrd.id ? updatedOrd : o))
-              );
-              syncBus.emit('ORDER_UPDATED', {
-                orderId: payload.new.id,
-                newStatus: payload.new.status,
-                timestamp: Date.now()
-              });
-            }
-          } else if (payload.eventType === 'DELETE') {
-            setOrders((prev) => prev.filter((o) => o.id !== payload.old.id));
-            syncBus.emit('ORDER_DELETED', { orderId: payload.old.id, timestamp: Date.now() });
-          }
-        }
-      )
-      .subscribe();
-
-    // Listen to local/cross-tab instant syncBus events
+    // Cross-tab and local window instantaneous event synchronization
     const unsubBusAdd = syncBus.on('ORDER_ADDED', ({ order }) => {
       if (order && order.status !== 'محذوف') {
         const mapped = formatDbOrder(order);
@@ -157,319 +399,64 @@ export function AdminProvider({ children }) {
       setOrders((prev) => prev.filter((o) => o.id !== orderId));
     });
 
+    const unsubCustSync = syncBus.on('CUSTOMER_UPDATED', () => {
+      customersApi.getAll().then((data) => {
+        if (isMounted && Array.isArray(data)) setCustomers(data.map(formatDbCustomer));
+      }).catch(() => {});
+    });
+
+    const unsubCoupSync = syncBus.on('COUPON_ADDED', ({ coupon }) => {
+      if (coupon) setCoupons((prev) => [coupon, ...prev.filter((c) => c.id !== coupon.id)]);
+    });
+
+    const unsubRevSync = syncBus.on('REVIEW_ADDED', ({ review }) => {
+      if (review) setReviews((prev) => [formatDbReview(review), ...prev.filter((r) => r.id !== review.id)]);
+    });
+
+    // Periodic silent background heartbeat (every 25 seconds)
+    const backgroundInterval = setInterval(() => {
+      if (isMounted && typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        refreshAllRealtimeData(true);
+      }
+    }, 25000);
+
+    // Immediate background catch-up whenever user returns to tab
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible' && isMounted) {
+        refreshAllRealtimeData(true);
+        if (!isRealtimeConnected) {
+          setupRealtimeChannel();
+        }
+      }
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleVisibilityChange);
+    }
+
     return () => {
       isMounted = false;
-      supabase.removeChannel(channel);
+      clearTimeout(reconnectTimeout);
+      clearInterval(backgroundInterval);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', handleVisibilityChange);
+      }
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
       unsubBusAdd();
       unsubBusUpdate();
       unsubBusDelete();
-    };
-  }, []);
-
-  // Server-driven customers state synchronized with Supabase Cloud
-  const [customers, setCustomers] = useState([]);
-  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadCustomers() {
-      try {
-        setIsLoadingCustomers(true);
-        const data = await customersApi.getAll();
-
-        if (isMounted) {
-          if (Array.isArray(data)) {
-            setCustomers(data.map(formatDbCustomer));
-          } else {
-            setCustomers([]);
-          }
-        }
-      } catch (err) {
-        console.warn('Notice loading customers from API:', err);
-      } finally {
-        if (isMounted) setIsLoadingCustomers(false);
-      }
-    }
-
-    loadCustomers();
-
-    const customerChannel = supabase
-      .channel('realtime_customers')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'customers' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const newCust = formatDbCustomer(payload.new);
-            setCustomers((prev) => [newCust, ...prev.filter((c) => c.id !== newCust.id)]);
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedCust = formatDbCustomer(payload.new);
-            setCustomers((prev) =>
-              prev.map((c) => (c.id === updatedCust.id ? updatedCust : c))
-            );
-          } else if (payload.eventType === 'DELETE') {
-            const deletedId = payload.old?.id;
-            const deletedEmail = payload.old?.email ? payload.old.email.toLowerCase().trim() : null;
-            setCustomers((prev) =>
-              prev.filter(
-                (c) =>
-                  String(c.id) !== String(deletedId) &&
-                  (!deletedEmail || c.email?.toLowerCase().trim() !== deletedEmail)
-              )
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    const unsubCustSync = syncBus.on('CUSTOMER_UPDATED', () => {
-      loadCustomers();
-    });
-
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(customerChannel);
       unsubCustSync();
+      unsubCoupSync();
+      unsubRevSync();
     };
-  }, []);
-
-  // Server-driven coupons state synchronized with Supabase
-  const [coupons, setCoupons] = useState([]);
-  const [isLoadingCoupons, setIsLoadingCoupons] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadCoupons() {
-      try {
-        const data = await couponsApi.getAll();
-        if (isMounted && Array.isArray(data)) {
-          setCoupons(data.map(formatDbCoupon));
-        }
-      } catch (e) {
-        console.warn('Coupons API notice:', e.message);
-      } finally {
-        if (isMounted) {
-          setIsLoadingCoupons(false);
-        }
-      }
-    }
-    loadCoupons();
-
-    const channel = supabase
-      .channel('realtime_coupons')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'coupons' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const cp = formatDbCoupon(payload.new);
-          setCoupons((prev) => [cp, ...prev.filter((c) => c.id !== cp.id)]);
-        } else if (payload.eventType === 'UPDATE') {
-          const cp = formatDbCoupon(payload.new);
-          setCoupons((prev) => prev.map((c) => (c.id === cp.id ? cp : c)));
-        } else if (payload.eventType === 'DELETE') {
-          setCoupons((prev) => prev.filter((c) => c.id !== payload.old.id));
-        }
-      })
-      .subscribe();
-
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // Server-driven reviews state synchronized with Supabase
-  const [reviews, setReviews] = useState([]);
-  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadReviews() {
-      try {
-        const data = await reviewsApi.getAll();
-        if (isMounted && Array.isArray(data)) {
-          setReviews(data.map(formatDbReview));
-        }
-      } catch (e) {
-        console.warn('Reviews API notice:', e.message);
-      } finally {
-        if (isMounted) {
-          setIsLoadingReviews(false);
-        }
-      }
-    }
-    loadReviews();
-
-    const channel = supabase
-      .channel('realtime_reviews')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const rev = formatDbReview(payload.new);
-          setReviews((prev) => [rev, ...prev.filter((r) => r.id !== rev.id)]);
-        } else if (payload.eventType === 'UPDATE') {
-          const rev = formatDbReview(payload.new);
-          setReviews((prev) => prev.map((r) => (r.id === rev.id ? rev : r)));
-        } else if (payload.eventType === 'DELETE') {
-          setReviews((prev) => prev.filter((r) => r.id !== payload.old.id));
-        }
-      })
-      .subscribe();
-
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // Server-driven store settings state synchronized with Supabase
-  const [storeSettings, setStoreSettings] = useState(initialStoreSettings);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadSettings() {
-      try {
-        const data = await storeSettingsApi.get();
-        if (isMounted && data) {
-          setStoreSettings(formatDbSettings(data));
-        }
-      } catch (e) {
-        console.warn('Store settings API notice:', e.message);
-      }
-    }
-    loadSettings();
-
-    const channel = supabase
-      .channel('realtime_store_settings')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, (payload) => {
-        if (payload.new) {
-          setStoreSettings(formatDbSettings(payload.new));
-        }
-      })
-      .subscribe();
-
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // Server-driven administrative team members state
-  // Server-driven administrative team members state (strictly in-memory and Supabase Cloud)
-  const [admins, setAdmins] = useState(initialAdmins);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadAdmins() {
-      try {
-        const data = await adminsApi.getAll();
-        if (isMounted && Array.isArray(data) && data.length > 0) {
-          setAdmins((prev) => {
-            const apiAdmins = data.map(formatDbAdmin);
-            const merged = apiAdmins.map((adm) => {
-              const localMatch = prev.find(
-                (p) => p.id === adm.id || p.email.toLowerCase() === adm.email.toLowerCase()
-              );
-              const resolvedPassword = adm.password || localMatch?.password || null;
-
-              return {
-                ...adm,
-                password: resolvedPassword
-              };
-            });
-
-            for (const p of prev) {
-              if (!merged.some((m) => m.id === p.id || m.email.toLowerCase() === p.email.toLowerCase())) {
-                merged.push(p);
-              }
-            }
-            return merged;
-          });
-        }
-      } catch (e) {
-        console.warn('Admins API notice:', e.message);
-      }
-    }
-    loadAdmins();
-
-    const channel = supabase
-      .channel('realtime_admins')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'admins' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const adm = formatDbAdmin(payload.new);
-          setAdmins((prev) => {
-            const localMatch = prev.find((p) => p.id === adm.id || p.email.toLowerCase() === adm.email.toLowerCase());
-            const resolved = {
-              ...adm,
-              password: adm.password || localMatch?.password || null
-            };
-            return [resolved, ...prev.filter((a) => a.id !== adm.id && a.email.toLowerCase() !== adm.email.toLowerCase())];
-          });
-        } else if (payload.eventType === 'UPDATE') {
-          const adm = formatDbAdmin(payload.new);
-          setAdmins((prev) => {
-            const localMatch = prev.find((p) => p.id === adm.id || p.email.toLowerCase() === adm.email.toLowerCase());
-            const resolved = {
-              ...adm,
-              password: adm.password || localMatch?.password || null
-            };
-            return prev.map((a) => (a.id === adm.id ? resolved : a));
-          });
-        } else if (payload.eventType === 'DELETE') {
-          setAdmins((prev) => prev.filter((a) => a.id !== payload.old.id));
-        }
-      })
-      .subscribe();
-
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // Server-driven activity log state
-  const [activityLog, setActivityLog] = useState([]);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadActivityLog() {
-      try {
-        const data = await activityLogApi.getAll();
-        if (isMounted && Array.isArray(data)) {
-          setActivityLog(data.map((entry) => ({
-            id: entry.id,
-            adminName: entry.admin_name,
-            action: entry.action,
-            target: entry.target,
-            time: entry.created_at ? new Date(entry.created_at).toLocaleTimeString('ar-EG') : 'الآن',
-            type: entry.type || 'general'
-          })));
-        }
-      } catch (e) {
-        console.warn('Activity log API notice:', e.message);
-      }
-    }
-    loadActivityLog();
-
-    const channel = supabase
-      .channel('realtime_activity_log')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'activity_log' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const entry = {
-            id: payload.new.id,
-            adminName: payload.new.admin_name,
-            action: payload.new.action,
-            target: payload.new.target,
-            time: 'الآن',
-            type: payload.new.type || 'general'
-          };
-          setActivityLog((prev) => [entry, ...prev.filter((a) => a.id !== entry.id)]);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  }, [refreshAllRealtimeData, addToast]);
 
   // Activity logger helper
   const addActivity = async (action, target, type = 'general') => {
@@ -803,6 +790,7 @@ export function AdminProvider({ children }) {
     }
     try {
       await couponsApi.create(couponObj);
+      syncBus.emit('COUPON_ADDED', { coupon: couponObj, timestamp: Date.now() });
     } catch (e) {
       console.warn('Coupons create API error:', e.message);
     }
@@ -822,6 +810,7 @@ export function AdminProvider({ children }) {
       })
     );
     addActivity('تغيير حالة كوبون', `${couponCode || couponId} أصبحت ${nextState ? 'نشط' : 'معطل'}`, 'coupon');
+    syncBus.emit('COUPON_UPDATED', { couponId, isActive: nextState, timestamp: Date.now() });
     try {
       await couponsApi.toggleStatus(couponId, nextState);
     } catch (e) {
@@ -837,6 +826,7 @@ export function AdminProvider({ children }) {
     if (addToast) {
       addToast('تم تحديث بيانات الكوبون بنجاح', 'success');
     }
+    syncBus.emit('COUPON_UPDATED', { couponId, updatedData, timestamp: Date.now() });
     try {
       await couponsApi.update(couponId, updatedData);
     } catch (e) {
@@ -850,6 +840,7 @@ export function AdminProvider({ children }) {
     if (addToast) {
       addToast('تم حذف الكوبون بنجاح', 'info');
     }
+    syncBus.emit('COUPON_DELETED', { couponId, timestamp: Date.now() });
     try {
       await couponsApi.delete(couponId);
     } catch (e) {
@@ -872,6 +863,7 @@ export function AdminProvider({ children }) {
       })
     );
     addActivity('تحديث مراجعة عميلة', `تم ${nextState ? 'اعتماد' : 'إخفاء'} تقييم ${custName}`, 'review');
+    syncBus.emit('REVIEW_UPDATED', { reviewId, isApproved: nextState, timestamp: Date.now() });
     try {
       await reviewsApi.toggleApproval(reviewId, nextState);
     } catch (e) {
@@ -885,6 +877,7 @@ export function AdminProvider({ children }) {
     if (addToast) {
       addToast('تم حذف التقييم', 'info');
     }
+    syncBus.emit('REVIEW_DELETED', { reviewId, timestamp: Date.now() });
     try {
       await reviewsApi.delete(reviewId);
     } catch (e) {
@@ -1037,6 +1030,7 @@ export function AdminProvider({ children }) {
     if (addToast) {
       addToast('تم حفظ إعدادات المتجر بنجاح', 'success');
     }
+    syncBus.emit('SETTINGS_UPDATED', { settings: newSettings, timestamp: Date.now() });
     try {
       await storeSettingsApi.update(newSettings);
     } catch (e) {
@@ -1103,6 +1097,13 @@ export function AdminProvider({ children }) {
     loginAdmin,
     logoutAdmin,
     hasAdminPermission,
+    // Real-time synchronization state & controls
+    isRealtimeConnected,
+    isSyncing,
+    lastSyncTime,
+    refreshAllRealtimeData,
+    isAudioAlertsEnabled,
+    toggleAudioAlerts,
     // Orders
     orders,
     isLoadingOrders,

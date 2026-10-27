@@ -28,7 +28,7 @@ import {
 } from '../../utils/validators';
 
 export default function CheckoutModal({ isOpen, onClose, cart, totalAmount, subtotal, shippingFee, discountAmount, onOrderSuccess }) {
-  const { formatPrice, addToast, clearCart, user, setUser, setIsAuthOpen } = useShop();
+  const { formatPrice, addToast, clearCart, user, setUser, setIsAuthOpen, allProducts, updateProductStock } = useShop();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -190,6 +190,22 @@ export default function CheckoutModal({ isOpen, onClose, cart, totalAmount, subt
       };
 
       await ordersApi.create(dbOrder);
+
+      // Real-time stock decrement for ordered items across all inventory monitors
+      if (Array.isArray(orderItems)) {
+        for (const item of orderItems) {
+          const prodId = item.id || item.productId;
+          if (prodId && typeof updateProductStock === 'function') {
+            const currentItem = (allProducts || []).find((p) => p.id === prodId);
+            if (currentItem) {
+              const currentStock = Number(currentItem.stockCount ?? currentItem.stock ?? 15);
+              const deductQty = Number(item.quantity) || 1;
+              const nextStock = Math.max(0, currentStock - deductQty);
+              updateProductStock(prodId, nextStock);
+            }
+          }
+        }
+      }
 
       // Instantly notify Dashboard and Customer tracking pages via zero-latency syncBus
       syncBus.emit('ORDER_ADDED', { orderId, order: dbOrder, timestamp: Date.now() });

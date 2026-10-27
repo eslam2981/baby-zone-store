@@ -94,7 +94,10 @@ export default function AdminCustomersPage() {
     updateCustomerStatus,
     updateCustomerPermissions,
     addCustomer,
-    deleteCustomer
+    deleteCustomer,
+    isRealtimeConnected,
+    isSyncing,
+    refreshAllRealtimeData
   } = useAdmin();
   const { addToast } = useShop();
 
@@ -331,19 +334,44 @@ export default function AdminCustomersPage() {
                 <h1 className="text-xl sm:text-2xl font-black font-heading text-rawaa-dark">
                   إدارة العملاء والصلاحيات
                 </h1>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  السيرفر السحابي (Supabase Live)
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+                    isRealtimeConnected
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}
+                >
+                  <span className="relative flex h-2 w-2">
+                    {isRealtimeConnected && (
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    )}
+                    <span
+                      className={`relative inline-flex rounded-full h-2 w-2 ${
+                        isRealtimeConnected ? 'bg-emerald-500' : 'bg-amber-500'
+                      }`}
+                    />
+                  </span>
+                  <span>{isRealtimeConnected ? 'مزامنة لحظية (Live 0ms)' : 'جاري الاتصال...'}</span>
                 </span>
               </div>
               <p className="text-xs text-rawaa-muted mt-1 leading-relaxed">
-                إدارة ملفات العملاء، تحديد الصلاحيات والرتب التنفيذية، والتحكم بحالات التفعيل والحظر مباشرة على السيرفر
+                إدارة ملفات العملاء، تحديد الصلاحيات والرتب التنفيذية — تتحدث بيانات العملاء تلقائياً لحظة تسجيلهم أو إتمامهم للطلبات
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+          <button
+            type="button"
+            onClick={() => refreshAllRealtimeData()}
+            disabled={isSyncing}
+            className="flex items-center gap-1.5 bg-white hover:bg-rawaa-soft border border-rawaa-border text-rawaa-dark text-xs font-bold px-3.5 py-2.5 rounded-2xl shadow-soft-xs transition-all cursor-pointer disabled:opacity-50"
+            title="مزامنة فورية للعملاء والطلبات"
+          >
+            <RefreshCw size={14} className={isSyncing ? 'animate-spin text-rawaa-primary' : ''} />
+            <span className="hidden sm:inline">مزامنة فورية</span>
+          </button>
           <button
             type="button"
             onClick={() => setIsAddModalOpen(true)}

@@ -23,13 +23,14 @@ import {
   Calendar,
   AlertCircle,
   Zap,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 import ConfirmModal from '../../components/common/ConfirmModal';
 
 /* Administrator team members management and role based access control */
 export default function AdminAdminsPage() {
-  const { admins, addAdmin, updateAdmin, deleteAdmin, currentAdmin } = useAdmin();
+  const { admins, addAdmin, updateAdmin, deleteAdmin, currentAdmin, isRealtimeConnected, isSyncing, refreshAllRealtimeData } = useAdmin();
   const { addToast } = useShop();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState(null);
@@ -189,14 +190,31 @@ export default function AdminAdminsPage() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-rawaa-primary text-white rounded-xl text-xs font-bold hover:bg-rawaa-primary/90 transition-all shadow-md shadow-rawaa-primary/20"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>إضافة مشرف جديد</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>مشرفين لحظي (0ms)</span>
+          </span>
+
+          <button
+            type="button"
+            onClick={() => refreshAllRealtimeData && refreshAllRealtimeData()}
+            disabled={isSyncing}
+            title="مزامنة المشرفين والصلاحيات لحظياً الآن"
+            className="p-2 rounded-xl border border-rawaa-border hover:bg-rawaa-soft text-rawaa-dark/70 hover:text-rawaa-dark transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-rawaa-peach' : ''}`} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-rawaa-primary text-white rounded-xl text-xs font-bold hover:bg-rawaa-primary/90 transition-all shadow-md shadow-rawaa-primary/20"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>إضافة مشرف جديد</span>
+          </button>
+        </div>
       </div>
 
       {/* Admins Grid */}

@@ -9,7 +9,8 @@ import {
   Trash2,
   Package,
   X,
-  Tag
+  Tag,
+  RefreshCw
 } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 import { useAdmin } from '../../context/AdminContext';
@@ -23,7 +24,7 @@ import {
 
 export default function AdminCategoriesPage() {
   const { categories, allProducts, addCategory, updateCategory, deleteCategory, addToast } = useShop();
-  const { addActivity } = useAdmin();
+  const { addActivity, isRealtimeConnected, isSyncing, refreshAllRealtimeData } = useAdmin();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -184,14 +185,31 @@ export default function AdminCategoriesPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="flex items-center justify-center gap-2 bg-rawaa-primary hover:bg-rawaa-primary-hover active:scale-95 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-soft-xs transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <Plus size={16} />
-          <span>إضافة قسم جديد</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>أقسام لحظية (0ms)</span>
+          </span>
+
+          <button
+            type="button"
+            onClick={() => refreshAllRealtimeData && refreshAllRealtimeData()}
+            disabled={isSyncing}
+            title="مزامنة الأقسام والتصنيفات لحظياً الآن"
+            className="p-2 rounded-xl border border-rawaa-border hover:bg-rawaa-soft text-rawaa-dark/70 hover:text-rawaa-dark transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-rawaa-peach' : ''}`} />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="flex items-center justify-center gap-2 bg-rawaa-primary hover:bg-rawaa-primary-hover active:scale-95 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-soft-xs transition-all cursor-pointer self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            <span>إضافة قسم جديد</span>
+          </button>
+        </div>
       </div>
 
       {/* Search filter */}

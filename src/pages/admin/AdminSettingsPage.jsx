@@ -21,12 +21,13 @@ import {
   Phone,
   MapPin,
   DollarSign,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 
 /* Store settings and administrative configuration interface */
 export default function AdminSettingsPage() {
-  const { storeSettings, updateStoreSettings } = useAdmin();
+  const { storeSettings, updateStoreSettings, isRealtimeConnected, isSyncing, refreshAllRealtimeData } = useAdmin();
   const { addToast } = useShop();
   const [formData, setFormData] = useState({
     storeName: storeSettings?.storeName || 'بيبي زون | BABY ZONE',
@@ -136,12 +137,29 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        {savedSuccess && (
-          <div className="px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-bold flex items-center gap-2 animate-fade-in">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>تم حفظ التعديلات بنجاح!</span>
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>إعدادات لحظية (0ms)</span>
+          </span>
+
+          <button
+            type="button"
+            onClick={() => refreshAllRealtimeData && refreshAllRealtimeData()}
+            disabled={isSyncing}
+            title="مزامنة الإعدادات لحظياً الآن"
+            className="p-2 rounded-xl border border-rawaa-border hover:bg-rawaa-soft text-rawaa-dark/70 hover:text-rawaa-dark transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-rawaa-peach' : ''}`} />
+          </button>
+
+          {savedSuccess && (
+            <div className="px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-xs font-bold flex items-center gap-2 animate-fade-in">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>تم حفظ التعديلات بنجاح!</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

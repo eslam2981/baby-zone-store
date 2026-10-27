@@ -17,7 +17,12 @@ import {
   AlertTriangle,
   Clock,
   ChevronDown,
-  X
+  X,
+  RefreshCw,
+  Volume2,
+  VolumeX,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
@@ -32,7 +37,12 @@ export default function AdminHeader() {
     activityLog,
     setIsMobileSidebarOpen,
     isSidebarCollapsed,
-    toggleSidebar
+    toggleSidebar,
+    isRealtimeConnected,
+    isSyncing,
+    refreshAllRealtimeData,
+    isAudioAlertsEnabled,
+    toggleAudioAlerts
   } = useAdmin();
 
   const { allProducts, logout } = useShop();
@@ -248,6 +258,63 @@ export default function AdminHeader() {
               </div>
             )}
           </div>
+
+          {/* Real-time Live Connection Status Badge */}
+          <div
+            className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${
+              isRealtimeConnected
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80 shadow-xs'
+                : 'bg-amber-50 text-amber-700 border-amber-200/80 animate-pulse'
+            }`}
+            title={
+              isRealtimeConnected
+                ? 'متصل لحظياً بالسيرفر السحابي (Real-Time Live) — التحديثات فورية دون الحاجة لإعادة تحميل الصفحة'
+                : 'جاري إعادة الاتصال بالسيرفر...'
+            }
+          >
+            <span className="relative flex h-2 w-2">
+              {isRealtimeConnected && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              )}
+              <span
+                className={`relative inline-flex rounded-full h-2 w-2 ${
+                  isRealtimeConnected ? 'bg-emerald-500' : 'bg-amber-500'
+                }`}
+              />
+            </span>
+            <span>{isRealtimeConnected ? 'مباشر (Real-Time)' : 'جاري الاتصال...'}</span>
+          </div>
+
+          {/* Instant Manual Re-sync Button */}
+          <button
+            type="button"
+            onClick={() => refreshAllRealtimeData()}
+            disabled={isSyncing}
+            className="p-2 rounded-full text-rawaa-dark hover:bg-rawaa-soft hover:text-rawaa-primary transition-colors cursor-pointer disabled:opacity-50"
+            title="مزامنة لحظية فورية لكافة البيانات الآن"
+            aria-label="مزامنة لحظية"
+          >
+            <RefreshCw size={16} className={isSyncing ? 'animate-spin text-rawaa-primary' : ''} />
+          </button>
+
+          {/* Audio Notification Alert Toggle */}
+          <button
+            type="button"
+            onClick={toggleAudioAlerts}
+            className={`p-2 rounded-full transition-colors cursor-pointer ${
+              isAudioAlertsEnabled
+                ? 'text-rawaa-primary hover:bg-rawaa-primary-light'
+                : 'text-rawaa-subtle hover:bg-rawaa-soft'
+            }`}
+            title={
+              isAudioAlertsEnabled
+                ? 'صوت التنبيهات للطلبات الجديدة: مفعل 🔔 (انقر للتعطيل)'
+                : 'صوت التنبيهات للطلبات الجديدة: معطل 🔕 (انقر للتفعيل)'
+            }
+            aria-label="تبديل صوت التنبيهات"
+          >
+            {isAudioAlertsEnabled ? <Volume2 size={17} /> : <VolumeX size={17} />}
+          </button>
 
           {/* Quick add action dropdown */}
           <div className="relative" ref={quickActionRef}>

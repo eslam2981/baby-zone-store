@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link} from 'react-router-dom';
 import { useShop } from '../context/ShopContext';
 import { reviewsApi } from '../services/api';
+import { syncBus } from '../utils/syncBus';
 import ProductCard from '../components/catalog/ProductCard';
 import { ReviewSkeleton, ProductDetailSkeleton } from '../components/common/Skeletons';
 import { validatePersonName, validateEmail, sanitizeText, REGEX_PATTERNS } from '../utils/validators';
@@ -122,6 +123,7 @@ export default function ProductDetailsPage() {
       };
 
       await reviewsApi.create(reviewPayload);
+      syncBus.emit('REVIEW_ADDED', { review: reviewPayload, timestamp: Date.now() });
       setProductReviews((prev) => [reviewPayload, ...prev]);
       setNewReview({
         name: user?.name || '',

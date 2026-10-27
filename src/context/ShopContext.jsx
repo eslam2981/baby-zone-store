@@ -52,47 +52,130 @@ export function ShopProvider({ children }) {
     }
     loadData();
 
-    // Real-time synchronization for products
-    const prodChannel = supabase
-      .channel('realtime_products')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'products' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setAllProducts((prev) => [payload.new, ...prev.filter((p) => p.id !== payload.new.id)]);
-          } else if (payload.eventType === 'UPDATE') {
-            setAllProducts((prev) => prev.map((p) => (p.id === payload.new.id ? payload.new : p)));
-          } else if (payload.eventType === 'DELETE') {
-            setAllProducts((prev) => prev.filter((p) => p.id !== payload.old.id));
-          }
-        }
-      )
-      .subscribe();
+    // Resilient Real-time synchronization for products and categories with auto-reconnect
+    let channel = null;
+    let reconnectTimeout = null;
 
-    // Real-time synchronization for categories
-    const catChannel = supabase
-      .channel('realtime_categories')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'categories' },
-        async () => {
-          try {
-            const freshCats = await categoriesApi.getAll();
-            if (isMounted && Array.isArray(freshCats)) {
-              setCategoriesList(mergeCategoriesWithLive(freshCats));
+    function setupCatalogRealtime() {
+      if (channel) {
+        try {
+          supabase.removeChannel(channel);
+        } catch {}
+      }
+
+      channel = supabase
+        .channel(`realtime_catalog_hub_${Date.now()}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'products' },
+          (payload) => {
+            if (!isMounted) return;
+            if (payload.eventType === 'INSERT') {
+              setAllProducts((prev) => [payload.new, ...prev.filter((p) => p.id !== payload.new.id)]);
+            } else if (payload.eventType === 'UPDATE') {
+              setAllProducts((prev) => prev.map((p) => (p.id === payload.new.id ? payload.new : p)));
+            } else if (payload.eventType === 'DELETE') {
+              setAllProducts((prev) => prev.filter((p) => p.id !== payload.old.id));
             }
-          } catch (e) {
-            console.error('Real-time categories update error:', e);
           }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'categories' },
+          async () => {
+            try {
+              const freshCats = await categoriesApi.getAll();
+              if (isMounted && Array.isArray(freshCats)) {
+                setCategoriesList(mergeCategoriesWithLive(freshCats));
+              }
+            } catch (e) {
+              console.warn('Real-time categories update error:', e);
+            }
+          }
+        )
+        .subscribe((status, err) => {
+          if (!isMounted) return;
+          if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.warn(`Catalog channel ${status}, scheduling reconnect...`, err || '');
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = setTimeout(() => {
+              if (isMounted) setupCatalogRealtime();
+            }, 3500);
+          }
+        });
+    }
+
+    setupCatalogRealtime();
+
+    // Instant cross-tab and local window syncBus listeners for products & categories
+    const unsubProdAdd = syncBus.on('PRODUCT_ADDED', ({ product }) => {
+      if (product) {
+        setAllProducts((prev) => [product, ...prev.filter((p) => p.id !== product.id)]);
+      }
+    });
+
+    const unsubProdUpd = syncBus.on('PRODUCT_UPDATED', (updated) => {
+      if (updated?.id) {
+        setAllProducts((prev) =>
+          prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p))
+        );
+      }
+    });
+
+    const unsubProdDel = syncBus.on('PRODUCT_DELETED', ({ productId }) => {
+      if (productId) {
+        setAllProducts((prev) => prev.filter((p) => p.id !== productId));
+      }
+    });
+
+    const unsubStockUpd = syncBus.on('STOCK_UPDATED', ({ productId, stockCount }) => {
+      if (productId) {
+        const inStock = Number(stockCount) > 0;
+        setAllProducts((prev) =>
+          prev.map((p) => (p.id === productId ? { ...p, stockCount: Number(stockCount), inStock } : p))
+        );
+      }
+    });
+
+    const unsubCatUpd = syncBus.on('CATEGORIES_UPDATED', async () => {
+      try {
+        const fresh = await categoriesApi.getAll();
+        if (isMounted && Array.isArray(fresh)) {
+          setCategoriesList(mergeCategoriesWithLive(fresh));
         }
-      )
-      .subscribe();
+      } catch {}
+    });
+
+    // Background catch-up when tab becomes visible
+    const handleCatalogVisibility = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible' && isMounted) {
+        Promise.allSettled([productsApi.getAll(), categoriesApi.getAll()]).then(([pRes, cRes]) => {
+          if (isMounted) {
+            if (pRes.status === 'fulfilled' && Array.isArray(pRes.value)) setAllProducts(pRes.value);
+            if (cRes.status === 'fulfilled' && Array.isArray(cRes.value)) setCategoriesList(mergeCategoriesWithLive(cRes.value));
+          }
+        });
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleCatalogVisibility);
+    }
 
     return () => {
       isMounted = false;
-      supabase.removeChannel(prodChannel);
-      supabase.removeChannel(catChannel);
+      clearTimeout(reconnectTimeout);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleCatalogVisibility);
+      }
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+      unsubProdAdd();
+      unsubProdUpd();
+      unsubProdDel();
+      unsubStockUpd();
+      unsubCatUpd();
     };
   }, []);
 
@@ -457,6 +540,7 @@ export function ShopProvider({ children }) {
     };
     setAllProducts((prev) => [newProduct, ...prev]);
     addToast(`تم إضافة المنتج «${newProduct.name.substring(0, 25)}...» بنجاح`, 'success');
+    syncBus.emit('PRODUCT_ADDED', { product: newProduct, timestamp: Date.now() });
 
     try {
       await productsApi.create(newProduct);
@@ -480,6 +564,7 @@ export function ShopProvider({ children }) {
       })
     );
     addToast('تم تحديث بيانات المنتج بنجاح', 'success');
+    syncBus.emit('PRODUCT_UPDATED', { id: productId, ...updatedData, timestamp: Date.now() });
 
     try {
       await productsApi.update(productId, updatedData);
@@ -491,6 +576,7 @@ export function ShopProvider({ children }) {
   const deleteProduct = useCallback(async (productId) => {
     setAllProducts((prev) => prev.filter((p) => p.id !== productId));
     addToast('تم حذف المنتج بنجاح', 'info');
+    syncBus.emit('PRODUCT_DELETED', { productId, timestamp: Date.now() });
 
     try {
       await productsApi.delete(productId);
@@ -504,6 +590,7 @@ export function ShopProvider({ children }) {
     setAllProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, stockCount: Math.max(0, newStock), inStock } : p))
     );
+    syncBus.emit('STOCK_UPDATED', { productId, stockCount: Math.max(0, newStock), timestamp: Date.now() });
     try {
       await productsApi.updateStock(productId, Math.max(0, newStock));
     } catch (e) {
@@ -520,6 +607,7 @@ export function ShopProvider({ children }) {
     };
     setCategoriesList((prev) => [...prev, newCat]);
     addToast(`تم إضافة قسم «${newCat.name}» بنجاح`, 'success');
+    syncBus.emit('CATEGORIES_UPDATED', { timestamp: Date.now() });
 
     try {
       await categoriesApi.create(newCat);
@@ -533,6 +621,7 @@ export function ShopProvider({ children }) {
       prev.map((c) => (c.id === categoryId ? { ...c, ...updatedData } : c))
     );
     addToast('تم تحديث بيانات القسم بنجاح', 'success');
+    syncBus.emit('CATEGORIES_UPDATED', { timestamp: Date.now() });
 
     try {
       await categoriesApi.update(categoryId, updatedData);
@@ -544,6 +633,7 @@ export function ShopProvider({ children }) {
   const deleteCategory = useCallback(async (categoryId) => {
     setCategoriesList((prev) => prev.filter((c) => c.id !== categoryId));
     addToast('تم حذف القسم بنجاح', 'info');
+    syncBus.emit('CATEGORIES_UPDATED', { timestamp: Date.now() });
 
     try {
       await categoriesApi.delete(categoryId);

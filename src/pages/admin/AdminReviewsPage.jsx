@@ -10,13 +10,14 @@ import {
   Eye,
   MessageSquare,
   ThumbsUp,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import ConfirmModal from '../../components/common/ConfirmModal';
 
 /* Reviews and customer ratings moderation page */
 export default function AdminReviewsPage() {
-  const { reviews, isLoadingReviews, toggleReviewApproval, deleteReview } = useAdmin();
+  const { reviews, isLoadingReviews, toggleReviewApproval, deleteReview, isRealtimeConnected, isSyncing, refreshAllRealtimeData } = useAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [ratingFilter, setRatingFilter] = useState('all');
@@ -72,7 +73,22 @@ export default function AdminReviewsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>تقييمات لحظية (0ms)</span>
+          </span>
+
+          <button
+            type="button"
+            onClick={() => refreshAllRealtimeData && refreshAllRealtimeData()}
+            disabled={isSyncing}
+            title="مزامنة التقييمات لحظياً الآن"
+            className="p-2 rounded-xl border border-rawaa-border hover:bg-rawaa-soft text-rawaa-dark/70 hover:text-rawaa-dark transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-rawaa-peach' : ''}`} />
+          </button>
+
           <div className="px-4 py-2 bg-rawaa-soft rounded-xl text-xs font-bold text-rawaa-dark flex items-center gap-2">
             <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
             <span>متوسط التقييم العام {stats.averageRating} من 5</span>

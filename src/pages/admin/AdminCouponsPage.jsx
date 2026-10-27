@@ -23,14 +23,15 @@ import {
   TrendingUp,
   AlertCircle,
   Sparkles,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import { CouponCardSkeleton } from '../../components/common/Skeletons';
 
 /* Coupons and marketing discount promotions management interface */
 export default function AdminCouponsPage() {
-  const { coupons, isLoadingCoupons, addCoupon, updateCoupon, deleteCoupon, toggleCouponStatus } = useAdmin();
+  const { coupons, isLoadingCoupons, addCoupon, updateCoupon, deleteCoupon, toggleCouponStatus, isRealtimeConnected, isSyncing, refreshAllRealtimeData } = useAdmin();
   const { addToast } = useShop();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -186,14 +187,31 @@ export default function AdminCouponsPage() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-rawaa-primary text-white rounded-xl text-xs font-bold hover:bg-rawaa-primary/90 transition-all shadow-md shadow-rawaa-primary/20"
-        >
-          <Plus className="w-4 h-4" />
-          <span>إنشاء كوبون جديد</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>كوبونات لحظية (0ms)</span>
+          </span>
+
+          <button
+            type="button"
+            onClick={() => refreshAllRealtimeData && refreshAllRealtimeData()}
+            disabled={isSyncing}
+            title="مزامنة الكوبونات لحظياً الآن"
+            className="p-2 rounded-xl border border-rawaa-border hover:bg-rawaa-soft text-rawaa-dark/70 hover:text-rawaa-dark transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-rawaa-peach' : ''}`} />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOpenCreate}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-rawaa-primary text-white rounded-xl text-xs font-bold hover:bg-rawaa-primary/90 transition-all shadow-md shadow-rawaa-primary/20"
+          >
+            <Plus className="w-4 h-4" />
+            <span>إنشاء كوبون جديد</span>
+          </button>
+        </div>
       </div>
 
       {/* Coupons Grid */}

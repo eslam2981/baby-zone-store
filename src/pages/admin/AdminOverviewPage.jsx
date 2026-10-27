@@ -15,7 +15,8 @@ import {
   Activity,
   Plus,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  RefreshCw
 } from 'lucide-react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
@@ -23,7 +24,18 @@ import { RevenueTrendChart, CategoryDistributionChart } from '../../components/a
 import { TableRowSkeleton } from '../../components/common/Skeletons';
 
 export default function AdminOverviewPage() {
-  const { currentAdmin, orders, isLoadingOrders, customers, activityLog, updateOrderStatus } = useAdmin();
+  const {
+    currentAdmin,
+    orders,
+    isLoadingOrders,
+    customers,
+    activityLog,
+    updateOrderStatus,
+    isRealtimeConnected,
+    isSyncing,
+    lastSyncTime,
+    refreshAllRealtimeData
+  } = useAdmin();
   const { allProducts, categories } = useShop();
 
   // Dynamic calculation of core KPIs from actual orders state
@@ -111,20 +123,46 @@ export default function AdminOverviewPage() {
         <div className="absolute -right-10 -top-10 w-44 h-44 bg-rawaa-sage/5 rounded-full blur-2xl pointer-events-none" />
 
         <div className="relative z-10 space-y-1.5">
-          <div className="inline-flex items-center gap-2 bg-white border border-rawaa-border text-rawaa-sage text-xs font-bold px-3 py-1 rounded-full mb-1 shadow-soft-xs">
-            <Activity size={14} className="text-rawaa-primary" />
-            <span>لوحة المتابعة الحية لمتجر بيبي زون</span>
+          <div className="inline-flex items-center gap-2 bg-white border border-rawaa-border text-rawaa-dark text-xs font-bold px-3 py-1 rounded-full mb-1 shadow-soft-xs">
+            <span className="relative flex h-2 w-2">
+              {isRealtimeConnected && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              )}
+              <span
+                className={`relative inline-flex rounded-full h-2 w-2 ${
+                  isRealtimeConnected ? 'bg-emerald-500' : 'bg-amber-500'
+                }`}
+              />
+            </span>
+            <span className={isRealtimeConnected ? 'text-emerald-700' : 'text-amber-700'}>
+              {isRealtimeConnected ? 'تحديث لحظي مباشر (Real-Time Live)' : 'جاري إعادة الاتصال بالسيرفر...'}
+            </span>
+            {lastSyncTime && (
+              <span className="text-[10px] text-rawaa-subtle font-medium border-r border-rawaa-border pr-2 mr-1">
+                آخر مزامنة: {new Date(lastSyncTime).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            )}
           </div>
           <h2 className="font-heading text-xl sm:text-2xl font-black text-rawaa-dark flex items-center gap-2">
             <span>مرحباً بك يا {currentAdmin?.name || 'إسلام جميل'}</span>
             <Sparkles size={22} className="text-rawaa-primary animate-pulse shrink-0" />
           </h2>
           <p className="text-xs text-rawaa-muted max-w-xl">
-            إليك التقرير الإجمالي للمبيعات وشحنات اليوم عبر كافة محافظات جمهورية مصر العربية
+            لوحة القيادة الذكية — جميع الطلبات والمبيعات والمخزون تتحدث تلقائياً لحظة بلحظة دون الحاجة لعمل ريفرش
           </p>
         </div>
 
-        <div className="flex items-center gap-3 relative z-10 shrink-0">
+        <div className="flex items-center gap-2.5 relative z-10 shrink-0 flex-wrap">
+          <button
+            type="button"
+            onClick={() => refreshAllRealtimeData()}
+            disabled={isSyncing}
+            className="flex items-center gap-1.5 bg-white hover:bg-rawaa-primary-light border border-rawaa-border hover:border-rawaa-primary text-rawaa-dark hover:text-rawaa-primary text-xs font-bold px-3.5 py-2.5 rounded-full shadow-soft-xs transition-all cursor-pointer disabled:opacity-50"
+            title="مزامنة فورية لكافة بيانات المتجر"
+          >
+            <RefreshCw size={14} className={isSyncing ? 'animate-spin text-rawaa-primary' : ''} />
+            <span className="hidden sm:inline">مزامنة حية</span>
+          </button>
           <Link
             to="/admin/products?action=add"
             className="flex items-center gap-2 bg-rawaa-primary hover:bg-rawaa-primary-hover active:scale-95 text-white text-xs font-bold px-5 py-2.5 rounded-full transition-all shadow-soft-sm hover:shadow-soft-md cursor-pointer"
