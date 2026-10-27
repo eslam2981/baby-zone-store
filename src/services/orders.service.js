@@ -24,12 +24,11 @@ export const ordersApi = {
   },
 
   async create(order) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('orders')
-      .insert([order])
-      .select();
+      .insert([order]);
     if (error) throw error;
-    return data?.[0];
+    return order;
   },
 
   async updateStatus(id, newStatus) {

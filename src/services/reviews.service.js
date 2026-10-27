@@ -34,12 +34,11 @@ export const reviewsApi = {
       is_approved: review.isApproved !== undefined ? Boolean(review.isApproved) : (review.is_approved !== undefined ? Boolean(review.is_approved) : true),
       likes: Number(review.likes || 0)
     };
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('reviews')
-      .insert([payload])
-      .select();
+      .insert([payload]);
     if (error) throw error;
-    return data?.[0];
+    return payload;
   },
 
   async toggleApproval(id, isApproved) {

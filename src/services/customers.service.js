@@ -49,22 +49,20 @@ export const customersApi = {
   },
 
   async create(customer) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('customers')
-      .insert([customer])
-      .select();
+      .insert([customer]);
     if (error) throw error;
-    return data?.[0];
+    return customer;
   },
 
   async update(id, updates) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('customers')
       .update(updates)
-      .eq('id', id)
-      .select();
+      .eq('id', id);
     if (error) throw error;
-    return data?.[0];
+    return { id, ...updates };
   },
 
   async delete(id) {
