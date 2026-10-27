@@ -227,7 +227,7 @@ export default function CheckoutModal({ isOpen, onClose, cart, totalAmount, subt
       onClick={handleClose}
     >
       <div
-        className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-soft-xl border border-rawaa-border relative my-8 animate-scaleUp"
+        className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-soft-xl border border-rawaa-border relative my-auto sm:my-8 max-h-[92vh] overflow-y-auto overflow-x-hidden custom-modal-scroll animate-scaleUp"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}

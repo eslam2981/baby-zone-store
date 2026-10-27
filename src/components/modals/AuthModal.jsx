@@ -199,7 +199,7 @@ export default function AuthModal() {
       aria-modal="true"
     >
       <div
-        className={`bg-white rounded-2xl sm:rounded-panel max-w-md w-full p-5 sm:p-8 shadow-soft-xl relative border border-rawaa-border my-auto max-h-[92vh] overflow-y-auto overscroll-contain transition-all duration-300 ease-out transform ${
+        className={`bg-white rounded-2xl sm:rounded-panel max-w-md w-full p-5 sm:p-8 shadow-soft-xl relative border border-rawaa-border my-auto max-h-[92vh] overflow-y-auto overflow-x-hidden overscroll-contain transition-all duration-300 ease-out transform ${
           isVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
         }`}
         onClick={(e) => e.stopPropagation()}

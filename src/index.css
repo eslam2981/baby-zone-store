@@ -35,6 +35,38 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #C25E3E;
   }
+  /* Universal form input optimization:
+     - On mobile (< 640px), set font-size to 16px to prevent iOS Safari auto-zoom.
+     - Enforce min-width: 0, max-width: 100%, and box-sizing: border-box to prevent overflow in flex/grid.
+     - Disallow horizontal overflow in forms and input containers.
+  */
+  @media (max-width: 639px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+      line-height: 1.35 !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+      touch-action: manipulation;
+    }
+  }
+
+  @media (min-width: 640px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+    select,
+    textarea {
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+  }
+
+  form {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
 }
 
 /* Seamless infinite marquee animation */
