@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export default function AuthModal() {
-  const { isAuthOpen, setIsAuthOpen, user, login, logout, formatPrice } = useShop();
+  const { isAuthOpen, setIsAuthOpen, user, login, logout } = useShop();
   const { isAuthenticated, currentAdmin, admins, loginAdmin, logoutAdmin } = useAdmin();
 
   // Active tab state for login and registration views

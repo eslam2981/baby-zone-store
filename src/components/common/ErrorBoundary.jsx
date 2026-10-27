@@ -38,9 +38,18 @@ export default class ErrorBoundary extends React.Component {
               حدث خطأ غير متوقع في العرض
             </h2>
 
-            <p className="text-xs text-rawaa-muted leading-relaxed mb-6">
+            <p className="text-xs text-rawaa-muted leading-relaxed mb-4">
               نعتذر عن هذا الخلل المؤقت. تم تسجيل الخطأ داخلياً للحفاظ على استقرار النظام وبياناتك.
             </p>
+
+            {this.state.error && (
+              <div className="mb-4 p-3 bg-red-50/80 border border-red-200 rounded-xl text-left text-xs text-red-800 font-mono overflow-auto max-h-40" dir="ltr">
+                <div className="font-bold text-xs mb-1">{this.state.error.name || 'Error'}: {this.state.error.message || String(this.state.error)}</div>
+                {this.state.error.stack && (
+                  <pre className="text-[10px] whitespace-pre-wrap text-red-700/80 leading-tight">{this.state.error.stack.split('\n').slice(0, 5).join('\n')}</pre>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row items-center gap-2.5">
               <button
