@@ -1323,9 +1323,9 @@ export default function AdminCustomersPage() {
       {/* Delete Customer Confirmation Modal */}
       <ConfirmModal
         isOpen={Boolean(deleteConfirmId)}
-        title="تأكيد حذف العميل من السيرفر؟"
-        message="هل أنت متأكد من رغبتك في حذف هذا العميل من قاعدة بيانات بيبي زون السحابية؟ سيتم إزالة حسابه وسجل صلاحياته نهائياً."
-        confirmText="نعم، حذف الحساب نهائياً"
+        title="تأكيد حذف العميل وسجل مشترياته نهائياً؟"
+        message="هل أنت متأكد من رغبتك في حذف هذا العميل من قاعدة بيانات بيبي زون السحابية؟ سيتم إزالة حسابه، وسجل كافة مشترياته وطلباته، وتقييماته، وصلاحياته نهائياً وإنهاء جلسته."
+        confirmText="نعم، حذف العميل وسجل طلباته نهائياً"
         cancelText="تراجع"
         isDestructive={true}
         onConfirm={async () => {

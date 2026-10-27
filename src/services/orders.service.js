@@ -60,6 +60,28 @@ export const ordersApi = {
     return true;
   },
 
+  async deleteByCustomer(customerId, email, phone) {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPhone = (phone || '').trim();
+    const cleanId = customerId ? String(customerId) : null;
+
+    try {
+      if (cleanEmail) {
+        await supabase.from('orders').delete().ilike('customer_email', cleanEmail);
+      }
+      if (cleanId) {
+        await supabase.from('orders').delete().eq('customer_id', cleanId);
+      }
+      if (cleanPhone) {
+        await supabase.from('orders').delete().eq('customer_phone', cleanPhone);
+      }
+      return true;
+    } catch (err) {
+      console.warn('Orders deletion by customer notice:', err);
+      return false;
+    }
+  },
+
   async track(query) {
     const raw = (query || '').trim();
     if (!raw || raw.length < 3) return null;

@@ -58,5 +58,17 @@ export const reviewsApi = {
       .eq('id', id);
     if (error) throw error;
     return true;
+  },
+
+  async deleteByCustomer(email) {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail) return false;
+    try {
+      await supabase.from('reviews').delete().ilike('customer_email', cleanEmail);
+      return true;
+    } catch (err) {
+      console.warn('Reviews deletion by customer email notice:', err);
+      return false;
+    }
   }
 };

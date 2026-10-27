@@ -972,8 +972,9 @@ export function AdminProvider({ children }) {
     const target = customers.find((c) => String(c.id) === String(customerId));
     const targetEmail = target?.email ? target.email.toLowerCase().trim() : null;
     const targetPhone = target?.phone ? target.phone.trim() : null;
+    const targetName = target?.name ? target.name.trim() : null;
 
-    // Remove immediately from local state (optimistic instant UI update without refresh)
+    // Remove immediately from customers state (optimistic instant UI update without refresh)
     setCustomers((prev) =>
       prev.filter(
         (c) =>
@@ -981,9 +982,36 @@ export function AdminProvider({ children }) {
           (!targetEmail || c.email?.toLowerCase().trim() !== targetEmail)
       )
     );
-    addActivity('حذف عميل', `رقم العميل ${customerId}${targetEmail ? ` (${targetEmail})` : ''}`, 'customer');
+
+    // Remove ALL orders belonging to this customer immediately from orders state
+    setOrders((prev) =>
+      prev.filter((o) => {
+        const oId = String(o.customerId || o.customer_id || '');
+        const oEmail = (o.customerEmail || o.customer_email || '').toLowerCase().trim();
+        const oPhone = (o.customerPhone || o.customer_phone || '').trim();
+        const oName = (o.customerName || o.customer_name || '').trim();
+
+        if (customerId && oId === String(customerId)) return false;
+        if (targetEmail && oEmail && oEmail === targetEmail) return false;
+        if (targetPhone && oPhone && oPhone === targetPhone) return false;
+        if (targetName && oName && oName === targetName) return false;
+        return true;
+      })
+    );
+
+    // Remove any reviews written by this customer from reviews state
+    if (targetEmail) {
+      setReviews((prev) =>
+        prev.filter((r) => {
+          const rEmail = (r.customerEmail || r.customer_email || '').toLowerCase().trim();
+          return rEmail !== targetEmail;
+        })
+      );
+    }
+
+    addActivity('حذف عميل وسجل مشترياته', `تم حذف العميل ${targetName || customerId} وكافة سجلات طلباته وصلاحياته`, 'customer');
     if (addToast) {
-      addToast('تم حذف العميل نهائياً من قاعدة البيانات وإنهاء جلسته', 'info');
+      addToast('تم حذف العميل وكافة سجلات مشترياته وصلاحياته نهائياً من قاعدة البيانات', 'info');
     }
 
     // 2. Broadcast instant wipeout to customer session across all tabs and intra-app
@@ -991,16 +1019,23 @@ export function AdminProvider({ children }) {
       customerId: String(customerId),
       email: targetEmail,
       phone: targetPhone,
+      name: targetName,
       timestamp: Date.now()
     });
 
-    // Also notify syncBus that customer list changed
+    // Also notify syncBus that customer list and orders changed
     syncBus.emit('CUSTOMER_UPDATED', {
       action: 'delete',
       customerId: String(customerId)
     });
 
-    // 3. If currently logged in storefront user matches this customer, log them out immediately
+    syncBus.emit('ORDERS_UPDATED', {
+      action: 'delete_by_customer',
+      customerId: String(customerId),
+      email: targetEmail
+    });
+
+    // 3. If currently logged in storefront user matches this customer, log them out and clear cart/orders immediately
     if (user && !user.isAdmin) {
       const isMatch =
         String(user.id) === String(customerId) ||
@@ -1009,17 +1044,24 @@ export function AdminProvider({ children }) {
         setUser(null);
         try {
           localStorage.removeItem('rawaa_user');
+          localStorage.removeItem('rawaa_cart');
+          localStorage.removeItem('rawaa_orders');
+          localStorage.removeItem('rawaa_wishlist');
           sessionStorage.removeItem('babyzone_admin_auth');
           sessionStorage.removeItem('babyzone_admin_user');
         } catch {}
       }
     }
 
-    // 4. Delete permanently from Supabase database by ID and Email
+    // 4. Cascade permanent delete in Supabase database (customers, orders, reviews)
     try {
-      await customersApi.delete(customerId, targetEmail);
+      await Promise.allSettled([
+        customersApi.delete(customerId, targetEmail),
+        ordersApi.deleteByCustomer(customerId, targetEmail, targetPhone),
+        reviewsApi.deleteByCustomer(targetEmail)
+      ]);
     } catch (e) {
-      console.warn('API customer delete notice:', e.message);
+      console.warn('API customer cascade delete notice:', e.message);
     }
   };
 

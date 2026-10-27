@@ -319,12 +319,17 @@ export function ShopProvider({ children }) {
 
       if (matchId || matchEmail || matchPhone) {
         setUser(null);
+        setCart([]);
+        setWishlist([]);
         try {
           localStorage.removeItem('rawaa_user');
+          localStorage.removeItem('rawaa_cart');
+          localStorage.removeItem('rawaa_orders');
+          localStorage.removeItem('rawaa_wishlist');
           sessionStorage.removeItem('babyzone_admin_auth');
           sessionStorage.removeItem('babyzone_admin_user');
         } catch {}
-        addToast('تم حذف حسابك وإنهاء الجلسة فوراً من قِبل إدارة المتجر', 'warning');
+        addToast('تم حذف حسابك وسجل مشترياتك وإنهاء الجلسة فوراً من قِبل إدارة المتجر', 'warning');
       }
     });
 
@@ -345,10 +350,17 @@ export function ShopProvider({ children }) {
 
           if (matchId || matchEmail || matchPhone) {
             setUser(null);
+            setCart([]);
+            setWishlist([]);
             try {
               localStorage.removeItem('rawaa_user');
+              localStorage.removeItem('rawaa_cart');
+              localStorage.removeItem('rawaa_orders');
+              localStorage.removeItem('rawaa_wishlist');
+              sessionStorage.removeItem('babyzone_admin_auth');
+              sessionStorage.removeItem('babyzone_admin_user');
             } catch {}
-            addToast('تم حذف حسابك وإنهاء الجلسة فوراً من قِبل إدارة المتجر', 'warning');
+            addToast('تم حذف حسابك وسجل مشترياتك وإنهاء الجلسة فوراً من قِبل إدارة المتجر', 'warning');
           }
         }
       )
@@ -684,8 +696,16 @@ export function ShopProvider({ children }) {
       // Case A: User exists in database
       if (dbCust) {
         if (dbCust.status === 'محظور') {
-          addToast('عذراً، هذا الحساب محظور حالياً من قبل الإدارة', 'error');
-          return null;
+          const errMsg = 'عذراً، هذا الحساب محظور حالياً من قبل الإدارة';
+          addToast(errMsg, 'error');
+          return { success: false, error: errMsg };
+        }
+
+        // STRICT VALIDATION: If the user is trying to REGISTER with an existing email, PREVENT duplicate registration!
+        if (isRegistration) {
+          const errMsg = 'هذا البريد الإلكتروني مسجل بالفعل لدينا! ممنوع تكرار التسجيل بنفس الإيميل، يرجى التوجه لتبويب «تسجيل الدخول» أو استخدام بريد آخر.';
+          addToast(errMsg, 'warning');
+          return { success: false, error: errMsg };
         }
 
         const isVip = Boolean(dbCust.is_vip || dbCust.role === 'vip_customer');
@@ -707,23 +727,18 @@ export function ShopProvider({ children }) {
 
         setUser(loggedUser);
         setIsAuthOpen(false);
-        addToast(
-          isRegistration
-            ? `هذا الحساب مسجل بالفعل، مرحباً بك يا ${loggedUser.name}!`
-            : `مرحباً بعودتك يا ${loggedUser.name}!`,
-          'success'
-        );
+        addToast(`مرحباً بعودتك يا ${loggedUser.name}!`, 'success');
         return loggedUser;
       }
 
-      // Case B: User does NOT exist in database
+      // Case B: User does NOT exist in database and is attempting to LOGIN
       if (!isRegistration) {
-        // If they are attempting to log in, do NOT auto-create!
-        addToast('هذا الحساب غير مسجل أو تم حذفه من قِبل إدارة المتجر', 'error');
-        return null;
+        const errMsg = 'هذا الحساب غير مسجل أو تم حذفه من قِبل إدارة المتجر. يمكنك إنشاء حساب جديد من تبويب «إنشاء حساب جديد».';
+        addToast(errMsg, 'error');
+        return { success: false, error: errMsg };
       }
 
-      // Case C: User is explicitly REGISTERING a new account
+      // Case C: User is explicitly REGISTERING a new account (email is guaranteed unique!)
       const newId = `cust-${Date.now()}`;
       const newCustRecord = {
         id: newId,
@@ -746,6 +761,7 @@ export function ShopProvider({ children }) {
         console.warn('Customer create notice:', err);
       }
 
+      // "وبعد كده سجل دخول" -> Immediately log in the user with their newly verified account
       const createdUser = {
         ...newCustRecord,
         isAdmin: false,
@@ -753,27 +769,15 @@ export function ShopProvider({ children }) {
       };
       setUser(createdUser);
       setIsAuthOpen(false);
-      addToast(`مرحباً بكِ في بيبي زون يا ${createdUser.name}! تم إنشاء حسابك بنجاح`, 'success');
+      addToast(`مرحباً بكِ في بيبي زون يا ${createdUser.name}! تم إنشاء حسابك وتسجيل دخولك بنجاح`, 'success');
       return createdUser;
     } catch (err) {
       console.error('Server login error:', err);
-      if (isRegistration) {
-        const fallbackUser = {
-          email: cleanEmail,
-          name: displayName,
-          isAdmin: false,
-          role: 'customer',
-          permissions: DEFAULT_CUSTOMER_PERMISSIONS,
-          loggedInAt: new Date().toISOString()
-        };
-        setUser(fallbackUser);
-        setIsAuthOpen(false);
-        addToast(`مرحباً بك يا ${fallbackUser.name}!`, 'success');
-        return fallbackUser;
-      } else {
-        addToast('تعذر تسجيل الدخول، يرجى التحقق من صحة البيانات أو الاتصال بالدعم', 'error');
-        return null;
-      }
+      const errMsg = isRegistration
+        ? (err?.message || 'تعذر إنشاء الحساب، يرجى التحقق من صحة البيانات أو الاتصال بالدعم')
+        : 'تعذر تسجيل الدخول، يرجى التحقق من صحة البيانات أو الاتصال بالدعم';
+      addToast(errMsg, 'error');
+      return { success: false, error: errMsg };
     }
   }, [addToast]);
 

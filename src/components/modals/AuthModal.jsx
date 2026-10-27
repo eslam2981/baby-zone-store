@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
 import { useAdmin } from '../../context/AdminContext';
-import { ordersApi } from '../../services/api';
+import { ordersApi, customersApi } from '../../services/api';
 import {
   X,
   User,
@@ -132,6 +132,11 @@ export default function AuthModal() {
     setIsSubmitting(true);
     try {
       if (matchingAdmin) {
+        if (activeTab === 'register') {
+          setErrorMessage('هذا البريد الإلكتروني مسجل كحساب إداري للمتجر. يرجى التوجه لتبويب «تسجيل الدخول» لإدخال كلمة المرور.');
+          setIsSubmitting(false);
+          return;
+        }
         if (!password) {
           setErrorMessage('يرجى إدخال كلمة المرور لتسجيل الدخول كمدير');
           setIsSubmitting(false);
@@ -156,12 +161,16 @@ export default function AuthModal() {
       if (activeTab === 'login') {
         const derivedName = cleanEmail.split('@')[0] || 'عميل بيبي زون';
         const res = await login(cleanEmail, derivedName, { isRegistration: false });
-        if (res) {
+        if (res && res.id && res.success !== false) {
           handleClose();
         } else {
-          setErrorMessage('هذا الحساب غير مسجل أو تم حذفه من قِبل الإدارة. يمكنك إنشاء حساب جديد من تبويب "إنشاء حساب جديد".');
+          setErrorMessage(
+            res?.error ||
+              'هذا الحساب غير مسجل أو تم حذفه من قِبل الإدارة. يمكنك إنشاء حساب جديد من تبويب "إنشاء حساب جديد".'
+          );
         }
       } else {
+        // activeTab === 'register'
         const cleanName = sanitizeText(name);
         const nameErr = validatePersonName(cleanName, true, 2, 70);
         if (nameErr) {
@@ -190,15 +199,33 @@ export default function AuthModal() {
           cleanPhone = normalizeEgyptianPhone(phone);
         }
 
+        // Pre-validation: verify email does NOT already exist in database
+        try {
+          const existingCustomer = await customersApi.getByEmail(cleanEmail);
+          if (existingCustomer) {
+            setErrorMessage(
+              'هذا البريد الإلكتروني مسجل بالفعل لدينا! يرجى التوجه لتبويب «تسجيل الدخول» أو استخدام بريد إلكتروني آخر.'
+            );
+            setIsSubmitting(false);
+            return;
+          }
+        } catch (e) {
+          console.warn('Customer email check error:', e);
+        }
+
         const res = await login(cleanEmail, cleanName, {
           isRegistration: true,
           babyStage,
           phone: cleanPhone
         });
-        if (res) {
+
+        if (res && res.id && res.success !== false) {
           handleClose();
         } else {
-          setErrorMessage('تعذر إنشاء الحساب، يرجى المحاولة مرة أخرى والتأكد من البيانات.');
+          setErrorMessage(
+            res?.error ||
+              'تعذر إنشاء الحساب، يرجى التأكد من أن البريد الإلكتروني غير مستخدم مسبقاً.'
+          );
         }
       }
     } catch (err) {
