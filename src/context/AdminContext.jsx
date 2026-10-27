@@ -181,6 +181,7 @@ export function AdminProvider({ children }) {
       }
 
       setLastSyncTime(new Date());
+      setIsRealtimeConnected(true);
       if (!silent && addToast) {
         addToast('تمت المزامنة اللحظية لكافة بيانات المتجر بنجاح ⚡', 'success');
       }
@@ -211,7 +212,7 @@ export function AdminProvider({ children }) {
         } catch {}
       }
 
-      const channelName = `realtime_admin_hub_${Date.now()}`;
+      const channelName = 'realtime_admin_hub';
       channel = supabase
         .channel(channelName)
         // 1. Live Orders Listener
@@ -369,8 +370,15 @@ export function AdminProvider({ children }) {
           if (status === 'SUBSCRIBED') {
             setIsRealtimeConnected(true);
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            setIsRealtimeConnected(false);
-            console.warn(`Realtime channel ${status}, scheduling auto-reconnect...`, err || '');
+            console.warn(`Realtime channel ${status}, verifying connection in background...`, err || '');
+            // Check if REST API is responsive before declaring disconnection
+            ordersApi.getAll()
+              .then(() => {
+                if (isMounted) setIsRealtimeConnected(true);
+              })
+              .catch(() => {
+                if (isMounted) setIsRealtimeConnected(false);
+              });
             clearTimeout(reconnectTimeout);
             reconnectTimeout = setTimeout(() => {
               if (isMounted) setupRealtimeChannel();
@@ -633,36 +641,87 @@ export function AdminProvider({ children }) {
 
   // Dynamic customer list synthesized from base customers + actual Supabase orders
   const mergedCustomers = useMemo(() => {
-    const map = new Map();
-    for (const c of customers) {
-      map.set(c.phone || c.id, { ...c });
-    }
+    // 1. Process all registered customers
+    const processedCustomers = customers.map((c) => {
+      const custEmail = (c.email || '').trim().toLowerCase();
+      const custPhone = (c.phone || '').trim();
+
+      // Find all orders in orders list that belong to this customer
+      const custOrders = orders.filter((ord) => {
+        const ordEmail = (ord.customerEmail || '').trim().toLowerCase();
+        const ordPhone = (ord.customerPhone || '').trim();
+        return (
+          (custEmail && ordEmail && custEmail === ordEmail) ||
+          (custPhone && ordPhone && custPhone === ordPhone)
+        );
+      });
+
+      // True orders count and total spent derived from actual orders if available, else DB customer record
+      const actualOrdersCount = custOrders.length > 0 
+        ? custOrders.length 
+        : (orders.length === 0 ? Number(c.ordersCount || 0) : 0);
+      const actualTotalSpent = custOrders.length > 0
+        ? custOrders.reduce((sum, ord) => sum + (Number(ord.total) || 0), 0)
+        : (orders.length === 0 ? Number(c.totalSpent || 0) : 0);
+
+      const latestOrder = custOrders[0]?.date || c.lastOrder || null;
+
+      return {
+        ...c,
+        ordersCount: actualOrdersCount,
+        totalSpent: actualTotalSpent,
+        lastOrder: latestOrder,
+        isVip: c.isVip || actualTotalSpent >= 1300
+      };
+    });
+
+    // 2. Synthesize guest customers from orders who are not in the registered customers list
+    const result = [...processedCustomers];
     for (const ord of orders) {
-      const key = ord.customerPhone || ord.customerEmail || ord.customerName;
-      if (key) {
-        if (map.has(key)) {
-          const existing = map.get(key);
-          existing.ordersCount = (existing.ordersCount || 1) + 1;
-          existing.totalSpent = (existing.totalSpent || 0) + (ord.total || 0);
-          existing.lastOrder = ord.date;
-        } else {
-          map.set(key, {
-            id: `cust-${ord.id}`,
-            name: ord.customerName,
-            phone: ord.customerPhone || '',
-            email: ord.customerEmail || '',
-            city: ord.city || 'القاهرة',
-            address: ord.address || '',
-            ordersCount: 1,
-            totalSpent: ord.total || 0,
-            status: 'نشط',
-            joinedDate: ord.date ? ord.date.split('T')[0] : new Date().toISOString().split('T')[0],
-            isVip: (ord.total || 0) >= 1300
-          });
-        }
+      const ordEmail = (ord.customerEmail || '').trim().toLowerCase();
+      const ordPhone = (ord.customerPhone || '').trim();
+      const ordName = (ord.customerName || '').trim();
+
+      const exists = result.some((c) => {
+        const cEmail = (c.email || '').trim().toLowerCase();
+        const cPhone = (c.phone || '').trim();
+        return (
+          (cEmail && ordEmail && cEmail === ordEmail) ||
+          (cPhone && ordPhone && cPhone === ordPhone)
+        );
+      });
+
+      if (!exists && (ordEmail || ordPhone || ordName)) {
+        const guestOrders = orders.filter((o) => {
+          const oEmail = (o.customerEmail || '').trim().toLowerCase();
+          const oPhone = (o.customerPhone || '').trim();
+          return (
+            (ordEmail && oEmail && ordEmail === oEmail) ||
+            (ordPhone && oPhone && ordPhone === oPhone)
+          );
+        });
+
+        const guestTotal = guestOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+        result.push({
+          id: `cust-${ord.id}`,
+          name: ordName || 'عميل زائر',
+          phone: ordPhone,
+          email: ordEmail || `guest-${ord.id}@babyzone-egypt.com`,
+          city: ord.city || 'القاهرة',
+          address: ord.address || '',
+          role: 'customer',
+          permissions: ['view_catalog', 'place_orders'],
+          ordersCount: guestOrders.length,
+          totalSpent: guestTotal,
+          status: 'نشط',
+          joinedDate: ord.date ? ord.date.split('T')[0] : new Date().toISOString().split('T')[0],
+          isVip: guestTotal >= 1300,
+          lastOrder: guestOrders[0]?.date || ord.date
+        });
       }
     }
-    return Array.from(map.values());
+
+    return result;
   }, [customers, orders]);
 
   // Order management methods with direct Supabase synchronization
