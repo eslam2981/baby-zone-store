@@ -9,7 +9,7 @@ export const initialStoreSettings = {
   storeName: "بيبي زون | BABY ZONE",
   tagline: "عالم متكامل لأجود مستلزمات الأم والطفل في مصر",
   description: "المتجر الاستثنائي المعتمد لمستلزمات الأم والطفل في مصر",
-  supportPhone: "+20 103 540 1549",
+  supportPhone: "+20 121 173 5629",
   supportEmail: "care@babyzone-egypt.com",
   address: "القاهرة، مصر",
   currency: "ج.م",
@@ -34,9 +34,10 @@ export const initialAdmins = [
     email: "admin@babyzone-egypt.com",
     role: "مدير النظام (Super Admin)",
     avatar: "/logo.png",
-    phone: "01035401549",
+    phone: "01211735629",
     lastLogin: "الآن",
     status: "نشط",
+    password: "admin",
     permissions: ["all"]
   }
 ];

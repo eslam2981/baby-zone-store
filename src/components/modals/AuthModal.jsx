@@ -103,7 +103,7 @@ export default function AuthModal() {
     isAuthenticated && currentAdmin && (user?.isAdmin || currentAdmin)
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
 
@@ -129,19 +129,24 @@ export default function AuthModal() {
         setErrorMessage('يرجى إدخال كلمة المرور لتسجيل الدخول كمدير');
         return;
       }
-      const res = loginAdmin(cleanEmail, password);
-      const isSuccess = typeof res === 'boolean' ? res : res?.success;
-      if (!isSuccess) {
-        setErrorMessage(res?.error || 'كلمة المرور الخاصة بمدير النظام غير صحيحة');
+      try {
+        const res = await loginAdmin(cleanEmail, password);
+        const isSuccess = typeof res === 'boolean' ? res : res?.success;
+        if (!isSuccess) {
+          setErrorMessage(res?.error || 'كلمة المرور الخاصة بمدير النظام غير صحيحة');
+          return;
+        }
+        login(cleanEmail, matchingAdmin.name, {
+          isAdmin: true,
+          role: matchingAdmin.role,
+          permissions: matchingAdmin.permissions || ['all']
+        });
+        handleClose();
+        return;
+      } catch (err) {
+        setErrorMessage(err?.message || 'حدث خطأ أثناء تسجيل الدخول');
         return;
       }
-      login(cleanEmail, matchingAdmin.name, {
-        isAdmin: true,
-        role: matchingAdmin.role,
-        permissions: matchingAdmin.permissions || ['all']
-      });
-      handleClose();
-      return;
     }
 
     if (activeTab === 'login') {
