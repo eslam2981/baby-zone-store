@@ -122,7 +122,7 @@ export default function TrackOrderPage() {
           return mapped.find((o) => o.status !== 'تم التسليم') || mapped[0] || null;
         }
         const updated = mapped.find((o) => o.id === prevActive.id);
-        return updated || prevActive;
+        return updated || mapped.find((o) => o.status !== 'تم التسليم') || mapped[0] || null;
       });
     } catch (err) {
       console.error('Error fetching customer orders:', err);
@@ -195,7 +195,17 @@ export default function TrackOrderPage() {
     });
 
     const unsubAdd = syncBus.on('ORDER_ADDED', ({ order }) => {
-      if (order) {
+      if (!order || !user) return;
+      const orderEmail = (order.customer_email || '').toLowerCase().trim();
+      const userEmail = (user.email || '').toLowerCase().trim();
+      const orderPhone = (order.customer_phone || '').trim();
+      const userPhone = (user.phone || '').trim();
+
+      const isMine =
+        (userEmail && orderEmail && userEmail === orderEmail) ||
+        (!orderEmail && userPhone && orderPhone && userPhone === orderPhone);
+
+      if (isMine) {
         const mapped = mapDbOrderToTracking(order);
         setCustomerOrders((prev) => [mapped, ...prev.filter((o) => o.id !== mapped.id)]);
         setActiveOrder((prev) => (!prev ? mapped : prev));
