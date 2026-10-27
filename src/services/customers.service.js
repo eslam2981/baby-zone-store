@@ -65,12 +65,40 @@ export const customersApi = {
     return { id, ...updates };
   },
 
-  async delete(id) {
-    const { error } = await supabase
-      .from('customers')
-      .delete()
-      .eq('id', id);
-    if (error) throw error;
+  async delete(id, email) {
+    const cleanEmail = email ? email.trim().toLowerCase() : null;
+    let anySuccess = false;
+    let lastError = null;
+
+    if (id) {
+      const { error: idError } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', id);
+      if (idError) {
+        console.warn('Supabase delete customer by ID notice:', idError.message);
+        lastError = idError;
+      } else {
+        anySuccess = true;
+      }
+    }
+
+    if (cleanEmail) {
+      const { error: emailError } = await supabase
+        .from('customers')
+        .delete()
+        .eq('email', cleanEmail);
+      if (emailError) {
+        console.warn('Supabase delete customer by email notice:', emailError.message);
+        if (!lastError) lastError = emailError;
+      } else {
+        anySuccess = true;
+      }
+    }
+
+    if (!anySuccess && lastError) {
+      throw lastError;
+    }
     return true;
   },
 

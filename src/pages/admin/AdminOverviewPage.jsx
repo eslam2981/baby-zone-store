@@ -320,7 +320,8 @@ export default function AdminOverviewPage() {
             </Link>
           </div>
 
-          <div className="overflow-x-auto custom-modal-scroll">
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto custom-modal-scroll">
             <table className="w-full text-right text-xs min-w-[680px] border-collapse">
               <thead>
                 <tr className="border-b border-rawaa-border/60 text-rawaa-subtle font-bold whitespace-nowrap">
@@ -425,6 +426,47 @@ export default function AdminOverviewPage() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card List View */}
+          <div className="sm:hidden space-y-3">
+            {isLoadingOrders ? (
+              <div className="space-y-2">
+                <div className="h-20 bg-rawaa-soft/60 rounded-2xl animate-pulse" />
+                <div className="h-20 bg-rawaa-soft/60 rounded-2xl animate-pulse" />
+              </div>
+            ) : orders.length === 0 ? (
+              <p className="text-xs text-rawaa-muted text-center py-6">لا توجد طلبات مسجلة حالياً</p>
+            ) : (
+              orders.slice(0, 5).map((ord) => (
+                <div key={ord.id} className="p-3.5 bg-rawaa-soft/40 border border-rawaa-border/70 rounded-2xl space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <Link to="/admin/orders" className="font-mono font-bold text-xs text-rawaa-primary hover:underline">
+                      #{ord.id}
+                    </Link>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(ord.deliveryStatus)}`}>
+                      {ord.deliveryStatus}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <div>
+                      <span className="block font-bold text-rawaa-dark">{ord.customerName}</span>
+                      <span className="block text-[10px] text-rawaa-muted">{ord.city} • {ord.paymentMethod}</span>
+                    </div>
+                    <span className="font-heading font-black text-rawaa-dark text-sm">{ord.total} ج.م</span>
+                  </div>
+                  {ord.deliveryStatus === 'بانتظار التأكيد' && (
+                    <button
+                      type="button"
+                      onClick={() => updateOrderStatus(ord.id, 'تم تأكيد الطلب')}
+                      className="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 rounded-xl transition-colors cursor-pointer"
+                    >
+                      تأكيد الطلب الآن
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
 

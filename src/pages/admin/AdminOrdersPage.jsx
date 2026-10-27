@@ -303,11 +303,11 @@ export default function AdminOrdersPage() {
         </div>
 
         {/* City and Payment filters */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:flex items-center gap-2 w-full md:w-auto">
           <select
             value={cityFilter}
             onChange={(e) => setCityFilter(e.target.value)}
-            className="bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs font-medium text-rawaa-dark outline-none cursor-pointer"
+            className="w-full sm:w-auto bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs font-medium text-rawaa-dark outline-none cursor-pointer"
           >
             <option value="all">جميع المحافظات</option>
             <option value="القاهرة">القاهرة</option>
@@ -321,7 +321,7 @@ export default function AdminOrdersPage() {
           <select
             value={paymentFilter}
             onChange={(e) => setPaymentFilter(e.target.value)}
-            className="bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs font-medium text-rawaa-dark outline-none cursor-pointer"
+            className="w-full sm:w-auto bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs font-medium text-rawaa-dark outline-none cursor-pointer"
           >
             <option value="all">جميع طرق الدفع</option>
             <option value="الدفع عند الاستلام">الدفع عند الاستلام</option>
@@ -332,9 +332,10 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {/* Orders table */}
+      {/* Orders table & mobile card view */}
       <div className="bg-white rounded-2xl border border-rawaa-border shadow-soft-xs overflow-hidden">
-        <div className="overflow-x-auto custom-modal-scroll">
+        {/* Desktop / Tablet table view */}
+        <div className="hidden md:block overflow-x-auto custom-modal-scroll">
           <table className="w-full text-right text-xs min-w-[820px] border-collapse">
             <thead className="bg-[#FAF7F2] border-b border-rawaa-border text-rawaa-subtle font-bold">
               <tr className="whitespace-nowrap">
@@ -462,6 +463,109 @@ export default function AdminOrdersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile card view (Visible on < md screens) */}
+        <div className="md:hidden divide-y divide-rawaa-border/60">
+          {isLoadingOrders ? (
+            <div className="p-4 space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="animate-pulse bg-rawaa-soft/60 rounded-xl p-3 h-32" />
+              ))}
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="text-center py-12 px-4 text-rawaa-muted">
+              <Package size={32} className="mx-auto text-rawaa-subtle mb-2 opacity-50" />
+              <p className="text-xs font-bold">
+                {orders.length === 0 ? 'لا توجد أي طلبات مسجلة حالياً' : 'لا توجد طلبات مطابقة لخيارات البحث'}
+              </p>
+            </div>
+          ) : (
+            filteredOrders.map((ord) => (
+              <div key={ord.id} className="p-3.5 hover:bg-rawaa-soft/30 transition-colors space-y-2.5">
+                {/* Header row: Order ID, Date & Status */}
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <span className="font-mono font-bold text-xs text-rawaa-dark">#{ord.id}</span>
+                    <span className="block text-[10px] text-rawaa-subtle mt-0.5">
+                      {formatShortDateTime(ord.date)}
+                    </span>
+                  </div>
+                  <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap ${getStatusBadge(ord.deliveryStatus)}`}>
+                    {ord.deliveryStatus}
+                  </span>
+                </div>
+
+                {/* Customer Info row */}
+                <div className="bg-[#FAF7F2] p-2.5 rounded-xl border border-rawaa-border/60 flex items-center justify-between gap-2 text-xs">
+                  <div className="min-w-0">
+                    <span className="font-bold text-rawaa-dark block truncate">{ord.customerName}</span>
+                    <div className="flex items-center gap-1 text-[10px] text-rawaa-subtle mt-0.5">
+                      <MapPin size={11} className="shrink-0 text-rawaa-muted" />
+                      <span className="truncate">{ord.city} {ord.district ? `• ${ord.district}` : ''}</span>
+                    </div>
+                  </div>
+                  {ord.customerPhone && (
+                    <a
+                      href={`tel:${ord.customerPhone}`}
+                      className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg shrink-0"
+                      dir="ltr"
+                    >
+                      <Phone size={11} />
+                      <span>{ord.customerPhone}</span>
+                    </a>
+                  )}
+                </div>
+
+                {/* Financial & Items summary */}
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <div>
+                    <span className="text-[10px] text-rawaa-subtle block">الإجمالي</span>
+                    <span className="font-bold text-rawaa-dark">
+                      {ord.total.toLocaleString('ar-EG')} <span className="text-[10px] text-rawaa-primary">ج.م</span>
+                    </span>
+                    <span className="text-[10px] text-rawaa-muted mr-1.5">({ord.items.length} منتجات)</span>
+                  </div>
+                  <div className="text-left">
+                    <span className="text-[10px] text-rawaa-muted block">{ord.paymentMethod}</span>
+                    <span className={`text-[10px] font-bold ${ord.paymentStatus === 'مدفوع بالكامل' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {ord.paymentStatus}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions row */}
+                <div className="flex items-center gap-2 pt-1 border-t border-dashed border-rawaa-border/60">
+                  {ord.deliveryStatus === 'بانتظار التأكيد' && (
+                    <button
+                      type="button"
+                      onClick={() => updateOrderStatus(ord.id, 'تم تأكيد الطلب')}
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <CheckCircle2 size={13} />
+                      <span>تأكيد الطلب</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setActiveOrder(ord)}
+                    className="flex-1 bg-rawaa-soft hover:bg-rawaa-primary hover:text-white text-rawaa-dark font-bold py-1.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Eye size={13} />
+                    <span>عرض التفاصيل</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirmId(ord.id)}
+                    className="w-8 h-8 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                    title="حذف الطلب"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Order Details Drawer / Modal rendered via createPortal */}
@@ -479,11 +583,11 @@ export default function AdminOrdersPage() {
 
           return (
             <div
-              className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+              className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto overscroll-contain"
               onClick={() => setActiveOrder(null)}
             >
               <div
-                className="bg-white rounded-3xl p-6 max-w-2xl w-full text-right shadow-2xl border border-rawaa-border my-6 animate-fadeIn max-h-[90vh] flex flex-col print:shadow-none print:border-none print:m-0 print:max-h-none print:w-full"
+                className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-2xl w-full text-right shadow-2xl border border-rawaa-border my-auto sm:my-6 animate-fadeIn max-h-[92vh] flex flex-col print:shadow-none print:border-none print:m-0 print:max-h-none print:w-full"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
@@ -691,11 +795,11 @@ export default function AdminOrdersPage() {
       {/* Manual Add Order Modal rendered via createPortal */}
       {isAddModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain"
           onClick={() => setIsAddModalOpen(false)}
         >
           <div
-            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-soft-xl border border-rawaa-border animate-scaleUp my-8"
+            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-soft-xl border border-rawaa-border animate-scaleUp my-auto sm:my-8 max-h-[92vh] overflow-y-auto custom-modal-scroll"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-4 border-b border-rawaa-border mb-4">

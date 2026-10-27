@@ -208,7 +208,15 @@ export function AdminProvider({ children }) {
               prev.map((c) => (c.id === updatedCust.id ? updatedCust : c))
             );
           } else if (payload.eventType === 'DELETE') {
-            setCustomers((prev) => prev.filter((c) => c.id !== payload.old.id));
+            const deletedId = payload.old?.id;
+            const deletedEmail = payload.old?.email ? payload.old.email.toLowerCase().trim() : null;
+            setCustomers((prev) =>
+              prev.filter(
+                (c) =>
+                  String(c.id) !== String(deletedId) &&
+                  (!deletedEmail || c.email?.toLowerCase().trim() !== deletedEmail)
+              )
+            );
           }
         }
       )
@@ -968,38 +976,55 @@ export function AdminProvider({ children }) {
 
   const deleteCustomer = async (customerId) => {
     // 1. Locate customer object first before state removal
-    const target = customers.find((c) => c.id === customerId);
+    const target = customers.find((c) => String(c.id) === String(customerId));
     const targetEmail = target?.email ? target.email.toLowerCase().trim() : null;
     const targetPhone = target?.phone ? target.phone.trim() : null;
 
-    setCustomers((prev) => prev.filter((c) => c.id !== customerId));
-    addActivity('حذف عميل', `رقم العميل ${customerId}`, 'customer');
+    // Remove immediately from local state (optimistic instant UI update without refresh)
+    setCustomers((prev) =>
+      prev.filter(
+        (c) =>
+          String(c.id) !== String(customerId) &&
+          (!targetEmail || c.email?.toLowerCase().trim() !== targetEmail)
+      )
+    );
+    addActivity('حذف عميل', `رقم العميل ${customerId}${targetEmail ? ` (${targetEmail})` : ''}`, 'customer');
     if (addToast) {
-      addToast('تم حذف العميل من قاعدة البيانات وإنهاء جلسته', 'info');
+      addToast('تم حذف العميل نهائياً من قاعدة البيانات وإنهاء جلسته', 'info');
     }
 
     // 2. Broadcast instant wipeout to customer session across all tabs and intra-app
     syncBus.emit('CUSTOMER_DELETED', {
-      customerId,
+      customerId: String(customerId),
       email: targetEmail,
       phone: targetPhone,
       timestamp: Date.now()
     });
 
+    // Also notify syncBus that customer list changed
+    syncBus.emit('CUSTOMER_UPDATED', {
+      action: 'delete',
+      customerId: String(customerId)
+    });
+
     // 3. If currently logged in storefront user matches this customer, log them out immediately
     if (user && !user.isAdmin) {
-      const isMatch = user.id === customerId || (targetEmail && user.email?.toLowerCase().trim() === targetEmail);
+      const isMatch =
+        String(user.id) === String(customerId) ||
+        (targetEmail && user.email?.toLowerCase().trim() === targetEmail);
       if (isMatch && setUser) {
         setUser(null);
         try {
           localStorage.removeItem('rawaa_user');
+          sessionStorage.removeItem('babyzone_admin_auth');
+          sessionStorage.removeItem('babyzone_admin_user');
         } catch {}
       }
     }
 
-    // 4. Delete from Supabase database
+    // 4. Delete permanently from Supabase database by ID and Email
     try {
-      await customersApi.delete(customerId);
+      await customersApi.delete(customerId, targetEmail);
     } catch (e) {
       console.warn('API customer delete notice:', e.message);
     }

@@ -129,7 +129,7 @@ export default function AdminInventoryPage() {
       </div>
 
       {/* Inventory KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-rawaa-border shadow-soft">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-rawaa-dark/60">إجمالي الوحدات</span>
@@ -280,9 +280,10 @@ export default function AdminInventoryPage() {
         </div>
       </div>
 
-      {/* Inventory Table */}
+      {/* Inventory Table & Mobile Card View */}
       <div className="bg-white rounded-2xl border border-rawaa-border shadow-soft overflow-hidden">
-        <div className="overflow-x-auto custom-modal-scroll">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto custom-modal-scroll">
           <table className="w-full text-right text-xs min-w-[880px] border-collapse">
             <thead className="bg-[#FAF7F2] border-b border-rawaa-border text-xs font-bold text-rawaa-dark/70">
               <tr className="whitespace-nowrap">
@@ -437,16 +438,124 @@ export default function AdminInventoryPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile Card View (Visible on < md screens) */}
+        <div className="md:hidden divide-y divide-rawaa-border/60">
+          {isLoadingProducts ? (
+            <div className="p-4 space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="animate-pulse bg-rawaa-soft/60 rounded-xl p-3 h-28" />
+              ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="py-12 px-4 text-center text-rawaa-dark/50">
+              <Boxes className="w-10 h-10 mx-auto mb-2 opacity-30" />
+              <p className="font-bold text-xs">لا توجد منتجات تطابق معايير الفلترة</p>
+            </div>
+          ) : (
+            filteredProducts.map((product) => {
+              const stock = Number(product.stockCount ?? product.stock ?? 0);
+              const price = Number(product.price) || 0;
+              const totalVal = stock * price;
+
+              return (
+                <div key={product.id} className="p-3.5 hover:bg-rawaa-soft/30 transition-colors space-y-2.5">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-xl border border-rawaa-border overflow-hidden shrink-0 bg-rawaa-soft">
+                      <img
+                        src={product.mainImage || product.image || '/logo.png'}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/logo.png';
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-bold text-xs text-rawaa-dark line-clamp-1 leading-snug">
+                          {product.name}
+                        </h4>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                          stock === 0
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : stock <= 5
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}>
+                          {stock === 0 ? 'نفد' : stock <= 5 ? `حرج (${stock})` : `${stock} متوفر`}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-1 text-[11px] text-rawaa-dark/50">
+                        <span>{categories.find((c) => c.id === product.category)?.name || product.category}</span>
+                        <span>•</span>
+                        <span className="font-bold text-rawaa-dark">{price.toLocaleString()} ج.م</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stock control row and replenishment action */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-dashed border-rawaa-border/60">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => updateProductStock(product.id, Math.max(0, stock - 1))}
+                        disabled={stock === 0}
+                        title="خصم قطعة واحدة"
+                        className="w-7 h-7 rounded-lg bg-rawaa-soft hover:bg-rose-100 hover:text-rose-700 text-rawaa-dark flex items-center justify-center transition-colors disabled:opacity-30 cursor-pointer shrink-0"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span
+                        className={`w-9 text-center font-bold font-mono text-sm ${
+                          stock === 0
+                            ? 'text-rose-600 font-black'
+                            : stock <= 5
+                            ? 'text-amber-600'
+                            : 'text-rawaa-dark'
+                        }`}
+                      >
+                        {stock}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateProductStock(product.id, stock + 1)}
+                        title="إضافة قطعة واحدة"
+                        className="w-7 h-7 rounded-lg bg-rawaa-soft hover:bg-emerald-100 hover:text-emerald-700 text-rawaa-dark flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setAdjustmentAmount(10);
+                        setAdjustmentType('add');
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-rawaa-soft hover:bg-rawaa-dark hover:text-white text-rawaa-dark font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <ArrowUpDown className="w-3.5 h-3.5 text-rawaa-primary" />
+                      <span>توريد / تسوية</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* Stock Adjustment Modal rendered via createPortal */}
       {selectedProduct && createPortal(
         <div
-          className="fixed inset-0 z-[9999] overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[99999] overflow-y-auto overscroll-contain bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
           onClick={() => setSelectedProduct(null)}
         >
           <div
-            className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-rawaa-border overflow-hidden my-8 animate-fadeIn"
+            className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-rawaa-border overflow-hidden my-auto sm:my-8 max-h-[92vh] overflow-y-auto custom-modal-scroll animate-fadeIn"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-5 bg-rawaa-soft/60 border-b border-rawaa-border flex items-center justify-between">

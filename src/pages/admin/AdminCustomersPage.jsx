@@ -289,7 +289,7 @@ export default function AdminCustomersPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         <div className="bg-white p-5 rounded-3xl border border-rawaa-border shadow-soft">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-rawaa-muted">إجمالي العملاء المسجلين</span>
@@ -443,9 +443,10 @@ export default function AdminCustomersPage() {
         </div>
       </div>
 
-      {/* Customers Table */}
+      {/* Customers Table & Mobile Cards */}
       <div className="bg-white rounded-3xl border border-rawaa-border shadow-soft overflow-hidden">
-        <div className="overflow-x-auto custom-modal-scroll">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto custom-modal-scroll">
           <table className="w-full text-right text-xs min-w-[880px] border-collapse">
             <thead className="bg-[#FAF7F2] border-b border-rawaa-border text-xs font-bold text-rawaa-muted">
               <tr className="whitespace-nowrap">
@@ -625,12 +626,122 @@ export default function AdminCustomersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile card view (Visible on < md screens) */}
+        <div className="md:hidden divide-y divide-rawaa-border/60">
+          {isLoadingCustomers ? (
+            <div className="p-4 space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="animate-pulse bg-rawaa-soft/60 rounded-2xl p-4 h-28" />
+              ))}
+            </div>
+          ) : filteredCustomers.length === 0 ? (
+            <div className="py-12 px-4 text-center text-rawaa-muted">
+              <Users className="w-12 h-12 mx-auto mb-3 opacity-30 text-rawaa-primary" />
+              <p className="font-heading font-black text-sm text-rawaa-dark">لا يوجد عملاء مسجلين حالياً</p>
+            </div>
+          ) : (
+            filteredCustomers.map((customer) => {
+              const permCount = Array.isArray(customer.permissions) ? customer.permissions.length : 5;
+              const isBlocked = customer.status === 'محظور';
+
+              return (
+                <div key={customer.id} className="p-4 hover:bg-rawaa-soft/30 transition-colors space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-11 h-11 rounded-2xl font-bold flex items-center justify-center text-sm shrink-0 shadow-soft-xs ${
+                        customer.isVip
+                          ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                          : isBlocked
+                          ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                          : 'bg-rawaa-primary/10 text-rawaa-primary border border-rawaa-primary/20'
+                      }`}>
+                        {customer.name?.charAt(0) || 'ع'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-xs text-rawaa-dark flex items-center gap-1.5 truncate">
+                          <span>{customer.name}</span>
+                          {customer.isVip && (
+                            <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
+                          )}
+                        </div>
+                        <div className="text-[10px] text-rawaa-muted flex items-center gap-1.5 mt-0.5">
+                          <span>{customer.city || 'مصر'}</span>
+                          <span>•</span>
+                          <span>انضم {customer.joinedDate || '2026'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                      isBlocked
+                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        : customer.status === 'نشط'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-gray-100 text-gray-600 border-gray-200'
+                    }`}>
+                      {customer.status}
+                    </span>
+                  </div>
+
+                  {/* Contact & financial stats row */}
+                  <div className="bg-[#FAF7F2] p-2.5 rounded-xl border border-rawaa-border/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      {customer.phone && (
+                        <a
+                          href={`tel:${customer.phone}`}
+                          className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg"
+                          dir="ltr"
+                        >
+                          <Phone size={11} />
+                          <span>{customer.phone}</span>
+                        </a>
+                      )}
+                      <span className="text-[11px] text-rawaa-muted">
+                        {customer.orderCount || 0} طلبات
+                      </span>
+                    </div>
+
+                    <div className="text-[11px] font-bold text-rawaa-dark">
+                      {(customer.totalSpent || 0).toLocaleString()} <span className="text-[9px] text-rawaa-primary font-normal">ج.م</span>
+                    </div>
+                  </div>
+
+                  {/* Permissions & action buttons */}
+                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-dashed border-rawaa-border/60">
+                    <span className="text-[10px] text-rawaa-muted font-medium">
+                      الصلاحيات: <strong className="text-rawaa-dark">{permCount}</strong> / 8
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCustomer(customer)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rawaa-soft hover:bg-rawaa-primary hover:text-white rounded-xl text-xs font-bold text-rawaa-dark transition-all cursor-pointer"
+                      >
+                        <Key className="w-3.5 h-3.5" />
+                        <span>الصلاحيات والملف</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmId(customer.id)}
+                        className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                        title="حذف العميل"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* Customer Profile & Permissions Management Drawer rendered via createPortal */}
       {selectedCustomer && createPortal(
         <div
-          className="fixed inset-0 z-[9999] overflow-hidden bg-black/60 backdrop-blur-xs flex justify-end animate-fadeIn"
+          className="fixed inset-0 z-[99999] overflow-hidden bg-black/60 backdrop-blur-xs flex justify-end animate-fadeIn overscroll-contain"
           onClick={() => setSelectedCustomer(null)}
         >
           <div
@@ -984,11 +1095,11 @@ export default function AdminCustomersPage() {
       {/* Add Customer Modal rendered via createPortal */}
       {isAddModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn overflow-y-auto"
+          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fadeIn overflow-y-auto overscroll-contain"
           onClick={() => setIsAddModalOpen(false)}
         >
           <div
-            className="bg-white rounded-3xl max-w-lg w-full p-6 text-right shadow-2xl border border-rawaa-border animate-scaleUp relative overflow-hidden my-8"
+            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 text-right shadow-2xl border border-rawaa-border animate-scaleUp relative overflow-hidden my-auto sm:my-8 max-h-[92vh] overflow-y-auto custom-modal-scroll"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-3 border-b border-rawaa-border mb-4">
@@ -1023,7 +1134,7 @@ export default function AdminCustomersPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-rawaa-dark mb-1">البريد الإلكتروني *</label>
                   <input
@@ -1119,13 +1230,14 @@ export default function AdminCustomersPage() {
         confirmText="نعم، حذف الحساب نهائياً"
         cancelText="تراجع"
         isDestructive={true}
-        onConfirm={() => {
+        onConfirm={async () => {
           if (deleteConfirmId) {
-            deleteCustomer(deleteConfirmId);
-            if (selectedCustomer?.id === deleteConfirmId) {
+            const idToDelete = deleteConfirmId;
+            setDeleteConfirmId(null);
+            if (selectedCustomer && String(selectedCustomer.id) === String(idToDelete)) {
               setSelectedCustomer(null);
             }
-            setDeleteConfirmId(null);
+            await deleteCustomer(idToDelete);
           }
         }}
         onCancel={() => setDeleteConfirmId(null)}

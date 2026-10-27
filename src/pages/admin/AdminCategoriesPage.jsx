@@ -270,11 +270,11 @@ export default function AdminCategoriesPage() {
       {/* Add / Edit Category Modal */}
       {isModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain"
           onClick={handleCloseModal}
         >
           <div
-            className="bg-white rounded-3xl p-6 max-w-lg w-full text-right shadow-2xl border border-rawaa-border animate-fadeIn space-y-4 my-8 max-h-[90vh] flex flex-col"
+            className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-lg w-full text-right shadow-2xl border border-rawaa-border animate-fadeIn space-y-4 my-auto sm:my-8 max-h-[92vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-3 border-b border-rawaa-border shrink-0">
@@ -303,7 +303,7 @@ export default function AdminCategoriesPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-rawaa-dark mb-1">المعرف البرمجي (Slug)</label>
                   <input

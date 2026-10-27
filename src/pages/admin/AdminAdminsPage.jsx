@@ -266,11 +266,11 @@ export default function AdminAdminsPage() {
       {/* Add Admin Modal rendered via createPortal */}
       {isModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[9999] overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[99999] overflow-y-auto overscroll-contain bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
           onClick={() => setIsModalOpen(false)}
         >
           <div
-            className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-rawaa-border overflow-hidden my-8 animate-fadeIn"
+            className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-rawaa-border overflow-hidden my-auto sm:my-8 max-h-[92vh] overflow-y-auto custom-modal-scroll animate-fadeIn"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-5 bg-rawaa-soft/60 border-b border-rawaa-border flex items-center justify-between">
@@ -490,11 +490,11 @@ export default function AdminAdminsPage() {
       {/* Password update modal rendered via createPortal */}
       {Boolean(editingAdminPassword) && createPortal(
         <div
-          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
+          className="fixed inset-0 z-[99999] overflow-y-auto overscroll-contain bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn"
           onClick={() => setEditingAdminPassword(null)}
         >
           <div
-            className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-rawaa-border overflow-hidden"
+            className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-rawaa-border overflow-hidden my-auto sm:my-8 max-h-[92vh] overflow-y-auto custom-modal-scroll"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 bg-rawaa-soft/60 border-b border-rawaa-border flex items-center justify-between">

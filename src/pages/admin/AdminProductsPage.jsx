@@ -294,12 +294,12 @@ export default function AdminProductsPage() {
         </div>
 
         {/* Filter controls */}
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:flex items-center gap-2 w-full md:w-auto">
           {/* Category filter */}
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs font-medium text-rawaa-dark outline-none cursor-pointer"
+            className="w-full sm:w-auto bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs font-medium text-rawaa-dark outline-none cursor-pointer"
           >
             <option value="all">جميع الأقسام</option>
             {categories.map((c) => (
@@ -311,7 +311,7 @@ export default function AdminProductsPage() {
           <select
             value={stockFilter}
             onChange={(e) => setStockFilter(e.target.value)}
-            className="bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs font-medium text-rawaa-dark outline-none cursor-pointer"
+            className="w-full sm:w-auto bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs font-medium text-rawaa-dark outline-none cursor-pointer"
           >
             <option value="all">جميع حالات المخزون</option>
             <option value="in-stock">متوفر (&gt; 5 قطع)</option>
@@ -323,7 +323,7 @@ export default function AdminProductsPage() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs font-medium text-rawaa-dark outline-none cursor-pointer"
+            className="w-full sm:w-auto bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs font-medium text-rawaa-dark outline-none cursor-pointer"
           >
             <option value="newest">الأحدث إضافة</option>
             <option value="price-low">السعر: من الأقل للأعلى</option>
@@ -334,9 +334,10 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Products table */}
+      {/* Products table & mobile card view */}
       <div className="bg-white rounded-2xl border border-rawaa-border shadow-soft-xs overflow-hidden">
-        <div className="overflow-x-auto custom-modal-scroll">
+        {/* Desktop / Tablet table view */}
+        <div className="hidden md:block overflow-x-auto custom-modal-scroll">
           <table className="w-full text-right text-xs min-w-[820px] border-collapse">
             <thead className="bg-[#FAF7F2] border-b border-rawaa-border text-rawaa-subtle font-bold">
               <tr className="whitespace-nowrap">
@@ -486,6 +487,126 @@ export default function AdminProductsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile card view (Visible on < md screens) */}
+        <div className="md:hidden divide-y divide-rawaa-border/60">
+          {isLoadingProducts ? (
+            <div className="p-4 space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="animate-pulse bg-rawaa-soft/60 rounded-xl p-3 h-24" />
+              ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-10 px-4 text-rawaa-muted">
+              <Package size={32} className="mx-auto text-rawaa-subtle mb-2 opacity-50" />
+              <p className="text-xs font-bold">لا توجد منتجات مطابقة لخيارات البحث أو الفلاتر</p>
+            </div>
+          ) : (
+            filteredProducts.map((p) => (
+              <div key={p.id} className="p-3.5 hover:bg-rawaa-soft/30 transition-colors">
+                <div className="flex items-start gap-3">
+                  <div className="w-14 h-14 rounded-xl border border-rawaa-border shrink-0 bg-rawaa-soft overflow-hidden">
+                    <img
+                      src={p.mainImage || '/logo.png'}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/logo.png';
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="font-bold text-xs text-rawaa-dark line-clamp-1 leading-snug">
+                        {p.name}
+                      </h4>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenModal(p)}
+                          className="w-8 h-8 rounded-lg text-rawaa-muted hover:text-rawaa-primary hover:bg-rawaa-soft flex items-center justify-center transition-colors cursor-pointer"
+                          title="تعديل المنتج"
+                        >
+                          <Edit size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteConfirmId(p.id)}
+                          className="w-8 h-8 rounded-lg text-rawaa-muted hover:text-red-600 hover:bg-red-50 flex items-center justify-center transition-colors cursor-pointer"
+                          title="حذف المنتج"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-1 text-[11px] text-rawaa-muted">
+                      <span>{getCategoryName(p.category)}</span>
+                      {p.brand && (
+                        <>
+                          <span>•</span>
+                          <span className="font-medium text-rawaa-dark">{p.brand}</span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Price and Stock row */}
+                    <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-dashed border-rawaa-border/60">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-xs font-bold text-rawaa-dark">{p.price} ج.م</span>
+                        {p.originalPrice > p.price && (
+                          <span className="text-[10px] text-rawaa-subtle line-through">
+                            {p.originalPrice} ج.م
+                          </span>
+                        )}
+                        {p.discountPercent > 0 && (
+                          <span className="bg-red-100 text-red-700 text-[9px] font-bold px-1.5 py-0.2 rounded-full">
+                            -{p.discountPercent}%
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Stock controls */}
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            p.stockCount <= 0
+                              ? 'bg-red-50 text-red-600 border border-red-200'
+                              : p.stockCount <= 5
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          }`}
+                        >
+                          {p.stockCount <= 0 ? 'نفد' : `${p.stockCount} ق`}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => updateProductStock(p.id, p.stockCount + 1)}
+                            className="w-6 h-6 rounded bg-rawaa-soft hover:bg-rawaa-primary hover:text-white flex items-center justify-center font-bold text-xs transition-colors cursor-pointer"
+                            title="إضافة 1 للمخزون"
+                          >
+                            <Plus size={11} strokeWidth={2.5} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateProductStock(p.id, p.stockCount - 1)}
+                            disabled={p.stockCount <= 0}
+                            className="w-6 h-6 rounded bg-rawaa-soft hover:bg-red-500 hover:text-white flex items-center justify-center font-bold text-xs transition-colors cursor-pointer disabled:opacity-30"
+                            title="خصم 1 من المخزون"
+                          >
+                            <Minus size={11} strokeWidth={2.5} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Delete confirmation dialog */}
@@ -508,11 +629,11 @@ export default function AdminProductsPage() {
       {/* Add / Edit product modal rendered in Portal at document.body level */}
       {isModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain"
           onClick={handleCloseModal}
         >
           <div
-            className="bg-white rounded-3xl p-6 max-w-2xl w-full text-right shadow-2xl border border-rawaa-border my-8 animate-fadeIn max-h-[90vh] flex flex-col"
+            className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-2xl w-full text-right shadow-2xl border border-rawaa-border my-auto sm:my-8 animate-fadeIn max-h-[92vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-3 border-b border-rawaa-border shrink-0">

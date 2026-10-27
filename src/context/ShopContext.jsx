@@ -230,9 +230,9 @@ export function ShopProvider({ children }) {
       if (!user || user.isAdmin) return;
       const cleanEmail = email ? email.toLowerCase().trim() : '';
       const userEmail = user.email ? user.email.toLowerCase().trim() : '';
-      const matchId = customerId && user.id === customerId;
+      const matchId = customerId && String(user.id) === String(customerId);
       const matchEmail = cleanEmail && userEmail && cleanEmail === userEmail;
-      const matchPhone = phone && user.phone && phone === user.phone;
+      const matchPhone = phone && user.phone && String(phone).trim() === String(user.phone).trim();
 
       if (matchId || matchEmail || matchPhone) {
         setUser(null);
@@ -241,7 +241,7 @@ export function ShopProvider({ children }) {
           sessionStorage.removeItem('babyzone_admin_auth');
           sessionStorage.removeItem('babyzone_admin_user');
         } catch {}
-        addToast('تم حذف حسابك وإنهاء الجلسة من قِبل إدارة المتجر', 'warning');
+        addToast('تم حذف حسابك وإنهاء الجلسة فوراً من قِبل إدارة المتجر', 'warning');
       }
     });
 
@@ -256,16 +256,16 @@ export function ShopProvider({ children }) {
           const old = payload.old;
           if (!old) return;
           const userEmail = user.email ? user.email.toLowerCase().trim() : '';
-          const matchId = old.id && user.id === old.id;
+          const matchId = old.id && String(user.id) === String(old.id);
           const matchEmail = old.email && userEmail && old.email.toLowerCase().trim() === userEmail;
-          const matchPhone = old.phone && user.phone && old.phone === user.phone;
+          const matchPhone = old.phone && user.phone && String(old.phone).trim() === String(user.phone).trim();
 
           if (matchId || matchEmail || matchPhone) {
             setUser(null);
             try {
               localStorage.removeItem('rawaa_user');
             } catch {}
-            addToast('تم حذف حسابك وإنهاء الجلسة من قِبل إدارة المتجر', 'warning');
+            addToast('تم حذف حسابك وإنهاء الجلسة فوراً من قِبل إدارة المتجر', 'warning');
           }
         }
       )
@@ -561,6 +561,7 @@ export function ShopProvider({ children }) {
       : (cleanEmail ? cleanEmail.split('@')[0] : 'عميل بيبي زون');
     const displayName = (name && name.trim()) ? name.trim() : fallbackName;
 
+    // 1. Admin login handling
     if (extraData?.isAdmin || isAdminEmail) {
       const adminUser = {
         email: cleanEmail,
@@ -576,13 +577,21 @@ export function ShopProvider({ children }) {
       return adminUser;
     }
 
+    // 2. Customer login & registration flow
+    const isRegistration = Boolean(extraData?.isRegistration);
+
     try {
-      const { data: dbCust } = await supabase
+      const { data: dbCust, error: fetchError } = await supabase
         .from('customers')
         .select('*')
         .eq('email', cleanEmail)
         .maybeSingle();
 
+      if (fetchError) {
+        console.warn('Supabase customer fetch notice:', fetchError);
+      }
+
+      // Case A: User exists in database
       if (dbCust) {
         if (dbCust.status === 'محظور') {
           addToast('عذراً، هذا الحساب محظور حالياً من قبل الإدارة', 'error');
@@ -601,62 +610,80 @@ export function ShopProvider({ children }) {
           isVip,
           permissions: Array.isArray(dbCust.permissions) && dbCust.permissions.length > 0
             ? dbCust.permissions
-            : ['view_catalog', 'place_orders', 'view_own_orders', 'rate_products', 'hospital_bag'],
+            : DEFAULT_CUSTOMER_PERMISSIONS,
           isAdmin: false,
           loggedInAt: new Date().toISOString()
         };
 
         setUser(loggedUser);
         setIsAuthOpen(false);
-        addToast(`مرحباً بعودتك يا ${loggedUser.name}!`, 'success');
+        addToast(
+          isRegistration
+            ? `هذا الحساب مسجل بالفعل، مرحباً بك يا ${loggedUser.name}!`
+            : `مرحباً بعودتك يا ${loggedUser.name}!`,
+          'success'
+        );
         return loggedUser;
-      } else {
-        const newId = `cust-${Date.now()}`;
-        const newCustRecord = {
-          id: newId,
-          name: displayName,
-          email: cleanEmail,
-          phone: extraData.phone || '',
-          city: extraData.city || 'القاهرة',
-          address: extraData.address || '',
-          role: 'customer',
-          permissions: DEFAULT_CUSTOMER_PERMISSIONS,
-          is_vip: false,
-          status: 'نشط',
-          orders_count: 0,
-          total_spent: 0
-        };
-
-        try {
-          await customersApi.create(newCustRecord);
-        } catch (err) {
-          console.warn('Customer auto-provision notice:', err);
-        }
-
-        const createdUser = {
-          ...newCustRecord,
-          isAdmin: false,
-          loggedInAt: new Date().toISOString()
-        };
-        setUser(createdUser);
-        setIsAuthOpen(false);
-        addToast(`مرحباً بكِ في بيبي زون يا ${createdUser.name}!`, 'success');
-        return createdUser;
       }
-    } catch (err) {
-      console.error('Server login error:', err);
-      const fallbackUser = {
-        email: cleanEmail,
+
+      // Case B: User does NOT exist in database
+      if (!isRegistration) {
+        // If they are attempting to log in, do NOT auto-create!
+        addToast('هذا الحساب غير مسجل أو تم حذفه من قِبل إدارة المتجر', 'error');
+        return null;
+      }
+
+      // Case C: User is explicitly REGISTERING a new account
+      const newId = `cust-${Date.now()}`;
+      const newCustRecord = {
+        id: newId,
         name: displayName,
-        isAdmin: false,
+        email: cleanEmail,
+        phone: extraData.phone || '',
+        city: extraData.city || 'القاهرة',
+        address: extraData.address || '',
         role: 'customer',
-        permissions: ['view_catalog', 'place_orders', 'view_own_orders', 'rate_products', 'hospital_bag'],
+        permissions: DEFAULT_CUSTOMER_PERMISSIONS,
+        is_vip: false,
+        status: 'نشط',
+        orders_count: 0,
+        total_spent: 0
+      };
+
+      try {
+        await customersApi.create(newCustRecord);
+      } catch (err) {
+        console.warn('Customer create notice:', err);
+      }
+
+      const createdUser = {
+        ...newCustRecord,
+        isAdmin: false,
         loggedInAt: new Date().toISOString()
       };
-      setUser(fallbackUser);
+      setUser(createdUser);
       setIsAuthOpen(false);
-      addToast(`مرحباً بك يا ${fallbackUser.name}!`, 'success');
-      return fallbackUser;
+      addToast(`مرحباً بكِ في بيبي زون يا ${createdUser.name}! تم إنشاء حسابك بنجاح`, 'success');
+      return createdUser;
+    } catch (err) {
+      console.error('Server login error:', err);
+      if (isRegistration) {
+        const fallbackUser = {
+          email: cleanEmail,
+          name: displayName,
+          isAdmin: false,
+          role: 'customer',
+          permissions: DEFAULT_CUSTOMER_PERMISSIONS,
+          loggedInAt: new Date().toISOString()
+        };
+        setUser(fallbackUser);
+        setIsAuthOpen(false);
+        addToast(`مرحباً بك يا ${fallbackUser.name}!`, 'success');
+        return fallbackUser;
+      } else {
+        addToast('تعذر تسجيل الدخول، يرجى التحقق من صحة البيانات أو الاتصال بالدعم', 'error');
+        return null;
+      }
     }
   }, [addToast]);
 

@@ -16,7 +16,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Clock,
-  ChevronDown
+  ChevronDown,
+  X
 } from 'lucide-react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
@@ -40,6 +41,7 @@ export default function AdminHeader() {
 
   // Search, notification, and profile popover states
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -125,36 +127,49 @@ export default function AdminHeader() {
   const totalNotifications = pendingOrders.length + lowStockProducts.length;
 
   return (
-    <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-rawaa-border px-4 sm:px-6 py-3 transition-all">
-      <div className="flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-rawaa-border px-3 sm:px-6 py-2.5 sm:py-3 transition-all">
+      <div className="flex items-center justify-between gap-2 sm:gap-4">
         {/* Mobile menu trigger and breadcrumbs */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <button
             type="button"
             onClick={() => setIsMobileSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-xl text-rawaa-dark hover:bg-rawaa-soft transition-colors cursor-pointer"
+            className="lg:hidden p-2 rounded-xl text-rawaa-dark hover:bg-rawaa-soft transition-colors cursor-pointer shrink-0"
             aria-label="فتح القائمة الجانبية"
           >
             <Menu size={20} />
           </button>
 
-          <div>
-            <div className="flex items-center gap-1.5 text-[11px] text-rawaa-subtle font-medium">
-              <Link to="/admin" className="hover:text-rawaa-primary transition-colors">
+          <div className="min-w-0 flex-1">
+            <div className="hidden xs:flex items-center gap-1.5 text-[11px] text-rawaa-subtle font-medium truncate">
+              <Link to="/admin" className="hover:text-rawaa-primary transition-colors shrink-0">
                 لوحة الإدارة
               </Link>
               <span>/</span>
-              <span className="text-rawaa-muted font-bold">{breadcrumb}</span>
+              <span className="text-rawaa-muted font-bold truncate">{breadcrumb}</span>
             </div>
-            <h1 className="font-heading text-base sm:text-lg font-black text-rawaa-dark leading-tight mt-0.5">
+            <h1 className="font-heading text-xs sm:text-base lg:text-lg font-black text-rawaa-dark leading-tight mt-0.5 truncate">
               {pageTitle}
             </h1>
           </div>
         </div>
 
         {/* Global search quick actions and admin profile */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Global search bar */}
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Mobile search trigger button */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileSearchOpen((prev) => !prev);
+              if (!isMobileSearchOpen) setIsSearchOpen(true);
+            }}
+            className="md:hidden p-2 rounded-full text-rawaa-dark hover:bg-rawaa-soft transition-colors cursor-pointer"
+            aria-label="البحث في لوحة التحكم"
+          >
+            <Search size={18} />
+          </button>
+
+          {/* Desktop search bar */}
           <div className="relative" ref={searchRef}>
             <div className="hidden md:flex items-center bg-rawaa-soft border border-rawaa-border rounded-full h-9 px-3.5 focus-within:border-rawaa-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-rawaa-primary/15 transition-all w-52 lg:w-72">
               <Search size={15} className="text-rawaa-subtle shrink-0 ml-2" />
@@ -170,7 +185,7 @@ export default function AdminHeader() {
 
             {/* Live search results popover */}
             {isSearchOpen && searchResults && (
-              <div className="absolute left-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-soft-xl border border-rawaa-border p-3 space-y-3 z-50 text-right animate-fadeIn">
+              <div className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-16 sm:top-full sm:mt-2 w-auto sm:w-80 md:w-96 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl shadow-soft-xl border border-rawaa-border p-3 space-y-3 z-50 text-right animate-fadeIn max-h-[75vh] overflow-y-auto">
                 {searchResults.products.length === 0 && searchResults.orders.length === 0 ? (
                   <p className="text-xs text-rawaa-muted text-center py-4">لا توجد نتائج مطابقة لـ «{searchQuery}»</p>
                 ) : (
@@ -185,6 +200,7 @@ export default function AdminHeader() {
                               type="button"
                               onClick={() => {
                                 setIsSearchOpen(false);
+                                setIsMobileSearchOpen(false);
                                 setSearchQuery('');
                                 navigate('/admin/products');
                               }}
@@ -211,6 +227,7 @@ export default function AdminHeader() {
                               type="button"
                               onClick={() => {
                                 setIsSearchOpen(false);
+                                setIsMobileSearchOpen(false);
                                 setSearchQuery('');
                                 navigate('/admin/orders');
                               }}
@@ -237,15 +254,15 @@ export default function AdminHeader() {
             <button
               type="button"
               onClick={() => setIsQuickActionOpen((prev) => !prev)}
-              className="flex items-center gap-1.5 bg-rawaa-primary hover:bg-rawaa-primary-hover active:scale-95 text-white text-xs font-bold h-9 px-3.5 rounded-full shadow-soft-xs transition-all cursor-pointer"
+              className="flex items-center gap-1.5 bg-rawaa-primary hover:bg-rawaa-primary-hover active:scale-95 text-white text-xs font-bold h-8 sm:h-9 px-2.5 sm:px-3.5 rounded-full shadow-soft-xs transition-all cursor-pointer"
             >
-              <Plus size={16} />
+              <Plus size={15} />
               <span className="hidden sm:inline">إجراء سريع</span>
               <ChevronDown size={14} className="hidden sm:inline opacity-70" />
             </button>
 
             {isQuickActionOpen && (
-              <div className="absolute left-0 mt-2 w-52 bg-white rounded-2xl shadow-soft-xl border border-rawaa-border p-1.5 z-50 text-right animate-fadeIn">
+              <div className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-16 sm:top-full sm:mt-2 w-auto sm:w-52 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl shadow-soft-xl border border-rawaa-border p-1.5 z-50 text-right animate-fadeIn">
                 {hasAdminPermission('products') && (
                   <Link
                     to="/admin/products?action=add"
@@ -297,7 +314,7 @@ export default function AdminHeader() {
             </button>
 
             {isNotificationsOpen && (
-              <div className="absolute left-0 mt-2 w-80 sm:w-88 bg-white rounded-2xl shadow-soft-xl border border-rawaa-border p-3.5 z-50 text-right animate-fadeIn">
+              <div className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-16 sm:top-full sm:mt-2 w-auto sm:w-80 md:w-88 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl shadow-soft-xl border border-rawaa-border p-3.5 z-50 text-right animate-fadeIn">
                 <div className="flex items-center justify-between pb-2 mb-2 border-b border-rawaa-border">
                   <strong className="text-xs font-heading font-bold text-rawaa-dark">التنبيهات الإدارية</strong>
                   <span className="text-[10px] font-bold text-rawaa-primary bg-rawaa-primary-light px-2 py-0.5 rounded-full">
@@ -360,7 +377,7 @@ export default function AdminHeader() {
             <button
               type="button"
               onClick={() => setIsProfileOpen((prev) => !prev)}
-              className="flex items-center gap-2 p-1 sm:pr-2.5 sm:pl-1 bg-rawaa-soft hover:bg-rawaa-primary-light/60 rounded-full border border-rawaa-border transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 p-1 sm:pr-2.5 sm:pl-1 bg-rawaa-soft hover:bg-rawaa-primary-light/60 rounded-full border border-rawaa-border transition-colors cursor-pointer"
             >
               <img
                 src={currentAdmin?.avatar || '/logo.png'}
@@ -374,7 +391,7 @@ export default function AdminHeader() {
             </button>
 
             {isProfileOpen && (
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded-2xl shadow-soft-xl border border-rawaa-border p-2 z-50 text-right animate-fadeIn">
+              <div className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-16 sm:top-full sm:mt-2 w-auto sm:w-56 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl shadow-soft-xl border border-rawaa-border p-2 z-50 text-right animate-fadeIn">
                 <div className="p-2 border-b border-rawaa-border mb-1">
                   <strong className="block text-xs font-bold text-rawaa-dark">
                     {currentAdmin?.name || 'إسلام جميل'}
@@ -426,6 +443,33 @@ export default function AdminHeader() {
           </div>
         </div>
       </div>
+
+      {/* Expandable mobile search bar */}
+      {isMobileSearchOpen && (
+        <div className="md:hidden pt-2.5 mt-2.5 border-t border-rawaa-border animate-fadeIn">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="ابحث عن منتج، طلب، عميل..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchOpen(true)}
+              autoFocus
+              className="w-full bg-rawaa-soft border border-rawaa-border rounded-xl pr-3.5 pl-9 py-2 text-xs text-rawaa-dark placeholder-rawaa-subtle focus:bg-white focus:border-rawaa-primary outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileSearchOpen(false);
+                setIsSearchOpen(false);
+              }}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-rawaa-muted hover:text-rawaa-dark p-1"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

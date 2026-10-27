@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
@@ -11,14 +11,11 @@ import {
   Lock,
   Phone,
   Heart,
-  CheckCircle2,
   LogOut,
   ShieldCheck,
   ArrowLeft,
   AlertCircle,
   Package,
-  Truck,
-  Sparkles
 } from 'lucide-react';
 
 export default function AuthModal() {
@@ -155,11 +152,11 @@ export default function AuthModal() {
 
       if (activeTab === 'login') {
         const derivedName = cleanEmail.split('@')[0] || 'عميل بيبي زون';
-        const res = await login(cleanEmail, derivedName);
+        const res = await login(cleanEmail, derivedName, { isRegistration: false });
         if (res) {
           handleClose();
         } else {
-          setErrorMessage('تعذر تسجيل الدخول، يرجى التحقق من صحة البريد الإلكتروني');
+          setErrorMessage('هذا الحساب غير مسجل أو تم حذفه من قِبل الإدارة. يمكنك إنشاء حساب جديد من تبويب "إنشاء حساب جديد".');
         }
       } else {
         const cleanName = name.trim();
@@ -174,13 +171,14 @@ export default function AuthModal() {
           return;
         }
         const res = await login(cleanEmail, cleanName, {
+          isRegistration: true,
           babyStage,
           phone: phone.trim() || undefined
         });
         if (res) {
           handleClose();
         } else {
-          setErrorMessage('تعذر إنشاء الحساب، يرجى المحاولة مرة أخرى');
+          setErrorMessage('تعذر إنشاء الحساب، يرجى المحاولة مرة أخرى والتأكد من البيانات.');
         }
       }
     } catch (err) {

@@ -329,7 +329,7 @@ export default function AdminSettingsPage() {
         <div className="flex items-center justify-end gap-3 pt-4">
           <button
             type="submit"
-            className="inline-flex items-center gap-2 px-8 py-3 bg-rawaa-primary text-white text-xs font-bold rounded-xl hover:bg-rawaa-primary/90 transition-all shadow-md shadow-rawaa-primary/20"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 bg-rawaa-primary text-white text-xs font-bold rounded-xl hover:bg-rawaa-primary/90 transition-all shadow-md shadow-rawaa-primary/20 cursor-pointer"
           >
             <Save className="w-4 h-4" />
             <span>حفظ الإعدادات</span>

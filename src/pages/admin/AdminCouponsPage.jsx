@@ -312,11 +312,11 @@ export default function AdminCouponsPage() {
       {/* Coupon Modal rendered via createPortal */}
       {isModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[9999] overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[99999] overflow-y-auto overscroll-contain bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
           onClick={handleCloseModal}
         >
           <div
-            className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-rawaa-border overflow-hidden my-8 animate-fadeIn"
+            className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-rawaa-border overflow-hidden my-auto sm:my-8 max-h-[92vh] overflow-y-auto custom-modal-scroll animate-fadeIn"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-5 bg-rawaa-soft/60 border-b border-rawaa-border flex items-center justify-between">
@@ -348,7 +348,7 @@ export default function AdminCouponsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-rawaa-dark mb-1">نوع الخصم</label>
                   <select
@@ -377,7 +377,7 @@ export default function AdminCouponsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-rawaa-dark mb-1">
                     الحد الأدنى للطلب (ج.م)
