@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { ordersApi, customersApi } from '../../services/api';
 import { useShop } from '../../context/ShopContext';
+import { syncBus } from '../../utils/syncBus';
 
 export default function CheckoutModal({ isOpen, onClose, cart, totalAmount, subtotal, shippingFee, discountAmount, onOrderSuccess }) {
   const { formatPrice, addToast, clearCart, user, setUser, setIsAuthOpen } = useShop();
@@ -182,15 +183,20 @@ export default function CheckoutModal({ isOpen, onClose, cart, totalAmount, subt
 
       await ordersApi.create(dbOrder);
 
-      // Synchronize customer profile and permissions via customers domain service
+      // Instantly notify Dashboard and Customer tracking pages via zero-latency syncBus
+      syncBus.emit('ORDER_ADDED', { orderId, order: dbOrder, timestamp: Date.now() });
+
+      // Synchronize customer profile and permissions via customers domain service safely
+      const customerEmail = user?.email ? user.email.trim() : (formData.email || '').trim();
       await customersApi.syncOnOrder({
         name: cleanName,
-        email: user.email.trim(),
+        email: customerEmail,
         phone: cleanPhone,
         city: formData.city,
         address: cleanAddress,
         totalAmount
       });
+      syncBus.emit('CUSTOMER_UPDATED', { email: customerEmail, phone: cleanPhone, timestamp: Date.now() });
 
       // Update current user state so saved phone and address persist
       if (setUser) {

@@ -139,9 +139,30 @@ export function AdminProvider({ children }) {
       )
       .subscribe();
 
+    // Listen to local/cross-tab instant syncBus events
+    const unsubBusAdd = syncBus.on('ORDER_ADDED', ({ order }) => {
+      if (order && order.status !== 'محذوف') {
+        const mapped = formatDbOrder(order);
+        setOrders((prev) => [mapped, ...prev.filter((o) => o.id !== mapped.id)]);
+      }
+    });
+
+    const unsubBusUpdate = syncBus.on('ORDER_UPDATED', ({ orderId, newStatus }) => {
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus, deliveryStatus: newStatus } : o))
+      );
+    });
+
+    const unsubBusDelete = syncBus.on('ORDER_DELETED', ({ orderId }) => {
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    });
+
     return () => {
       isMounted = false;
       supabase.removeChannel(channel);
+      unsubBusAdd();
+      unsubBusUpdate();
+      unsubBusDelete();
     };
   }, []);
 
@@ -193,9 +214,14 @@ export function AdminProvider({ children }) {
       )
       .subscribe();
 
+    const unsubCustSync = syncBus.on('CUSTOMER_UPDATED', () => {
+      loadCustomers();
+    });
+
     return () => {
       isMounted = false;
       supabase.removeChannel(customerChannel);
+      unsubCustSync();
     };
   }, []);
 

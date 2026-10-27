@@ -193,6 +193,15 @@ export default function TrackOrderPage() {
       loadUserOrders(false);
     });
 
+    const unsubAdd = syncBus.on('ORDER_ADDED', ({ order }) => {
+      if (order) {
+        const mapped = mapDbOrderToTracking(order);
+        setCustomerOrders((prev) => [mapped, ...prev.filter((o) => o.id !== mapped.id)]);
+        setActiveOrder((prev) => (!prev ? mapped : prev));
+        loadUserOrders(false);
+      }
+    });
+
     const unsubDelete = syncBus.on('ORDER_DELETED', ({ orderId }) => {
       setCustomerOrders((prev) => prev.filter((o) => o.id !== orderId));
       setActiveOrder((prev) => (prev?.id === orderId ? null : prev));
@@ -201,6 +210,7 @@ export default function TrackOrderPage() {
 
     return () => {
       unsubUpdate();
+      unsubAdd();
       unsubDelete();
     };
   }, [loadUserOrders]);
