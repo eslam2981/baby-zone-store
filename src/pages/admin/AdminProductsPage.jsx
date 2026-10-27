@@ -118,8 +118,11 @@ export default function AdminProductsPage() {
         break;
     }
 
-    return result;
   }, [allProducts, searchQuery, selectedCategory, stockFilter, sortBy]);
+
+  const getCategoryName = (categoryId) => {
+    return (categories || []).find((c) => c.id === categoryId)?.name || categoryId;
+  };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -524,7 +527,7 @@ export default function AdminProductsPage() {
                       <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
-                          onClick={() => handleOpenModal(p)}
+                          onClick={() => handleOpenEdit(p)}
                           className="w-8 h-8 rounded-lg text-rawaa-muted hover:text-rawaa-primary hover:bg-rawaa-soft flex items-center justify-center transition-colors cursor-pointer"
                           title="تعديل المنتج"
                         >
