@@ -119,11 +119,14 @@ export default function AdminCustomersPage() {
   useEffect(() => {
     if (selectedCustomer || isAddModalOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, [selectedCustomer, isAddModalOpen]);
 
@@ -1095,14 +1098,14 @@ export default function AdminCustomersPage() {
       {/* Add Customer Modal rendered via createPortal */}
       {isAddModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fadeIn overflow-y-auto overscroll-contain"
+          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fadeIn overflow-hidden"
           onClick={() => setIsAddModalOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 text-right shadow-2xl border border-rawaa-border animate-scaleUp relative overflow-hidden my-auto sm:my-8 max-h-[92vh] overflow-y-auto custom-modal-scroll"
+            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full text-right shadow-2xl border border-rawaa-border animate-scaleUp relative max-h-[90vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-rawaa-border mb-4">
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-rawaa-border shrink-0 bg-white">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-rawaa-primary/10 text-rawaa-primary flex items-center justify-center">
                   <Plus size={18} />
@@ -1121,7 +1124,8 @@ export default function AdminCustomersPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateCustomerSubmit} className="space-y-3.5">
+            <form onSubmit={handleCreateCustomerSubmit} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="space-y-3.5 flex-1 min-h-0 overflow-y-auto custom-modal-scroll p-4 sm:p-6 py-4">
               <div>
                 <label className="block text-xs font-bold text-rawaa-dark mb-1">اسم العميل بالكامل *</label>
                 <input
@@ -1201,7 +1205,9 @@ export default function AdminCustomersPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
+              </div>
+
+              <div className="flex items-center gap-2 p-4 sm:px-6 py-3 border-t border-rawaa-border shrink-0 bg-white">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
@@ -1211,7 +1217,7 @@ export default function AdminCustomersPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 text-xs font-bold text-white bg-rawaa-primary hover:bg-rawaa-primary-hover rounded-xl transition-all shadow-soft-xs cursor-pointer"
+                  className="flex-1 py-2.5 text-xs font-bold text-white bg-rawaa-primary hover:bg-rawaa-primary-hover active:scale-[0.99] rounded-xl transition-all shadow-soft-xs cursor-pointer"
                 >
                   تأكيد وحفظ على السيرفر
                 </button>

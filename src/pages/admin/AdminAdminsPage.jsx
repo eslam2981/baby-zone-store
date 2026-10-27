@@ -101,6 +101,21 @@ export default function AdminAdminsPage() {
     setNewPasswordValue('');
   };
 
+  // Lock background scroll when any modal is open
+  useEffect(() => {
+    if (isModalOpen || Boolean(editingAdminPassword)) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isModalOpen, editingAdminPassword]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -266,14 +281,14 @@ export default function AdminAdminsPage() {
       {/* Add Admin Modal rendered via createPortal */}
       {isModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[99999] overflow-y-auto overscroll-contain bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+          className="fixed inset-0 z-[99999] overflow-hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
           onClick={() => setIsModalOpen(false)}
         >
           <div
-            className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-rawaa-border overflow-hidden my-auto sm:my-8 max-h-[92vh] overflow-y-auto custom-modal-scroll animate-fadeIn"
+            className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-rawaa-border max-h-[90vh] flex flex-col overflow-hidden animate-fadeIn"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-5 bg-rawaa-soft/60 border-b border-rawaa-border flex items-center justify-between">
+            <div className="p-4 sm:p-5 bg-rawaa-soft/60 border-b border-rawaa-border flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-rawaa-primary" />
                 <h3 className="font-bold font-cairo text-rawaa-dark">إضافة مشرف جديد للمنصة</h3>
@@ -281,13 +296,14 @@ export default function AdminAdminsPage() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-full hover:bg-white text-rawaa-dark/60 flex items-center justify-center cursor-pointer"
+                className="w-8 h-8 rounded-full hover:bg-white text-rawaa-dark/60 flex items-center justify-center cursor-pointer transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="p-4 sm:p-6 space-y-4 flex-1 min-h-0 overflow-y-auto custom-modal-scroll">
               <div>
                 <label className="block text-xs font-bold text-rawaa-dark mb-1">الاسم الكامل</label>
                 <input
@@ -466,17 +482,19 @@ export default function AdminAdminsPage() {
               </div>
 
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-rawaa-border">
+              </div>
+
+              <div className="flex items-center justify-end gap-2 p-4 sm:px-6 py-3 border-t border-rawaa-border shrink-0 bg-white">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-rawaa-border text-rawaa-dark text-xs font-bold rounded-xl hover:bg-rawaa-soft transition-colors"
+                  className="px-4 py-2 border border-rawaa-border text-rawaa-dark text-xs font-bold rounded-xl hover:bg-rawaa-soft transition-colors cursor-pointer"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-rawaa-primary text-white text-xs font-bold rounded-xl hover:bg-rawaa-primary/90 transition-colors shadow-xs"
+                  className="px-5 py-2 bg-rawaa-primary text-white text-xs font-bold rounded-xl hover:bg-rawaa-primary/90 active:scale-[0.99] transition-all shadow-xs cursor-pointer"
                 >
                   حفظ المشرف
                 </button>
@@ -490,11 +508,11 @@ export default function AdminAdminsPage() {
       {/* Password update modal rendered via createPortal */}
       {Boolean(editingAdminPassword) && createPortal(
         <div
-          className="fixed inset-0 z-[99999] overflow-y-auto overscroll-contain bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn"
+          className="fixed inset-0 z-[99999] overflow-hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn"
           onClick={() => setEditingAdminPassword(null)}
         >
           <div
-            className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-rawaa-border overflow-hidden my-auto sm:my-8 max-h-[92vh] overflow-y-auto custom-modal-scroll"
+            className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-rawaa-border overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 bg-rawaa-soft/60 border-b border-rawaa-border flex items-center justify-between">

@@ -193,11 +193,14 @@ export default function AdminProductsPage() {
   useEffect(() => {
     if (isModalOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, [isModalOpen]);
 
@@ -633,27 +636,29 @@ export default function AdminProductsPage() {
       {/* Add / Edit product modal rendered in Portal at document.body level */}
       {isModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain"
+          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-hidden"
           onClick={handleCloseModal}
         >
           <div
-            className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-2xl w-full text-right shadow-2xl border border-rawaa-border my-auto sm:my-8 animate-fadeIn max-h-[92vh] flex flex-col"
+            className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full text-right shadow-2xl border border-rawaa-border animate-fadeIn max-h-[90vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-rawaa-border shrink-0">
-              <h3 className="font-heading text-lg font-bold text-rawaa-dark">
+            <div className="flex items-center justify-between p-4 sm:p-6 pb-3 border-b border-rawaa-border shrink-0 bg-white">
+              <h3 className="font-heading text-base sm:text-lg font-bold text-rawaa-dark">
                 {editingProduct ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد للكتالوج'}
               </h3>
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="p-1.5 rounded-full text-rawaa-muted hover:bg-rawaa-soft cursor-pointer"
+                className="p-1.5 rounded-full text-rawaa-muted hover:text-rawaa-dark hover:bg-rawaa-soft cursor-pointer transition-colors"
+                aria-label="إغلاق النافذة"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleFormSubmit} className="flex-1 overflow-y-auto custom-modal-scroll py-4 space-y-4">
+            <form onSubmit={handleFormSubmit} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-y-auto custom-modal-scroll p-4 sm:p-6 py-4 space-y-4">
               {/* Product name */}
               <div>
                 <label className="block text-xs font-bold text-rawaa-dark mb-1">اسم المنتج بالكامل *</label>
@@ -895,8 +900,10 @@ export default function AdminProductsPage() {
                 </label>
               </div>
 
-              {/* Form buttons */}
-              <div className="flex items-center gap-2 pt-4 border-t border-rawaa-border">
+              </div>
+
+              {/* Form buttons: Fixed at bottom */}
+              <div className="shrink-0 p-4 sm:px-6 py-3 border-t border-rawaa-border bg-white flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleCloseModal}
@@ -906,7 +913,7 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 text-xs font-bold text-white bg-rawaa-primary hover:bg-rawaa-primary-hover rounded-xl shadow-soft-xs transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 text-xs font-bold text-white bg-rawaa-primary hover:bg-rawaa-primary-hover active:scale-[0.99] rounded-xl shadow-soft-xs transition-all cursor-pointer"
                 >
                   {editingProduct ? 'حفظ التعديلات' : 'إضافة المنتج للكتالوج'}
                 </button>

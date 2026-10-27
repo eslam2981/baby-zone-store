@@ -83,11 +83,14 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     if (activeOrder || isAddModalOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, [activeOrder, isAddModalOpen]);
 
@@ -583,15 +586,15 @@ export default function AdminOrdersPage() {
 
           return (
             <div
-              className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto overscroll-contain"
+              className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4 overflow-hidden"
               onClick={() => setActiveOrder(null)}
             >
               <div
-                className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-2xl w-full text-right shadow-2xl border border-rawaa-border my-auto sm:my-6 animate-fadeIn max-h-[92vh] flex flex-col print:shadow-none print:border-none print:m-0 print:max-h-none print:w-full"
+                className="bg-white rounded-2xl sm:rounded-3xl max-w-2xl w-full text-right shadow-2xl border border-rawaa-border animate-fadeIn max-h-[90vh] flex flex-col overflow-hidden print:shadow-none print:border-none print:m-0 print:max-h-none print:w-full"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between pb-4 border-b border-rawaa-border shrink-0">
+                <div className="flex items-center justify-between p-4 sm:p-5 border-b border-rawaa-border shrink-0 bg-white">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-rawaa-primary-light text-rawaa-primary flex items-center justify-center">
                       <Package size={20} />
@@ -627,7 +630,7 @@ export default function AdminOrdersPage() {
                 </div>
 
                 {/* Content body */}
-                <div className="flex-1 overflow-y-auto custom-modal-scroll py-4 space-y-5">
+                <div className="flex-1 min-h-0 overflow-y-auto custom-modal-scroll p-4 sm:p-6 py-4 space-y-5">
                   {/* Status and quick update selector */}
                   <div className="bg-[#FAF7F2] p-4 rounded-2xl border border-rawaa-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
@@ -773,7 +776,7 @@ export default function AdminOrdersPage() {
                 </div>
 
                 {/* Footer actions */}
-                <div className="pt-3 border-t border-rawaa-border flex items-center justify-between shrink-0 print:hidden">
+                <div className="p-4 sm:px-6 py-3 border-t border-rawaa-border flex items-center justify-between shrink-0 bg-white print:hidden">
                   <span className="text-[11px] text-rawaa-muted">
                     المندوب المسؤول: <strong>{activeOrder.courierName || 'مندوب التوصيل السريع'}</strong>
                   </span>
@@ -795,30 +798,31 @@ export default function AdminOrdersPage() {
       {/* Manual Add Order Modal rendered via createPortal */}
       {isAddModalOpen && createPortal(
         <div
-          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain"
+          className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-hidden"
           onClick={() => setIsAddModalOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-soft-xl border border-rawaa-border animate-scaleUp my-auto sm:my-8 max-h-[92vh] overflow-y-auto custom-modal-scroll"
+            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full text-right shadow-soft-xl border border-rawaa-border animate-scaleUp max-h-[90vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-4 border-b border-rawaa-border mb-4">
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-rawaa-border shrink-0 bg-white">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-rawaa-primary-light text-rawaa-primary flex items-center justify-center">
                   <Plus size={18} />
                 </div>
-                <h3 className="font-heading text-lg font-bold text-rawaa-dark">تسجيل طلب بيع يدوي (هاتف / واتساب)</h3>
+                <h3 className="font-heading text-base sm:text-lg font-bold text-rawaa-dark">تسجيل طلب بيع يدوي (هاتف / واتساب)</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1.5 hover:bg-rawaa-soft rounded-full text-rawaa-muted"
+                className="p-1.5 hover:bg-rawaa-soft rounded-full text-rawaa-muted cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateManualOrder} className="space-y-4">
+            <form onSubmit={handleCreateManualOrder} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="space-y-4 flex-1 min-h-0 overflow-y-auto custom-modal-scroll p-4 sm:p-6 py-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-rawaa-dark mb-1">اسم العميل *</label>
@@ -940,7 +944,9 @@ export default function AdminOrdersPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-rawaa-border flex items-center justify-end gap-2">
+              </div>
+
+              <div className="p-4 sm:px-6 py-3 border-t border-rawaa-border bg-white flex items-center justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
@@ -950,7 +956,7 @@ export default function AdminOrdersPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold text-white bg-rawaa-primary hover:bg-rawaa-primary-hover rounded-xl shadow-soft-xs transition-colors cursor-pointer"
+                  className="px-5 py-2 text-xs font-bold text-white bg-rawaa-primary hover:bg-rawaa-primary-hover active:scale-[0.99] rounded-xl shadow-soft-xs transition-all cursor-pointer"
                 >
                   حفظ وتأكيد الطلب في السيرفر
                 </button>

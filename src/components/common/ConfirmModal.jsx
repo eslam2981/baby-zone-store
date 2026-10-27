@@ -17,6 +17,7 @@ export default function ConfirmModal({
   useEffect(() => {
     if (!isOpen) return;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         onCancel?.();
@@ -25,6 +26,7 @@ export default function ConfirmModal({
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onCancel]);
