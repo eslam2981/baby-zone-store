@@ -353,7 +353,7 @@ export default function AdminOverviewPage() {
                     </td>
                   </tr>
                 ) : (
-                  orders.slice(0, 5).map((ord) => (
+                  (orders || []).slice(0, 5).map((ord) => (
                     <tr key={ord.id} className="hover:bg-rawaa-soft/60 transition-colors">
                       <td className="py-3 pr-2 font-mono font-bold text-rawaa-dark whitespace-nowrap">
                         <Link to="/admin/orders" className="hover:text-rawaa-primary hover:underline">
@@ -435,10 +435,10 @@ export default function AdminOverviewPage() {
                 <div className="h-20 bg-rawaa-soft/60 rounded-2xl animate-pulse" />
                 <div className="h-20 bg-rawaa-soft/60 rounded-2xl animate-pulse" />
               </div>
-            ) : orders.length === 0 ? (
+            ) : (!orders || orders.length === 0) ? (
               <p className="text-xs text-rawaa-muted text-center py-6">لا توجد طلبات مسجلة حالياً</p>
             ) : (
-              orders.slice(0, 5).map((ord) => (
+              (orders || []).slice(0, 5).map((ord) => (
                 <div key={ord.id} className="p-3.5 bg-rawaa-soft/40 border border-rawaa-border/70 rounded-2xl space-y-2.5">
                   <div className="flex items-center justify-between">
                     <Link to="/admin/orders" className="font-mono font-bold text-xs text-rawaa-primary hover:underline">

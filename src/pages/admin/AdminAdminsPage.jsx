@@ -131,7 +131,7 @@ export default function AdminAdminsPage() {
 
       {/* Admins Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-        {admins.map((admin) => {
+        {(admins || []).map((admin) => {
           const isCurrentUser = currentAdmin?.email === admin.email;
 
           return (

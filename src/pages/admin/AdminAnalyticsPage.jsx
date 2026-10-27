@@ -276,7 +276,7 @@ export default function AdminAnalyticsPage() {
           </div>
 
           <div className="space-y-3.5 pt-2">
-            {regions.map((reg) => (
+            {(regions || []).map((reg) => (
               <div key={reg.name} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-bold">
                   <span className="text-rawaa-dark">{reg.name}</span>
@@ -309,7 +309,7 @@ export default function AdminAnalyticsPage() {
           </div>
 
           <div className="space-y-4 pt-2">
-            {paymentMethods.map((pm) => {
+            {(paymentMethods || []).map((pm) => {
               const Icon = pm.icon;
               return (
                 <div

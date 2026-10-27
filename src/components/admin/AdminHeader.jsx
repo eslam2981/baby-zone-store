@@ -112,18 +112,18 @@ export default function AdminHeader() {
   // Quick search results
   const searchResults = searchQuery.trim()
     ? {
-        products: allProducts
-          .filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.brand.toLowerCase().includes(searchQuery.toLowerCase()))
+        products: (allProducts || [])
+          .filter((p) => (p?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (p?.brand || '').toLowerCase().includes(searchQuery.toLowerCase()))
           .slice(0, 3),
-        orders: orders
-          .filter((o) => o.id.toLowerCase().includes(searchQuery.toLowerCase()) || o.customerName.includes(searchQuery))
+        orders: (orders || [])
+          .filter((o) => (o?.id || '').toLowerCase().includes(searchQuery.toLowerCase()) || (o?.customerName || '').includes(searchQuery))
           .slice(0, 3)
       }
     : null;
 
   // Unread notifications calculation
-  const pendingOrders = orders.filter((o) => o.deliveryStatus === 'بانتظار التأكيد');
-  const lowStockProducts = allProducts.filter((p) => p.stockCount <= 5);
+  const pendingOrders = (orders || []).filter((o) => o?.deliveryStatus === 'بانتظار التأكيد');
+  const lowStockProducts = (allProducts || []).filter((p) => (p?.stockCount ?? 0) <= 5);
   const totalNotifications = pendingOrders.length + lowStockProducts.length;
 
   return (

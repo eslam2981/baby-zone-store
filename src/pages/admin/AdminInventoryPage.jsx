@@ -253,7 +253,7 @@ export default function AdminInventoryPage() {
               className="px-3 py-2 bg-rawaa-soft/60 border border-rawaa-border rounded-xl text-xs font-bold text-rawaa-dark focus:outline-none focus:border-rawaa-primary whitespace-nowrap cursor-pointer shrink-0"
             >
               <option value="all">كل الأقسام</option>
-              {categories.map((cat) => (
+              {(categories || []).map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>
@@ -313,7 +313,7 @@ export default function AdminInventoryPage() {
                   </td>
                 </tr>
               ) : (
-                filteredProducts.map((product) => {
+                (filteredProducts || []).map((product) => {
                   const stock = Number(product.stockCount ?? product.stock ?? 0);
                   const price = Number(product.price) || 0;
                   const totalVal = stock * price;
@@ -447,13 +447,13 @@ export default function AdminInventoryPage() {
                 <div key={i} className="animate-pulse bg-rawaa-soft/60 rounded-xl p-3 h-28" />
               ))}
             </div>
-          ) : filteredProducts.length === 0 ? (
+          ) : (!filteredProducts || filteredProducts.length === 0) ? (
             <div className="py-12 px-4 text-center text-rawaa-dark/50">
               <Boxes className="w-10 h-10 mx-auto mb-2 opacity-30" />
               <p className="font-bold text-xs">لا توجد منتجات تطابق معايير الفلترة</p>
             </div>
           ) : (
-            filteredProducts.map((product) => {
+            (filteredProducts || []).map((product) => {
               const stock = Number(product.stockCount ?? product.stock ?? 0);
               const price = Number(product.price) || 0;
               const totalVal = stock * price;

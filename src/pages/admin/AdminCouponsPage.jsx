@@ -196,7 +196,7 @@ export default function AdminCouponsPage() {
             </button>
           </div>
         ) : (
-          coupons.map((coupon) => {
+          (coupons || []).map((coupon) => {
           const expDate = coupon.expiryDate || coupon.endDate;
           const isExpired = expDate ? new Date(expDate) < new Date() : false;
           const maxU = Number(coupon.maxUses ?? coupon.maxUsage) || 0;

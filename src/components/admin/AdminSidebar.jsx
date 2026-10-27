@@ -92,7 +92,7 @@ export default function AdminSidebar() {
           name: 'إدارة المنتجات',
           path: '/admin/products',
           icon: Package,
-          badge: allProducts.length,
+          badge: (allProducts || []).length,
           badgeColor: 'bg-rawaa-soft text-rawaa-dark',
           perm: 'products'
         },
@@ -162,7 +162,7 @@ export default function AdminSidebar() {
         }
       ]
     }
-  ], [allProducts.length, pendingOrdersCount, lowStockCount, activeCouponsCount]);
+  ], [allProducts?.length, pendingOrdersCount, lowStockCount, activeCouponsCount]);
 
   const visibleNavGroups = useMemo(() => {
     return navGroups

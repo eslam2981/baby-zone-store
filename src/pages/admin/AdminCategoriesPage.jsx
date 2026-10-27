@@ -34,9 +34,9 @@ export default function AdminCategoriesPage() {
   });
 
   // Filter categories
-  const filteredCategories = categories.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCategories = (categories || []).filter((c) =>
+    (c?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (c?.description || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleCloseModal = () => {
@@ -180,8 +180,8 @@ export default function AdminCategoriesPage() {
 
       {/* Categories grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-        {filteredCategories.map((cat) => {
-          const catProducts = allProducts.filter((p) => p.category === cat.id);
+        {(filteredCategories || []).map((cat) => {
+          const catProducts = (allProducts || []).filter((p) => p.category === cat.id);
           return (
             <div
               key={cat.id}
@@ -219,11 +219,11 @@ export default function AdminCategoriesPage() {
                 </p>
 
                 {/* Subcategories tag chips */}
-                {cat.subcategories && cat.subcategories.length > 0 && (
+                {Array.isArray(cat.subcategories) && cat.subcategories.length > 0 && (
                   <div className="mb-4">
                     <span className="text-[10px] font-bold text-rawaa-subtle block mb-1.5">الفئات الفرعية</span>
                     <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto custom-modal-scroll">
-                      {cat.subcategories.map((sub, sIdx) => (
+                      {(cat.subcategories || []).map((sub, sIdx) => (
                         <span
                           key={sIdx}
                           className="bg-rawaa-soft text-rawaa-dark text-[10px] font-medium px-2 py-0.5 rounded-md"

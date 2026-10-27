@@ -33,7 +33,7 @@ export function RevenueTrendChart() {
       const dayIndexMap = { 6: 0, 0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 };
       const dayTotals = [0, 0, 0, 0, 0, 0, 0];
 
-      orders.forEach((o) => {
+      (orders || []).forEach((o) => {
         if (o.deliveryStatus === 'ملغي') return;
         const d = new Date(o.date || o.created_at);
         if (!isNaN(d.getTime())) {
@@ -59,7 +59,7 @@ export function RevenueTrendChart() {
       }
 
       const weekTotals = [0, 0, 0, 0];
-      orders.forEach((o) => {
+      (orders || []).forEach((o) => {
         if (o.deliveryStatus === 'ملغي') return;
         const d = new Date(o.date || o.created_at);
         if (!isNaN(d.getTime())) {
@@ -76,7 +76,8 @@ export function RevenueTrendChart() {
     }
   }, [period, orders, totalRev]);
 
-  const maxDataVal = Math.max(...data.map((d) => d.value), 0);
+  const safeData = Array.isArray(data) && data.length > 0 ? data : [{ label: '', value: 0 }];
+  const maxDataVal = Math.max(...safeData.map((d) => d.value), 0);
   const maxValue = maxDataVal > 0 ? maxDataVal * 1.15 : 1000;
 
   // Compute SVG polyline points
@@ -87,8 +88,8 @@ export function RevenueTrendChart() {
   const chartWidth = width - paddingX * 2;
   const chartHeight = height - paddingY * 2;
 
-  const points = data.map((d, index) => {
-    const x = paddingX + (index / (data.length - 1)) * chartWidth;
+  const points = safeData.map((d, index) => {
+    const x = paddingX + (safeData.length > 1 ? (index / (safeData.length - 1)) * chartWidth : chartWidth / 2);
     const y = height - paddingY - (d.value / maxValue) * chartHeight;
     return { x, y, value: d.value, label: d.label };
   });

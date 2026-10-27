@@ -129,13 +129,13 @@ export default function AdminCustomersPage() {
 
   // Extract unique cities from customers for filtering
   const cities = useMemo(() => {
-    const set = new Set(customers.map((c) => c.city).filter(Boolean));
+    const set = new Set((customers || []).map((c) => c.city).filter(Boolean));
     return ['all', ...Array.from(set)];
   }, [customers]);
 
   // Filter customers based on search query status role and city
   const filteredCustomers = useMemo(() => {
-    return customers.filter((c) => {
+    return (customers || []).filter((c) => {
       const matchSearch =
         !searchQuery.trim() ||
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -488,7 +488,7 @@ export default function AdminCustomersPage() {
                   </td>
                 </tr>
               ) : (
-                filteredCustomers.map((customer) => {
+                (filteredCustomers || []).map((customer) => {
                   const permCount = Array.isArray(customer.permissions) ? customer.permissions.length : 5;
                   const isBlocked = customer.status === 'محظور';
 
@@ -635,13 +635,13 @@ export default function AdminCustomersPage() {
                 <div key={i} className="animate-pulse bg-rawaa-soft/60 rounded-2xl p-4 h-28" />
               ))}
             </div>
-          ) : filteredCustomers.length === 0 ? (
+          ) : (!filteredCustomers || filteredCustomers.length === 0) ? (
             <div className="py-12 px-4 text-center text-rawaa-muted">
               <Users className="w-12 h-12 mx-auto mb-3 opacity-30 text-rawaa-primary" />
               <p className="font-heading font-black text-sm text-rawaa-dark">لا يوجد عملاء مسجلين حالياً</p>
             </div>
           ) : (
-            filteredCustomers.map((customer) => {
+            (filteredCustomers || []).map((customer) => {
               const permCount = Array.isArray(customer.permissions) ? customer.permissions.length : 5;
               const isBlocked = customer.status === 'محظور';
 

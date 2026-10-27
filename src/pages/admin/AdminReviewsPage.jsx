@@ -36,7 +36,7 @@ export default function AdminReviewsPage() {
 
   /* Filter reviews by search status and rating */
   const filteredReviews = useMemo(() => {
-    return reviews.filter((r) => {
+    return (reviews || []).filter((r) => {
       const matchSearch =
         !searchQuery.trim() ||
         r.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -207,13 +207,13 @@ export default function AdminReviewsPage() {
               </div>
             </div>
           ))
-        ) : filteredReviews.length === 0 ? (
+        ) : (!filteredReviews || filteredReviews.length === 0) ? (
           <div className="bg-white p-12 rounded-2xl border border-rawaa-border text-center text-rawaa-dark/50">
             <Star className="w-10 h-10 mx-auto mb-2 opacity-30" />
             <p className="font-bold">لا توجد تقييمات مطابقة</p>
           </div>
         ) : (
-          filteredReviews.map((review) => (
+          (filteredReviews || []).map((review) => (
             <div
               key={review.id}
               className="bg-white p-4 sm:p-5 rounded-2xl border border-rawaa-border shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4"

@@ -75,49 +75,50 @@ export default function AdminProductsPage() {
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    let result = [...allProducts];
+    let result = Array.isArray(allProducts) ? [...allProducts] : [];
 
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       result = result.filter(
         (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.brand.toLowerCase().includes(q) ||
-          (p.subcategory && p.subcategory.toLowerCase().includes(q))
+          (p?.name || '').toLowerCase().includes(q) ||
+          (p?.brand || '').toLowerCase().includes(q) ||
+          (p?.subcategory && p.subcategory.toLowerCase().includes(q))
       );
     }
 
     if (selectedCategory !== 'all') {
-      result = result.filter((p) => p.category === selectedCategory);
+      result = result.filter((p) => p?.category === selectedCategory);
     }
 
     if (stockFilter === 'in-stock') {
-      result = result.filter((p) => p.stockCount > 5);
+      result = result.filter((p) => (p?.stockCount ?? 0) > 5);
     } else if (stockFilter === 'low-stock') {
-      result = result.filter((p) => p.stockCount > 0 && p.stockCount <= 5);
+      result = result.filter((p) => (p?.stockCount ?? 0) > 0 && (p?.stockCount ?? 0) <= 5);
     } else if (stockFilter === 'out-of-stock') {
-      result = result.filter((p) => p.stockCount === 0);
+      result = result.filter((p) => (p?.stockCount ?? 0) === 0);
     }
 
     switch (sortBy) {
       case 'price-low':
-        result.sort((a, b) => a.price - b.price);
+        result.sort((a, b) => (a?.price ?? 0) - (b?.price ?? 0));
         break;
       case 'price-high':
-        result.sort((a, b) => b.price - a.price);
+        result.sort((a, b) => (b?.price ?? 0) - (a?.price ?? 0));
         break;
       case 'stock-high':
-        result.sort((a, b) => b.stockCount - a.stockCount);
+        result.sort((a, b) => (b?.stockCount ?? 0) - (a?.stockCount ?? 0));
         break;
       case 'stock-low':
-        result.sort((a, b) => a.stockCount - b.stockCount);
+        result.sort((a, b) => (a?.stockCount ?? 0) - (b?.stockCount ?? 0));
         break;
       case 'newest':
       default:
-        result.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
+        result.sort((a, b) => (b?.isNew ? 1 : 0) - (a?.isNew ? 1 : 0));
         break;
     }
 
+    return result;
   }, [allProducts, searchQuery, selectedCategory, stockFilter, sortBy]);
 
   const getCategoryName = (categoryId) => {
@@ -164,8 +165,8 @@ export default function AdminProductsPage() {
     setFormData({
       name: '',
       brand: 'بيبي زون',
-      category: categories[0]?.id || 'bedding',
-      subcategory: categories[0]?.subcategories?.[0] || 'مستلزمات مواليد',
+      category: categories?.[0]?.id || 'bedding',
+      subcategory: categories?.[0]?.subcategories?.[0] || 'مستلزمات مواليد',
       price: '',
       originalPrice: '',
       stockCount: 15,
@@ -206,7 +207,7 @@ export default function AdminProductsPage() {
     setFormData({
       name: product.name,
       brand: product.brand || 'بيبي زون',
-      category: product.category || categories[0]?.id || 'bedding',
+      category: product.category || categories?.[0]?.id || 'bedding',
       subcategory: product.subcategory || '',
       price: product.price,
       originalPrice: product.originalPrice || product.price,
@@ -268,7 +269,7 @@ export default function AdminProductsPage() {
         <div>
           <h2 className="font-heading text-xl font-black text-rawaa-dark">إدارة كتالوج المنتجات</h2>
           <p className="text-xs text-rawaa-muted">
-            إجمالي {allProducts.length} منتج مسجل بالكتالوج عبر {categories.length} أقسام
+            إجمالي {(allProducts || []).length} منتج مسجل بالكتالوج عبر {(categories || []).length} أقسام
           </p>
         </div>
 
@@ -305,7 +306,7 @@ export default function AdminProductsPage() {
             className="w-full sm:w-auto bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs font-medium text-rawaa-dark outline-none cursor-pointer"
           >
             <option value="all">جميع الأقسام</option>
-            {categories.map((c) => (
+            {(categories || []).map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
@@ -362,7 +363,7 @@ export default function AdminProductsPage() {
                   <TableRowSkeleton cols={6} />
                   <TableRowSkeleton cols={6} />
                 </>
-              ) : filteredProducts.map((p) => (
+              ) : (filteredProducts || []).map((p) => (
                 <tr key={p.id} className="hover:bg-rawaa-soft/50 transition-colors">
                   <td className="py-3 pr-4 pl-2 min-w-[260px]">
                     <div className="flex items-center gap-3">
@@ -391,7 +392,7 @@ export default function AdminProductsPage() {
 
                   <td className="py-3 px-3 whitespace-nowrap">
                     <span className="inline-block bg-rawaa-soft px-2.5 py-1 rounded-lg text-[11px] font-bold text-rawaa-dark">
-                      {categories.find((c) => c.id === p.category)?.name || p.category}
+                      {(categories || []).find((c) => c.id === p.category)?.name || p.category}
                     </span>
                   </td>
 
@@ -499,13 +500,13 @@ export default function AdminProductsPage() {
                 <div key={i} className="animate-pulse bg-rawaa-soft/60 rounded-xl p-3 h-24" />
               ))}
             </div>
-          ) : filteredProducts.length === 0 ? (
+          ) : (!filteredProducts || filteredProducts.length === 0) ? (
             <div className="text-center py-10 px-4 text-rawaa-muted">
               <Package size={32} className="mx-auto text-rawaa-subtle mb-2 opacity-50" />
               <p className="text-xs font-bold">لا توجد منتجات مطابقة لخيارات البحث أو الفلاتر</p>
             </div>
           ) : (
-            filteredProducts.map((p) => (
+            (filteredProducts || []).map((p) => (
               <div key={p.id} className="p-3.5 hover:bg-rawaa-soft/30 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className="w-14 h-14 rounded-xl border border-rawaa-border shrink-0 bg-rawaa-soft overflow-hidden">
@@ -687,7 +688,7 @@ export default function AdminProductsPage() {
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full bg-rawaa-soft border border-rawaa-border rounded-xl px-3.5 py-2 text-xs text-rawaa-dark outline-none focus:bg-white focus:border-rawaa-primary cursor-pointer"
                   >
-                    {categories.map((c) => (
+                    {(categories || []).map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>

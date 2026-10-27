@@ -358,7 +358,7 @@ export default function AdminOrdersPage() {
                   <TableRowSkeleton cols={7} />
                 </>
               ) : (
-                filteredOrders.map((ord) => (
+                (filteredOrders || []).map((ord) => (
                   <tr key={ord.id} className="hover:bg-rawaa-soft/50 transition-colors">
                   <td className="py-3.5 pr-4 pl-2 whitespace-nowrap">
                     <span className="block font-mono font-bold text-rawaa-dark text-xs">#{ord.id}</span>
@@ -472,15 +472,15 @@ export default function AdminOrdersPage() {
                 <div key={i} className="animate-pulse bg-rawaa-soft/60 rounded-xl p-3 h-32" />
               ))}
             </div>
-          ) : filteredOrders.length === 0 ? (
+          ) : (!filteredOrders || filteredOrders.length === 0) ? (
             <div className="text-center py-12 px-4 text-rawaa-muted">
               <Package size={32} className="mx-auto text-rawaa-subtle mb-2 opacity-50" />
               <p className="text-xs font-bold">
-                {orders.length === 0 ? 'لا توجد أي طلبات مسجلة حالياً' : 'لا توجد طلبات مطابقة لخيارات البحث'}
+                {(orders || []).length === 0 ? 'لا توجد أي طلبات مسجلة حالياً' : 'لا توجد طلبات مطابقة لخيارات البحث'}
               </p>
             </div>
           ) : (
-            filteredOrders.map((ord) => (
+            (filteredOrders || []).map((ord) => (
               <div key={ord.id} className="p-3.5 hover:bg-rawaa-soft/30 transition-colors space-y-2.5">
                 {/* Header row: Order ID, Date & Status */}
                 <div className="flex items-center justify-between gap-2">
@@ -702,8 +702,8 @@ export default function AdminOrdersPage() {
                       المنتجات المشمولة في هذا الطلب ({itemsList.length})
                     </span>
                     <div className="border border-rawaa-border rounded-2xl overflow-hidden divide-y divide-rawaa-border/60">
-                      {itemsList.length > 0 ? (
-                        itemsList.map((item, idx) => {
+                      {(itemsList || []).length > 0 ? (
+                        (itemsList || []).map((item, idx) => {
                           const itemQty = Number(item.quantity) || Number(item.qty) || 1;
                           const itemPrice = Number(item.price) || 0;
                           return (
@@ -896,7 +896,7 @@ export default function AdminOrdersPage() {
                     onChange={(e) => setManualOrder({ ...manualOrder, productId: e.target.value })}
                     className="w-full bg-rawaa-soft border border-rawaa-border rounded-xl px-3 py-2 text-xs text-rawaa-dark outline-none focus:bg-white focus:border-rawaa-primary cursor-pointer"
                   >
-                    {allProducts.map((p) => (
+                    {(allProducts || []).map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name.substring(0, 45)}... ({p.price} ج.م)
                       </option>
