@@ -32,6 +32,39 @@ export default function GiftConcierge() {
             </p>
           </div>
 
+          {/* Featured Luxury Gift Showcase Banner */}
+          <div className="mb-8 sm:mb-10 rounded-2xl sm:rounded-3xl overflow-hidden border border-rawaa-border shadow-soft-md bg-white grid grid-cols-1 lg:grid-cols-12 items-center">
+            <div className="lg:col-span-6 p-6 sm:p-8 lg:p-10 text-right flex flex-col justify-center order-2 lg:order-1">
+              <span className="inline-flex items-center gap-1.5 bg-rawaa-primary-light text-rawaa-primary text-[11px] sm:text-xs font-bold px-3 py-1 rounded-full mb-3 self-start shadow-soft-xs">
+                <Sparkles size={13} />
+                <span>لحظات أمومة لا تُنسى</span>
+              </span>
+              <h3 className="font-heading text-lg sm:text-xl lg:text-2xl font-black text-rawaa-dark mb-3 leading-snug">
+                كل صندوق هدية يحمل دفء الأمومة وفرحة البدايات الجديدة
+              </h3>
+              <p className="text-xs sm:text-sm text-rawaa-muted leading-relaxed mb-5">
+                نختار لكِ أجود أقطان المواليد، وألعاب التسنين الخشبية الطبيعية، مع تطريز اسم طفلكِ الخاص، لنصنع هدية تدفئ قلب كل أم وتخلد أولى لحظات اللقاء.
+              </p>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-rawaa-dark font-medium">
+                <span className="inline-flex items-center gap-1.5 bg-rawaa-soft px-3 py-1.5 rounded-full border border-rawaa-border">
+                  ✨ خامات ناعمة 100% قطن
+                </span>
+                <span className="inline-flex items-center gap-1.5 bg-rawaa-soft px-3 py-1.5 rounded-full border border-rawaa-border">
+                  🎀 بطاقة إهداء مخصصة
+                </span>
+              </div>
+            </div>
+            <div className="lg:col-span-6 h-56 sm:h-72 lg:h-80 overflow-hidden relative group order-1 lg:order-2">
+              <img
+                src="/images/motherhood/gift-mother-baby.jpg"
+                alt="أم تحتضن مولودها وتفتح صندوق باقة التهنئة الفاخرة من بيبي زون"
+                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-rawaa-dark/25 via-transparent to-transparent pointer-events-none" />
+            </div>
+          </div>
+
           {/* Concierge feature cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
             {/* Custom embroidery card */}

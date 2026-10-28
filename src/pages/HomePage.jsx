@@ -1,6 +1,7 @@
 import HeroBanner from '../components/home/HeroBanner';
 import TrustPillars from '../components/home/TrustPillars';
 import CategoryPills from '../components/home/CategoryPills';
+import BundleOfferSection from '../components/home/BundleOfferSection';
 import PromotionalBanner from '../components/home/PromotionalBanner';
 import ProductCatalog from '../components/catalog/ProductCatalog';
 import GiftConcierge from '../components/home/GiftConcierge';
@@ -25,6 +26,9 @@ export default function HomePage() {
 
       {/* Infinite scrolling category rail */}
       <CategoryPills />
+
+      {/* Featured 4-in-1 Royal Bundle Package Offer */}
+      <BundleOfferSection />
 
       {/* Promotional coupon and offer banner */}
       <PromotionalBanner />

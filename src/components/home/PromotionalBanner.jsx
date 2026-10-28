@@ -82,11 +82,12 @@ export default function PromotionalBanner() {
           </div>
 
           {/* Banner image column */}
-          <div className="lg:col-span-5 h-48 sm:h-64 lg:h-full relative overflow-hidden">
+          <div className="lg:col-span-5 h-56 sm:h-72 lg:h-full min-h-[260px] lg:min-h-[340px] relative overflow-hidden group">
             <img
-              src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=700&q=80"
-              alt="صندوق ألعاب ومستلزمات خشبية أنيقة للأطفال"
-              className="w-full h-full object-cover"
+              src="/images/motherhood/promo-mother-baby.jpg"
+              alt="أم تداعب مولودها بحب وفرح على بساط دافئ في بيبي زون"
+              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+              loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-rawaa-dark/50 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-rawaa-soft/20 pointer-events-none" />
             <div className="absolute bottom-3 right-3 left-3 sm:left-auto bg-white/95 backdrop-blur-sm border border-rawaa-border px-3 py-1.5 sm:py-2 rounded-full inline-flex items-center gap-2 text-[11px] sm:text-xs font-bold text-rawaa-dark shadow-soft-sm">

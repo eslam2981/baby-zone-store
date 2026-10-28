@@ -92,9 +92,11 @@ export default function HeroBanner() {
               {/* Arch shaped photo container */}
               <div className="rounded-[100px_100px_20px_20px] sm:rounded-[160px_160px_28px_28px] overflow-hidden shadow-soft-lg sm:shadow-soft-xl border-4 sm:border-8 border-white aspect-[4/4.5] sm:aspect-[4/5] relative bg-rawaa-soft">
                 <img
-                  src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=900&q=85"
-                  alt="طفل رضيع بأزياء قطنية عضوية"
+                  src="/images/motherhood/hero-mother-baby.jpg"
+                  alt="أم تحتضن مولودها بحنان وأمان وسط أجواء دافئة في بيبي زون"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                  loading="eager"
+                  fetchPriority="high"
                 />
               </div>
 

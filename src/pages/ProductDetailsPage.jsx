@@ -22,7 +22,10 @@ import {
   Info,
   MessageSquare,
   Send,
-  User
+  User,
+  Flame,
+  BadgePercent,
+  Sparkles
 } from 'lucide-react';
 
 export default function ProductDetailsPage() {
@@ -202,10 +205,21 @@ export default function ProductDetailsPage() {
     }
   };
 
-  // Related products from the same category
+  // Related products from the same category (excluding bundle offer)
   const relatedProducts = allProducts
-    .filter((p) => p.category === product.category && p.id !== product.id)
+    .filter((p) => p.category === product.category && p.id !== product.id && p.id !== 'prod-bundle-package-05')
     .slice(0, 4);
+
+  // 4-in-1 bundle package relationship detection
+  const BUNDLE_CONSTITUENT_IDS = [
+    'prod-baby-nest-01',
+    'prod-nursing-pillow-02',
+    'prod-nursing-cover-03',
+    'prod-changing-mat-04'
+  ];
+  const isBundleConstituent = BUNDLE_CONSTITUENT_IDS.includes(product.id);
+  const bundleProduct = allProducts.find((p) => p.id === 'prod-bundle-package-05');
+  const isBundlePage = product.id === 'prod-bundle-package-05';
 
   return (
     <div className="bg-rawaa-bg min-h-screen py-6 sm:py-10">
@@ -478,6 +492,66 @@ export default function ProductDetailsPage() {
                 </a>
               )}
             </div>
+
+            {/* Complete The Set / 4-in-1 Bundle Package Special Offer Box */}
+            {isBundleConstituent && bundleProduct && (
+              <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-rose-50/90 via-[#FCF8F5] to-amber-50/50 border-2 border-rose-300/80 shadow-soft-xs text-right">
+                <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 bg-rose-600 text-white text-[10px] sm:text-[11px] font-black px-2.5 py-0.5 rounded-full shadow-soft-xs">
+                    <Flame size={12} />
+                    <span>عرض التوفير الأكبر 4 في 1</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                    وفر 240+ ج.م وتوصيل مجاني
+                  </span>
+                </div>
+
+                <h4 className="font-heading text-sm sm:text-base font-black text-rawaa-dark mb-1">
+                  أكملي طقم مولودك الكامل متطابق بنفس النقشة والخامة
+                </h4>
+                <p className="text-[11px] sm:text-xs text-rawaa-muted leading-relaxed mb-3">
+                  يشمل 4 قطع: بيبي نيست كبير + مخدة رضاعة ومخدة رأس + ساتر رضاعة بدعامة + مفرش غيار ووتر بروف.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-white p-3 rounded-xl border border-rawaa-border gap-3">
+                  <div>
+                    <span className="text-[10px] text-rawaa-muted block">سعر الطقم الكامل (4 منتجات + شحن مجاني):</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-lg sm:text-xl font-black font-mono text-rawaa-primary">
+                        {formatPrice(bundleProduct.price || 1375)}
+                      </span>
+                      <span className="text-[11px] text-rawaa-muted line-through font-mono">
+                        {formatPrice(bundleProduct.originalPrice || 1545)}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      addToCart(bundleProduct, 1, selectedColor);
+                      addToast('تمت إضافة الباكدج الكامل 4 في 1 للسلة بتوفير 240+ ج.م 🤍', 'success');
+                    }}
+                    className="inline-flex items-center justify-center gap-1.5 bg-rawaa-primary hover:bg-rawaa-primary-hover text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-soft-xs hover:-translate-y-0.5 transition-all cursor-pointer"
+                  >
+                    <ShoppingBag size={14} />
+                    <span>أضيفي الطقم كاملاً (وفر 240+ ج)</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Special notification if viewing the bundle page directly */}
+            {isBundlePage && (
+              <div className="mb-8 p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-right">
+                <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5 mb-1">
+                  <Sparkles size={14} className="text-amber-600" />
+                  <span>طقم مجمع شامل 4 منتجات أساسية متطابقة:</span>
+                </span>
+                <p className="text-[11px] text-amber-800/90 leading-relaxed">
+                  هذا العرض يوفر عليكِ 170 ج.م مقارنة بشراء كل قطعة منفردة، بالإضافة إلى إعفاء كامل من مصاريف الشحن لجميع المحافظات.
+                </p>
+              </div>
+            )}
 
             {/* Tabbed specifications and shipping information */}
             <div className="border-t border-rawaa-border pt-6 mt-auto">

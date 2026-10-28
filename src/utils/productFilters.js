@@ -55,9 +55,16 @@ export function filterAndSortProducts(allProducts = [], filters = {}) {
   // Category filter
   if (selectedCategory && selectedCategory !== 'all') {
     if (selectedCategory === 'offers') {
-      result = result.filter((p) => (p.discountPercent || 0) > 0 || p.isBestSeller);
+      result = result.filter((p) => (p.discountPercent || 0) > 0 || p.isBestSeller || p.id === 'prod-bundle-package-05');
     } else {
-      result = result.filter((p) => p.category === selectedCategory);
+      // Exclude bundle package from regular individual product categories (e.g. bedding)
+      result = result.filter((p) => p.category === selectedCategory && p.id !== 'prod-bundle-package-05');
+    }
+  } else {
+    // In 'all' category default view, exclude bundle package unless specifically searched for
+    const hasSearch = searchQuery && searchQuery.trim().length > 0;
+    if (!hasSearch) {
+      result = result.filter((p) => p.id !== 'prod-bundle-package-05');
     }
   }
 
