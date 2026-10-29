@@ -35,6 +35,13 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #C25E3E;
   }
+
+  /* Baby Zone Brand Checkboxes and Radios matching site vibes */
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: #C25E3E !important;
+    cursor: pointer;
+  }
   /* Universal form input optimization:
      - On mobile (< 640px), set font-size to 16px to prevent iOS Safari auto-zoom.
      - Enforce min-width: 0, max-width: 100%, and box-sizing: border-box to prevent overflow in flex/grid.
@@ -95,10 +102,11 @@
   animation-play-state: paused !important;
 }
 
-/* Thin internal scrollbar for modals */
+/* Thin internal scrollbar for modals that never bleeds outside borders */
 .custom-modal-scroll {
   scrollbar-width: thin;
   scrollbar-color: #D5CCC0 transparent;
+  overscroll-behavior: contain;
 }
 
 .custom-modal-scroll::-webkit-scrollbar {
@@ -108,6 +116,7 @@
 
 .custom-modal-scroll::-webkit-scrollbar-track {
   background: transparent;
+  margin: 6px 0;
 }
 
 .custom-modal-scroll::-webkit-scrollbar-thumb {
@@ -117,6 +126,63 @@
 
 .custom-modal-scroll::-webkit-scrollbar-thumb:hover {
   background: #C25E3E;
+}
+
+/* Professional smooth modal entrance animations */
+@keyframes modal-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-scaleUp,
+.animate-modal-pop {
+  animation: modal-pop-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: modal-fade-in 0.24s ease-out forwards;
+}
+
+/* Drawer slide animations */
+@keyframes drawer-slide-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slideLeft {
+  animation: drawer-slide-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes drawer-slide-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slideRight {
+  animation: drawer-slide-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Responsive category rail scrollbar with auto marquee support */

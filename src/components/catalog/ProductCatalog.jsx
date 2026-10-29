@@ -10,6 +10,7 @@ import {
   ArrowUpDown,
   Sparkles
 } from 'lucide-react';
+import ModernSelect from '../common/ModernSelect';
 
 export default function ProductCatalog({ showHeader = true, initialCategory = null }) {
   const {
@@ -66,22 +67,19 @@ export default function ProductCatalog({ showHeader = true, initialCategory = nu
               </button>
 
               {/* Sorting select dropdown */}
-              <div className="relative inline-flex items-center bg-white border border-rawaa-border rounded-card px-3 py-1.5 shadow-soft-xs text-xs font-bold text-rawaa-dark hover:border-rawaa-primary/50 transition-colors">
-                <ArrowUpDown size={14} className="text-rawaa-muted ml-1.5 shrink-0" />
-                <label htmlFor="catalog-sort" className="sr-only">ترتيب حسب</label>
-                <select
-                  id="catalog-sort"
+              <div className="w-52">
+                <ModernSelect
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-rawaa-dark focus:outline-none cursor-pointer pr-1 pl-4"
-                  aria-label="ترتيب المنتجات"
-                >
-                  <option value="popularity">الأكثر مبيعاً وشهرة</option>
-                  <option value="newest">وصل حديثاً (الأحدث)</option>
-                  <option value="price-low">السعر: من الأقل للأعلى</option>
-                  <option value="price-high">السعر: من الأعلى للأقل</option>
-                  <option value="rating">الأعلى تقييماً من الأمهات</option>
-                </select>
+                  options={[
+                    { value: 'popularity', label: 'الأكثر مبيعاً وشهرة' },
+                    { value: 'newest', label: 'وصل حديثاً (الأحدث)' },
+                    { value: 'price-low', label: 'السعر: من الأقل للأعلى' },
+                    { value: 'price-high', label: 'السعر: من الأعلى للأقل' },
+                    { value: 'rating', label: 'الأعلى تقييماً من الأمهات' }
+                  ]}
+                  buttonClassName="bg-white rounded-card shadow-soft-xs py-1.5"
+                />
               </div>
 
               {/* View mode toggle between grid and list */}

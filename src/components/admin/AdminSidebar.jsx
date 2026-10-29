@@ -1,5 +1,5 @@
 // Sidebar navigation component for store management and administrative controls
-import { useMemo } from 'react';
+import { useMemo ,useCallback} from 'react';
 import { createPortal } from 'react-dom';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
@@ -48,7 +48,7 @@ export default function AdminSidebar() {
     navigate('/admin/login');
   };
 
-  const hasPerm = (requiredPerm) => {
+  const hasPerm = useCallback((requiredPerm) => {
     if (!currentAdmin) return false;
     const perms = currentAdmin.permissions || [];
     if (
@@ -64,7 +64,7 @@ export default function AdminSidebar() {
       return requiredPerm.some((p) => perms.includes(p));
     }
     return perms.includes(requiredPerm);
-  };
+  }, [currentAdmin]);
 
   const navGroups = useMemo(() => [
     {
@@ -162,7 +162,7 @@ export default function AdminSidebar() {
         }
       ]
     }
-  ], [allProducts?.length, pendingOrdersCount, lowStockCount, activeCouponsCount]);
+  ], [allProducts, pendingOrdersCount, lowStockCount, activeCouponsCount]);
 
   const visibleNavGroups = useMemo(() => {
     return navGroups
@@ -171,7 +171,7 @@ export default function AdminSidebar() {
         items: group.items.filter((item) => hasPerm(item.perm))
       }))
       .filter((group) => group.items.length > 0);
-  }, [navGroups, currentAdmin]);
+  }, [navGroups, hasPerm]);
 
   const renderSidebarContent = (isMobile = false) => {
     const collapsed = isMobile ? false : isSidebarCollapsed;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
 import {
@@ -66,13 +66,13 @@ export default function MegaMenu({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
-  const handleSmoothClose = () => {
+  const handleSmoothClose = useCallback(() => {
     setIsVisible(false);
     setTimeout(() => {
       onClose();
       setIsRendered(false);
     }, 300);
-  };
+  }, [onClose]);
 
   useEffect(() => {
     function handleKeyDown(e) {
@@ -82,7 +82,7 @@ export default function MegaMenu({ isOpen, onClose }) {
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isVisible]);
+  }, [isVisible, handleSmoothClose]);
 
   if (!isRendered) return null;
 

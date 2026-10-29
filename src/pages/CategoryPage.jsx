@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   Sparkles
 } from 'lucide-react';
+import ModernSelect from '../components/common/ModernSelect';
 
 export default function CategoryPage() {
   const { categoryId } = useParams();
@@ -48,7 +49,7 @@ export default function CategoryPage() {
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [categoryId, subParam, queryParam]);
+  }, [categoryId, subParam, queryParam, setSelectedCategory, setSelectedSubcategory, setSearchQuery]);
 
   const currentCategory = categories.find((c) => c.id === (categoryId || 'all'));
   const categoryTitle = currentCategory ? currentCategory.name : 'جميع المنتجات';
@@ -191,22 +192,19 @@ export default function CategoryPage() {
             </button>
 
             {/* Sorting selection dropdown */}
-            <div className="relative inline-flex items-center bg-white border border-rawaa-border rounded-card px-3 py-2 shadow-soft-xs text-xs font-bold text-rawaa-dark hover:border-rawaa-primary/50 transition-colors">
-              <ArrowUpDown size={14} className="text-rawaa-muted ml-1.5 shrink-0" />
-              <label htmlFor="category-sort" className="sr-only">ترتيب المنتجات</label>
-              <select
-                id="category-sort"
+            <div className="w-52">
+              <ModernSelect
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-xs font-bold text-rawaa-dark focus:outline-none cursor-pointer pr-1 pl-4"
-                aria-label="ترتيب المنتجات"
-              >
-                <option value="popularity">الأكثر مبيعاً وشهرة</option>
-                <option value="newest">وصل حديثاً (الأحدث)</option>
-                <option value="price-low">السعر: من الأقل للأعلى</option>
-                <option value="price-high">السعر: من الأعلى للأقل</option>
-                <option value="rating">الأعلى تقييماً من الأمهات</option>
-              </select>
+                options={[
+                  { value: 'popularity', label: 'الأكثر مبيعاً وشهرة' },
+                  { value: 'newest', label: 'وصل حديثاً (الأحدث)' },
+                  { value: 'price-low', label: 'السعر: من الأقل للأعلى' },
+                  { value: 'price-high', label: 'السعر: من الأعلى للأقل' },
+                  { value: 'rating', label: 'الأعلى تقييماً من الأمهات' }
+                ]}
+                buttonClassName="bg-white rounded-card shadow-soft-xs py-2"
+              />
             </div>
 
             {/* Grid and list layout switcher */}

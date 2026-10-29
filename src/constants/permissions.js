@@ -4,7 +4,8 @@ export const DEFAULT_CUSTOMER_PERMISSIONS = [
   'place_orders',
   'view_own_orders',
   'rate_products',
-  'hospital_bag'
+  'hospital_bag',
+  'cod_payment'
 ];
 
 export const VIP_CUSTOMER_PERMISSIONS = [

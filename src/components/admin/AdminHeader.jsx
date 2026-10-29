@@ -33,11 +33,7 @@ export default function AdminHeader() {
     logoutAdmin,
     hasAdminPermission,
     orders,
-    coupons,
-    activityLog,
     setIsMobileSidebarOpen,
-    isSidebarCollapsed,
-    toggleSidebar,
     isRealtimeConnected,
     isSyncing,
     refreshAllRealtimeData,
@@ -452,7 +448,7 @@ export default function AdminHeader() {
                 className="w-7 h-7 rounded-full object-cover bg-white p-0.5 border border-rawaa-border"
               />
               <span className="text-xs font-bold text-rawaa-dark hidden sm:inline max-w-[100px] truncate">
-                {currentAdmin?.name || 'إسلام جميل'}
+                {currentAdmin?.name || 'مدير المتجر'}
               </span>
               <ChevronDown size={14} className="text-rawaa-muted hidden sm:inline" />
             </button>
@@ -461,10 +457,10 @@ export default function AdminHeader() {
               <div className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:left-0 top-16 sm:top-full sm:mt-2 w-auto sm:w-56 max-w-[calc(100vw-1.5rem)] bg-white rounded-2xl shadow-soft-xl border border-rawaa-border p-2 z-50 text-right animate-fadeIn">
                 <div className="p-2 border-b border-rawaa-border mb-1">
                   <strong className="block text-xs font-bold text-rawaa-dark">
-                    {currentAdmin?.name || 'إسلام جميل'}
+                    {currentAdmin?.name || 'مدير المتجر'}
                   </strong>
                   <span className="block text-[10px] text-rawaa-muted truncate">
-                    {currentAdmin?.email || 'admin@babyzone-egypt.com'}
+                    {currentAdmin?.email || 'حساب إداري موثق'}
                   </span>
                   <span className="inline-block mt-1 bg-rawaa-primary-light text-rawaa-primary text-[9px] font-bold px-2 py-0.5 rounded-full">
                     {currentAdmin?.role || 'مدير عام المتجر'}

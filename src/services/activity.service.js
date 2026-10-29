@@ -12,6 +12,16 @@ export const activityLogApi = {
     return data || [];
   },
 
+  async getRecent(limit = 30) {
+    const { data, error } = await supabase
+      .from('activity_log')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return data || [];
+  },
+
   async add(entryOrAdminName, action, target, type) {
     let payload;
     if (typeof entryOrAdminName === 'object' && entryOrAdminName !== null) {

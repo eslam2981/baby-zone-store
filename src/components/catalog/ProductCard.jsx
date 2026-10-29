@@ -56,7 +56,7 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
 
   return (
     <article
-      className={`bg-white border border-rawaa-border rounded-panel overflow-hidden shadow-soft-xs hover:shadow-soft-lg hover:border-rawaa-primary/40 hover:-translate-y-1 transition-all duration-300 flex cursor-pointer group ${
+      className={`w-full bg-white border border-rawaa-border rounded-panel overflow-hidden shadow-soft-xs hover:shadow-soft-lg hover:border-rawaa-primary/40 hover:-translate-y-1 transition-all duration-300 flex cursor-pointer group ${
         viewMode === 'list' ? 'flex-col sm:flex-row' : 'flex-col'
       }`}
       onClick={handleCardClick}
@@ -137,18 +137,18 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
         </h3>
 
         {/* Rating score and live stock availability */}
-        <div className="flex items-center gap-2 text-xs mb-2">
-          <div className="flex items-center gap-1 text-amber-500 font-bold bg-amber-50 px-2 py-0.5 rounded-md">
+        <div className="flex items-center gap-1.5 text-xs mb-2 flex-wrap">
+          <div className="flex items-center gap-1 text-amber-500 font-bold bg-amber-50 px-2 py-0.5 rounded-md shrink-0">
             <Star size={13} fill="#EAB308" color="#EAB308" />
             <span>{product.rating}</span>
           </div>
-          <span className="text-rawaa-subtle text-[11px]">({product.reviewCount} تقييم)</span>
+          <span className="text-rawaa-subtle text-[11px] shrink-0">({product.reviewCount} تقييم)</span>
           {product.inStock ? (
-            <span className="mr-auto text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span className="mr-auto text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
               متوفر
             </span>
           ) : (
-            <span className="mr-auto text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full">
+            <span className="mr-auto text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full shrink-0">
               قريباً
             </span>
           )}
@@ -156,9 +156,9 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
 
         {/* Selectable product color swatches */}
         {product.colors && product.colors.length > 0 && (
-          <div className="flex items-center gap-2 mb-3" onClick={(e) => e.stopPropagation()}>
-            <span className="text-xs text-rawaa-muted">الألوان:</span>
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 mb-3 flex-wrap" onClick={(e) => e.stopPropagation()}>
+            <span className="text-xs text-rawaa-muted shrink-0">الألوان:</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
               {product.colors.map((c, cIdx) => (
                 <button
                   key={cIdx}
@@ -174,7 +174,7 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
               ))}
             </div>
             {selectedColor && (
-              <span className="text-[11px] text-rawaa-subtle mr-1">({selectedColor.name})</span>
+              <span className="text-[11px] text-rawaa-subtle mr-1 truncate max-w-[120px]">({selectedColor.name})</span>
             )}
           </div>
         )}

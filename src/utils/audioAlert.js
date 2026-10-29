@@ -36,7 +36,9 @@ export function setAudioAlertEnabled(enabled) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem('babyzone_audio_enabled', enabled ? 'true' : 'false');
-  } catch {}
+  } catch (err) {
+    console.warn('Failed to save audio alert preference:', err);
+  }
 }
 
 /**

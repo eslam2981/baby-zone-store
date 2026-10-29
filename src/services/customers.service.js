@@ -57,12 +57,48 @@ export const customersApi = {
   },
 
   async update(id, updates) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('customers')
       .update(updates)
-      .eq('id', id);
+      .eq('id', id)
+      .select();
     if (error) throw error;
-    return { id, ...updates };
+
+    if (!data || data.length === 0) {
+      if (updates.email) {
+        const { data: emailData, error: emailErr } = await supabase
+          .from('customers')
+          .update(updates)
+          .eq('email', updates.email.trim().toLowerCase())
+          .select();
+        if (!emailErr && emailData && emailData.length > 0) {
+          return emailData[0];
+        }
+      }
+
+      const newCustomerRow = {
+        id: id || `cust-${Date.now()}`,
+        name: updates.name || 'عميل بيبي زون',
+        email: (updates.email || '').trim().toLowerCase(),
+        phone: updates.phone || '',
+        city: updates.city || 'القاهرة',
+        address: updates.address || '',
+        role: updates.role || 'customer',
+        is_vip: Boolean(updates.is_vip),
+        permissions: updates.permissions || DEFAULT_CUSTOMER_PERMISSIONS,
+        status: updates.status || 'نشط',
+        notes: updates.notes || '',
+        created_at: new Date().toISOString()
+      };
+      const { data: insData, error: insErr } = await supabase
+        .from('customers')
+        .upsert([newCustomerRow])
+        .select();
+      if (insErr) throw insErr;
+      return insData?.[0] || newCustomerRow;
+    }
+
+    return data[0];
   },
 
   async delete(id, email) {

@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { useAdmin } from '../../context/AdminContext';
-import { useShop } from '../../context/ShopContext';
 import { RevenueTrendChart, CategoryDistributionChart } from '../../components/admin/AdminCharts';
 import {
   BarChart3,
@@ -20,7 +19,6 @@ import {
 /* Analytics and financial reports page with regional performance and revenue trends */
 export default function AdminAnalyticsPage() {
   const { orders, customers } = useAdmin();
-  const { allProducts } = useShop();
   const [timeRange, setTimeRange] = useState('month');
 
   /* Calculate core financial and operational analytics */

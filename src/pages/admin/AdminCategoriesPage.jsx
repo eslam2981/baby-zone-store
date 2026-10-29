@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -22,9 +22,17 @@ import {
   REGEX_PATTERNS
 } from '../../utils/validators';
 
+const INITIAL_CATEGORY_FORM = {
+  name: '',
+  slug: '',
+  badge: 'جديد',
+  description: '',
+  subcategoriesStr: 'وصل حديثاً, الأكثر طلباً'
+};
+
 export default function AdminCategoriesPage() {
   const { categories, allProducts, addCategory, updateCategory, deleteCategory, addToast } = useShop();
-  const { addActivity, isRealtimeConnected, isSyncing, refreshAllRealtimeData } = useAdmin();
+  const { addActivity, isSyncing, refreshAllRealtimeData } = useAdmin();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,13 +40,7 @@ export default function AdminCategoriesPage() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    badge: 'شامل',
-    description: '',
-    subcategoriesStr: ''
-  });
+  const [formData, setFormData] = useState(INITIAL_CATEGORY_FORM);
 
   // Filter categories
   const filteredCategories = (categories || []).filter((c) =>
@@ -49,30 +51,25 @@ export default function AdminCategoriesPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingCategory(null);
+    setFormData(INITIAL_CATEGORY_FORM);
     if (searchParams.get('action')) {
       searchParams.delete('action');
       setSearchParams(searchParams, { replace: true });
     }
   };
 
-  const handleOpenAdd = () => {
+  const handleOpenAdd = useCallback(() => {
     setEditingCategory(null);
-    setFormData({
-      name: '',
-      slug: '',
-      badge: 'جديد',
-      description: '',
-      subcategoriesStr: 'وصل حديثاً, الأكثر طلباً'
-    });
+    setFormData(INITIAL_CATEGORY_FORM);
     setIsModalOpen(true);
-  };
+  }, []);
 
   // Synchronize modal state with URL searchParams dynamically without needing any page refresh
   useEffect(() => {
     if (searchParams.get('action') === 'add') {
       handleOpenAdd();
     }
-  }, [searchParams]);
+  }, [searchParams, handleOpenAdd]);
 
   // Lock background scroll when modal is open
   useEffect(() => {
@@ -153,7 +150,7 @@ export default function AdminCategoriesPage() {
       if (addToast) addToast('تم إنشاء القسم بنجاح', 'success');
     }
 
-    setIsModalOpen(false);
+    handleCloseModal();
   };
 
   const handleRequestDelete = (cat) => {
@@ -322,7 +319,7 @@ export default function AdminCategoriesPage() {
           onClick={handleCloseModal}
         >
           <div
-            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full text-right shadow-2xl border border-rawaa-border animate-fadeIn max-h-[90vh] flex flex-col overflow-hidden"
+            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full text-right shadow-2xl border border-rawaa-border animate-scaleUp max-h-[90vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 sm:p-5 border-b border-rawaa-border shrink-0 bg-white">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useShop } from '../../context/ShopContext';
 import {
@@ -55,13 +55,13 @@ export default function QuickViewModal() {
     }
   }, [quickViewProduct]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsVisible(false);
     setTimeout(() => {
       setQuickViewProduct(null);
       setActiveProduct(null);
     }, 300);
-  };
+  }, [setQuickViewProduct]);
 
   useEffect(() => {
     function handleKeyDown(e) {
@@ -71,7 +71,7 @@ export default function QuickViewModal() {
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isVisible]);
+  }, [isVisible, handleClose]);
 
   if (!activeProduct) return null;
 

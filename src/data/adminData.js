@@ -20,24 +20,14 @@ export const initialStoreSettings = {
   taxRate: 14,
   autoConfirmOrders: false,
   enableCOD: true,
-  enableInstaPay: true,
-  enableVodafoneCash: true,
-  enableCreditCard: true,
+  enableCod: true,
+  enableInstaPay: false,
+  enableInstapay: false,
+  enableVodafoneCash: false,
+  enableCreditCard: false,
+  enableCard: false,
   maintenanceMode: false,
   businessHours: "يومياً من 9:00 ص حتى 11:00 م"
 };
 
-export const initialAdmins = [
-  {
-    id: "adm-1",
-    name: "إسلام جميل",
-    email: "admin@babyzone-egypt.com",
-    role: "مدير النظام (Super Admin)",
-    avatar: "/logo.png",
-    phone: "01211735629",
-    lastLogin: "الآن",
-    status: "نشط",
-    password: "admin",
-    permissions: ["all"]
-  }
-];
+export const initialAdmins = [];

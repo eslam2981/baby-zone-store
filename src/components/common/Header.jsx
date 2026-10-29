@@ -35,7 +35,7 @@ export default function Header({ onOpenMegaMenu, isMegaMenuOpen }) {
   } = useShop();
 
   const { isAuthenticated, currentAdmin } = useAdmin();
-  const isUserAdmin = Boolean(user && user.isAdmin && isAuthenticated && currentAdmin);
+  const isUserAdmin = Boolean((isAuthenticated && currentAdmin && (!user || user.isAdmin)) || (user && user.isAdmin));
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -307,14 +307,35 @@ export default function Header({ onOpenMegaMenu, isMegaMenuOpen }) {
           {/* User account button */}
           <button
             type="button"
-            className="flex relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-rawaa-soft hover:bg-rawaa-primary-light hover:text-rawaa-primary text-rawaa-dark items-center justify-center transition-all duration-200 cursor-pointer"
+            className="flex items-center gap-1.5 relative h-9 sm:h-10 px-2 sm:px-3 rounded-full bg-rawaa-soft hover:bg-rawaa-primary-light hover:text-rawaa-primary text-rawaa-dark transition-all duration-200 cursor-pointer border border-rawaa-border/60"
             onClick={() => setIsAuthOpen(true)}
             aria-label="حسابي"
             title={user ? `حساب: ${user.name}` : 'تسجيل الدخول'}
           >
-            <User size={18} />
+            <div className="relative flex items-center justify-center">
+              <User size={18} />
+              {user && (
+                <span
+                  className={`absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                    user.status === 'محظور'
+                      ? 'bg-rose-500'
+                      : user.status === 'غير نشط'
+                      ? 'bg-amber-500'
+                      : user.role === 'wholesaler'
+                      ? 'bg-blue-600'
+                      : user.isVip || user.role === 'vip_customer'
+                      ? 'bg-amber-500'
+                      : 'bg-emerald-500'
+                  }`}
+                />
+              )}
+            </div>
             {user && (
-              <span className="absolute bottom-1 right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
+              <span className="hidden xl:inline-block text-xs font-bold text-rawaa-dark max-w-[90px] truncate">
+                {user.name?.split(' ')[0] || 'حسابي'}
+                {user.role === 'wholesaler' && ' (تاجر)'}
+                {(user.isVip || user.role === 'vip_customer') && ' 👑'}
+              </span>
             )}
           </button>
         </div>

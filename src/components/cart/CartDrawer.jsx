@@ -54,6 +54,7 @@ export default function CartDrawer() {
 
     if (clean === 'BABY10' || clean === 'ZONE10' || clean === 'BABYZONE10' || clean === 'RAWAA10') {
       setAppliedPromo({ code: clean, type: 'percentage', percent: 10, amount: 0 });
+      setPromoInput('');
       addToast(`تم تطبيق كود الخصم ${clean} بنجاح! تم خصم 10% إضافية`, 'success');
       return;
     }
@@ -79,6 +80,7 @@ export default function CartDrawer() {
           amount: amountVal
         });
 
+        setPromoInput('');
         const discountDesc = isPercent ? `${percentVal}%` : `${amountVal} ج.م`;
         addToast(`تم تطبيق كود الخصم ${clean} بنجاح! (${discountDesc})`, 'success');
       } else {
@@ -97,14 +99,45 @@ export default function CartDrawer() {
       : Math.round((cartTotalSAR * (appliedPromo.percent || 0)) / 100)
     : 0;
 
-  const shippingCostSAR = cartTotalSAR === 0 ? 0 : freeShippingRemainingSAR === 0 ? 0 : 70;
-  const finalTotalSAR = Math.max(0, cartTotalSAR - promoDiscountSAR + shippingCostSAR);
+  const isWholesaler = user?.role === 'wholesaler' || user?.permissions?.includes('bulk_purchasing');
+  const isVipUser = Boolean(user?.isVip || user?.role === 'vip_customer' || user?.permissions?.includes('vip_discounts'));
+  const canPlaceOrders = !user || (
+    user.status !== 'محظور' &&
+    user.status !== 'غير نشط' &&
+    (user.isAdmin || !user.permissions || user.permissions.includes('place_orders') || user.permissions.includes('*'))
+  );
+
+  // Wholesale: 15% discount; VIP: 5% loyalty discount
+  const wholesaleDiscountSAR = isWholesaler ? Math.round(cartTotalSAR * 0.15) : 0;
+  const vipDiscountSAR = (!isWholesaler && isVipUser) ? Math.round(cartTotalSAR * 0.05) : 0;
+  const roleDiscountSAR = wholesaleDiscountSAR + vipDiscountSAR;
+
+  const shippingCostSAR = cartTotalSAR === 0
+    ? 0
+    : (isVipUser || isWholesaler || freeShippingRemainingSAR === 0)
+    ? 0
+    : 70;
+
+  const totalDiscountSAR = promoDiscountSAR + roleDiscountSAR;
+  const finalTotalSAR = Math.max(0, cartTotalSAR - totalDiscountSAR + shippingCostSAR);
 
   const handleCheckout = () => {
     if (!user) {
       addToast('يرجى تسجيل الدخول أو إنشاء حسابك أولاً لإتمام طلبك ومتابعة شحنتك في صفحتك الخاصة', 'warning');
       setIsCartOpen(false);
       setIsAuthOpen(true);
+      return;
+    }
+    if (user.status === 'محظور') {
+      addToast('عذراً، هذا الحساب محظور حالياً من قبل الإدارة', 'error');
+      return;
+    }
+    if (user.status === 'غير نشط') {
+      addToast('حسابك غير نشط وقيد المراجعة من الإدارة. إتمام الطلبات معلق حتى اعتماد الحساب.', 'warning');
+      return;
+    }
+    if (user.permissions && !user.permissions.includes('place_orders') && !user.permissions.includes('*')) {
+      addToast('صلاحية إتمام الطلبات معطلة لحسابك من قِبل الإدارة.', 'warning');
       return;
     }
     setIsCheckoutOpen(true);
@@ -149,7 +182,7 @@ export default function CartDrawer() {
         <FreeShippingBar />
 
         {/* Cart product items list or empty state */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto custom-modal-scroll p-5">
           {cart.length === 0 ? (
             <div className="py-16 text-center">
               <div className="w-16 h-16 rounded-full bg-rawaa-primary-light text-rawaa-primary flex items-center justify-center mx-auto mb-4">
@@ -268,9 +301,10 @@ export default function CartDrawer() {
               </div>
               <button
                 type="submit"
-                className="bg-rawaa-sage hover:bg-rawaa-sage-hover text-white text-xs font-bold px-4 py-1.5 rounded-full transition-colors shrink-0"
+                disabled={isApplyingPromo}
+                className="bg-rawaa-sage hover:bg-rawaa-sage-hover disabled:opacity-50 text-white text-xs font-bold px-4 py-1.5 rounded-full transition-colors shrink-0"
               >
-                تطبيق
+                {isApplyingPromo ? 'جارٍ التحقق...' : 'تطبيق'}
               </button>
             </form>
 
@@ -297,11 +331,27 @@ export default function CartDrawer() {
                 </div>
               )}
 
+              {isWholesaler && wholesaleDiscountSAR > 0 && (
+                <div className="flex justify-between text-blue-700 font-bold">
+                  <span>خصم تاجر الجملة والتوريد (15%):</span>
+                  <span>- {formatPrice(wholesaleDiscountSAR)}</span>
+                </div>
+              )}
+
+              {isVipUser && !isWholesaler && vipDiscountSAR > 0 && (
+                <div className="flex justify-between text-amber-700 font-bold">
+                  <span>خصم عضوية VIP الذهبية (5%):</span>
+                  <span>- {formatPrice(vipDiscountSAR)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between">
                 <span>رسوم التوصيل:</span>
                 <span className="font-semibold text-rawaa-dark">
                   {shippingCostSAR === 0 ? (
-                    <strong className="text-emerald-600 font-bold">مجاناً بالكامل</strong>
+                    <strong className="text-emerald-600 font-bold">
+                      {isVipUser ? 'مجاناً (ميزة VIP)' : isWholesaler ? 'مجاناً (ميزة تاجر)' : 'مجاناً بالكامل'}
+                    </strong>
                   ) : (
                     formatPrice(shippingCostSAR)
                   )}
@@ -314,7 +364,7 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            {/* Login verification status block */}
+            {/* Login and Account Status Block */}
             {!user ? (
               <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 text-xs text-amber-900 flex items-start gap-2.5 mb-2.5 shadow-2xs">
                 <Lock size={15} className="text-amber-600 shrink-0 mt-0.5" />
@@ -325,23 +375,56 @@ export default function CartDrawer() {
                   </span>
                 </div>
               </div>
+            ) : user.status === 'محظور' ? (
+              <div className="bg-rose-50 border border-rose-300 rounded-2xl p-2.5 text-xs text-rose-900 flex items-center justify-between gap-2 mb-2.5 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-600 shrink-0" />
+                  <span className="font-bold">حسابك محظور من الشراء والتنفيذ بأمر الإدارة</span>
+                </div>
+                <span className="text-[10px] bg-rose-200 text-rose-900 font-black px-2 py-0.5 rounded-full">محظور</span>
+              </div>
+            ) : user.status === 'غير نشط' ? (
+              <div className="bg-amber-50 border border-amber-300 rounded-2xl p-2.5 text-xs text-amber-900 flex items-center justify-between gap-2 mb-2.5 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                  <span className="font-bold">حسابك قيد المراجعة — إتمام الطلبات معلق حتى الاعتماد</span>
+                </div>
+                <span className="text-[10px] bg-amber-200 text-amber-900 font-black px-2 py-0.5 rounded-full">قيد المراجعة</span>
+              </div>
+            ) : !canPlaceOrders ? (
+              <div className="bg-amber-50 border border-amber-300 rounded-2xl p-2.5 text-xs text-amber-900 flex items-center justify-between gap-2 mb-2.5 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                  <span className="font-bold">صلاحية إتمام الطلبات معطلة لحسابك من قِبل الإدارة</span>
+                </div>
+                <span className="text-[10px] bg-amber-200 text-amber-900 font-black px-2 py-0.5 rounded-full">مقيد</span>
+              </div>
             ) : (
               <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl p-2.5 text-xs text-emerald-900 flex items-center justify-between gap-2 mb-2.5 shadow-2xs">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                   <span className="font-medium">الطلب مرتبط بحسابك: <strong className="font-bold text-emerald-800">{user.name}</strong></span>
                 </div>
-                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">حساب موثق</span>
+                {isWholesaler ? (
+                  <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">تاجر جملة</span>
+                ) : isVipUser ? (
+                  <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">VIP ذهبي 👑</span>
+                ) : (
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">حساب نشط</span>
+                )}
               </div>
             )}
 
             {/* Primary checkout action button */}
             <button
               type="button"
-              className={`w-full text-white text-sm font-bold py-3 px-4 rounded-full flex items-center justify-center gap-2 shadow-soft-sm hover:shadow-soft-md transition-all hover:-translate-y-0.5 cursor-pointer ${
+              disabled={user && !canPlaceOrders}
+              className={`w-full text-white text-sm font-bold py-3 px-4 rounded-full flex items-center justify-center gap-2 shadow-soft-sm hover:shadow-soft-md transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
                 !user
                   ? 'bg-amber-600 hover:bg-amber-700'
-                  : 'bg-rawaa-primary hover:bg-rawaa-primary-hover'
+                  : !canPlaceOrders
+                  ? 'bg-gray-400'
+                  : 'bg-rawaa-primary hover:bg-rawaa-primary-hover hover:-translate-y-0.5'
               }`}
               onClick={handleCheckout}
             >
@@ -349,6 +432,12 @@ export default function CartDrawer() {
               <span>
                 {!user
                   ? `تسجيل الدخول ومتابعة إتمام الطلب (${formatPrice(finalTotalSAR)})`
+                  : user.status === 'محظور'
+                  ? 'الحساب محظور من الشراء'
+                  : user.status === 'غير نشط'
+                  ? 'الحساب قيد المراجعة والاعتماد'
+                  : !canPlaceOrders
+                  ? 'صلاحية إتمام الطلبات معطلة لحسابك'
                   : `متابعة إتمام الطلب الآمن (${formatPrice(finalTotalSAR)})`}
               </span>
             </button>

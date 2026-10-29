@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import ModernCheckbox from '../../components/common/ModernCheckbox';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import {
   validateEmail,
   validateEgyptianPhone,
-  validatePrice,
   sanitizeText,
   normalizeEgyptianPhone
 } from '../../utils/validators';
@@ -27,7 +27,7 @@ import {
 
 /* Store settings and administrative configuration interface */
 export default function AdminSettingsPage() {
-  const { storeSettings, updateStoreSettings, isRealtimeConnected, isSyncing, refreshAllRealtimeData } = useAdmin();
+  const { storeSettings, updateStoreSettings, isSyncing, refreshAllRealtimeData } = useAdmin();
   const { addToast } = useShop();
   const [formData, setFormData] = useState({
     storeName: storeSettings?.storeName || 'بيبي زون | BABY ZONE',
@@ -39,9 +39,9 @@ export default function AdminSettingsPage() {
     freeShippingThreshold: storeSettings?.freeShippingThreshold || 500,
     cairoShippingCost: storeSettings?.cairoShippingCost || 50,
     otherGovernoratesShippingCost: storeSettings?.otherGovernoratesShippingCost || 75,
-    enableCod: storeSettings?.enableCod ?? true,
-    enableInstapay: storeSettings?.enableInstapay ?? true,
-    enableCard: storeSettings?.enableCard ?? true,
+    enableCod: storeSettings?.enableCOD ?? storeSettings?.enableCod ?? true,
+    enableInstapay: storeSettings?.enableInstaPay ?? storeSettings?.enableInstapay ?? false,
+    enableCard: storeSettings?.enableCreditCard ?? storeSettings?.enableCard ?? false,
     lowStockThreshold: storeSettings?.lowStockThreshold || 5,
     notifyOnNewOrder: storeSettings?.notifyOnNewOrder ?? true
   });
@@ -61,9 +61,9 @@ export default function AdminSettingsPage() {
         freeShippingThreshold: storeSettings.freeShippingLimit ?? storeSettings.freeShippingThreshold ?? prev.freeShippingThreshold,
         cairoShippingCost: storeSettings.cairoShippingFee ?? storeSettings.cairoShippingCost ?? prev.cairoShippingCost,
         otherGovernoratesShippingCost: storeSettings.provincesShippingFee ?? storeSettings.otherGovernoratesShippingCost ?? prev.otherGovernoratesShippingCost,
-        enableCod: storeSettings.enableCOD !== undefined ? storeSettings.enableCOD : prev.enableCod,
-        enableInstapay: storeSettings.enableInstaPay !== undefined ? storeSettings.enableInstaPay : prev.enableInstapay,
-        enableCard: storeSettings.enableCreditCard !== undefined ? storeSettings.enableCreditCard : prev.enableCard
+        enableCod: storeSettings.enableCOD !== undefined ? Boolean(storeSettings.enableCOD) : (storeSettings.enableCod !== undefined ? Boolean(storeSettings.enableCod) : prev.enableCod),
+        enableInstapay: storeSettings.enableInstaPay !== undefined ? Boolean(storeSettings.enableInstaPay) : (storeSettings.enableInstapay !== undefined ? Boolean(storeSettings.enableInstapay) : prev.enableInstapay),
+        enableCard: storeSettings.enableCreditCard !== undefined ? Boolean(storeSettings.enableCreditCard) : (storeSettings.enableCard !== undefined ? Boolean(storeSettings.enableCard) : prev.enableCard)
       }));
     }
   }, [storeSettings]);
@@ -102,6 +102,7 @@ export default function AdminSettingsPage() {
     const otherShipping = Math.max(0, Number(formData.otherGovernoratesShippingCost) || 0);
 
     const payload = {
+      ...storeSettings,
       ...formData,
       storeName: cleanStoreName,
       tagline: sanitizeText(formData.tagline),
@@ -109,13 +110,26 @@ export default function AdminSettingsPage() {
       supportPhone: cleanPhone,
       address: sanitizeText(formData.address),
       freeShippingThreshold: freeThreshold,
+      freeShippingLimit: freeThreshold,
       cairoShippingCost: cairoShipping,
-      otherGovernoratesShippingCost: otherShipping
+      cairoShippingFee: cairoShipping,
+      otherGovernoratesShippingCost: otherShipping,
+      provincesShippingFee: otherShipping,
+      enableCod: Boolean(formData.enableCod),
+      enableCOD: Boolean(formData.enableCod),
+      enable_cod: Boolean(formData.enableCod),
+      enableInstapay: Boolean(formData.enableInstapay),
+      enableInstaPay: Boolean(formData.enableInstapay),
+      enable_instapay: Boolean(formData.enableInstapay),
+      enableCard: Boolean(formData.enableCard),
+      enableCreditCard: Boolean(formData.enableCard),
+      enable_credit_card: Boolean(formData.enableCard),
+      enableVodafoneCash: Boolean(formData.enableInstapay),
+      enable_vodafone_cash: Boolean(formData.enableInstapay)
     };
 
     updateStoreSettings(payload);
     setSavedSuccess(true);
-    if (addToast) addToast('تم حفظ إعدادات المتجر بنجاح', 'success');
     setTimeout(() => setSavedSuccess(false), 3000);
   };
 
@@ -301,50 +315,104 @@ export default function AdminSettingsPage() {
           </div>
 
           <div className="space-y-3">
-            <label className="flex items-center justify-between p-3.5 rounded-xl bg-rawaa-soft/40 border border-rawaa-border cursor-pointer hover:bg-rawaa-soft/70 transition-colors">
+            <div
+              onClick={() => setFormData((prev) => ({ ...prev, enableCod: !prev.enableCod }))}
+              className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all select-none ${
+                formData.enableCod
+                  ? 'bg-emerald-50/60 border-emerald-300 shadow-2xs'
+                  : 'bg-rawaa-soft/40 border-rawaa-border hover:bg-rawaa-soft/70'
+              }`}
+            >
               <div>
-                <div className="font-bold text-xs text-rawaa-dark">الدفع نقداً عند الاستلام (COD)</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-rawaa-dark">الدفع نقداً عند الاستلام (COD)</span>
+                  {formData.enableCod ? (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                      مفعل ومتاح للعملاء
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                      معطل (غير متاح)
+                    </span>
+                  )}
+                </div>
                 <div className="text-[11px] text-rawaa-dark/60 mt-0.5">
                   يتيح للعملاء دفع قيمة الطلب لمندوب الشحن نقداً عند باب المنزل
                 </div>
               </div>
-              <input
-                type="checkbox"
-                checked={formData.enableCod}
-                onChange={(e) => setFormData({ ...formData, enableCod: e.target.checked })}
-                className="w-5 h-5 rounded text-rawaa-primary focus:ring-rawaa-primary border-rawaa-border"
+              <ModernCheckbox
+                checked={Boolean(formData.enableCod)}
+                onChange={(checked) => setFormData((prev) => ({ ...prev, enableCod: checked }))}
+                color="primary"
+                size="md"
               />
-            </label>
+            </div>
 
-            <label className="flex items-center justify-between p-3.5 rounded-xl bg-rawaa-soft/40 border border-rawaa-border cursor-pointer hover:bg-rawaa-soft/70 transition-colors">
+            <div
+              onClick={() => setFormData((prev) => ({ ...prev, enableInstapay: !prev.enableInstapay }))}
+              className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all select-none ${
+                formData.enableInstapay
+                  ? 'bg-purple-50/60 border-purple-300 shadow-2xs'
+                  : 'bg-rawaa-soft/40 border-rawaa-border hover:bg-rawaa-soft/70'
+              }`}
+            >
               <div>
-                <div className="font-bold text-xs text-rawaa-dark">الدفع الرقمي عبر إنستاباي والمحافظ الإلكترونية (InstaPay)</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-rawaa-dark">الدفع الرقمي عبر إنستاباي والمحافظ الإلكترونية (InstaPay)</span>
+                  {formData.enableInstapay ? (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                      مفعل ومتاح للعملاء
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+                      معطل (يظهر "قريباً" للعملاء)
+                    </span>
+                  )}
+                </div>
                 <div className="text-[11px] text-rawaa-dark/60 mt-0.5">
                   تحويل بنكي فوري فودافون كاش، أورنج، اتصالات، وإنستاباي
                 </div>
               </div>
-              <input
-                type="checkbox"
-                checked={formData.enableInstapay}
-                onChange={(e) => setFormData({ ...formData, enableInstapay: e.target.checked })}
-                className="w-5 h-5 rounded text-rawaa-primary focus:ring-rawaa-primary border-rawaa-border"
+              <ModernCheckbox
+                checked={Boolean(formData.enableInstapay)}
+                onChange={(checked) => setFormData((prev) => ({ ...prev, enableInstapay: checked }))}
+                color="primary"
+                size="md"
               />
-            </label>
+            </div>
 
-            <label className="flex items-center justify-between p-3.5 rounded-xl bg-rawaa-soft/40 border border-rawaa-border cursor-pointer hover:bg-rawaa-soft/70 transition-colors">
+            <div
+              onClick={() => setFormData((prev) => ({ ...prev, enableCard: !prev.enableCard }))}
+              className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all select-none ${
+                formData.enableCard
+                  ? 'bg-blue-50/60 border-blue-300 shadow-2xs'
+                  : 'bg-rawaa-soft/40 border-rawaa-border hover:bg-rawaa-soft/70'
+              }`}
+            >
               <div>
-                <div className="font-bold text-xs text-rawaa-dark">البطاقات الائتمانية والخصم المباشر (Visa / Mastercard)</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-rawaa-dark">البطاقات الائتمانية والخصم المباشر (Visa / Mastercard)</span>
+                  {formData.enableCard ? (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                      مفعل ومتاح للعملاء
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800">
+                      معطل (يظهر "قريباً" للعملاء)
+                    </span>
+                  )}
+                </div>
                 <div className="text-[11px] text-rawaa-dark/60 mt-0.5">
                   بوابة دفع إلكترونية مؤمنة ومشفرة لمعاملات الفيزا والماستركارد
                 </div>
               </div>
-              <input
-                type="checkbox"
-                checked={formData.enableCard}
-                onChange={(e) => setFormData({ ...formData, enableCard: e.target.checked })}
-                className="w-5 h-5 rounded text-rawaa-primary focus:ring-rawaa-primary border-rawaa-border"
+              <ModernCheckbox
+                checked={Boolean(formData.enableCard)}
+                onChange={(checked) => setFormData((prev) => ({ ...prev, enableCard: checked }))}
+                color="primary"
+                size="md"
               />
-            </label>
+            </div>
           </div>
         </div>
 
@@ -375,14 +443,19 @@ export default function AdminSettingsPage() {
             </div>
 
             <div className="flex items-center">
-              <label className="flex items-center gap-3 p-3.5 rounded-xl bg-rawaa-soft/40 border border-rawaa-border cursor-pointer w-full">
-                <input
-                  type="checkbox"
-                  checked={formData.notifyOnNewOrder}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notifyOnNewOrder: e.target.checked })
+              <div
+                onClick={() =>
+                  setFormData({ ...formData, notifyOnNewOrder: !formData.notifyOnNewOrder })
+                }
+                className="flex items-center gap-3 p-3.5 rounded-xl bg-rawaa-soft/40 border border-rawaa-border cursor-pointer w-full select-none hover:bg-rawaa-soft/70 transition-colors"
+              >
+                <ModernCheckbox
+                  checked={Boolean(formData.notifyOnNewOrder)}
+                  onChange={(checked) =>
+                    setFormData({ ...formData, notifyOnNewOrder: checked })
                   }
-                  className="w-5 h-5 rounded text-rawaa-primary focus:ring-rawaa-primary border-rawaa-border"
+                  color="primary"
+                  size="md"
                 />
                 <div>
                   <div className="font-bold text-xs text-rawaa-dark">إشعارات الطلبات الفورية</div>
@@ -390,7 +463,7 @@ export default function AdminSettingsPage() {
                     إرسال إشعار فوري عند قيام أي عميل بطلب جديد
                   </div>
                 </div>
-              </label>
+              </div>
             </div>
           </div>
         </div>

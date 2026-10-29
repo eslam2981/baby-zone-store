@@ -135,6 +135,19 @@ export function formatDbAdmin(dbAdm) {
 
 export function formatDbSettings(dbSet) {
   if (!dbSet) return initialStoreSettings;
+  const isCod = dbSet.enable_cod !== undefined && dbSet.enable_cod !== null
+    ? Boolean(dbSet.enable_cod)
+    : initialStoreSettings.enableCOD;
+  const isInstapay = dbSet.enable_instapay !== undefined && dbSet.enable_instapay !== null
+    ? Boolean(dbSet.enable_instapay)
+    : initialStoreSettings.enableInstaPay;
+  const isVodafone = dbSet.enable_vodafone_cash !== undefined && dbSet.enable_vodafone_cash !== null
+    ? Boolean(dbSet.enable_vodafone_cash)
+    : initialStoreSettings.enableVodafoneCash;
+  const isCard = dbSet.enable_credit_card !== undefined && dbSet.enable_credit_card !== null
+    ? Boolean(dbSet.enable_credit_card)
+    : initialStoreSettings.enableCreditCard;
+
   return {
     storeName: dbSet.store_name || initialStoreSettings.storeName,
     tagline: dbSet.tagline || initialStoreSettings.tagline,
@@ -145,14 +158,20 @@ export function formatDbSettings(dbSet) {
     currency: dbSet.currency || initialStoreSettings.currency,
     currencyCode: dbSet.currency_code || initialStoreSettings.currencyCode,
     freeShippingLimit: Number(dbSet.free_shipping_limit) || initialStoreSettings.freeShippingLimit,
+    freeShippingThreshold: Number(dbSet.free_shipping_limit) || initialStoreSettings.freeShippingLimit,
     cairoShippingFee: Number(dbSet.cairo_shipping_fee) || initialStoreSettings.cairoShippingFee,
+    cairoShippingCost: Number(dbSet.cairo_shipping_fee) || initialStoreSettings.cairoShippingFee,
     provincesShippingFee: Number(dbSet.provinces_shipping_fee) || initialStoreSettings.provincesShippingFee,
+    otherGovernoratesShippingCost: Number(dbSet.provinces_shipping_fee) || initialStoreSettings.provincesShippingFee,
     taxRate: Number(dbSet.tax_rate) || initialStoreSettings.taxRate,
     autoConfirmOrders: Boolean(dbSet.auto_confirm_orders),
-    enableCOD: Boolean(dbSet.enable_cod),
-    enableInstaPay: Boolean(dbSet.enable_instapay),
-    enableVodafoneCash: Boolean(dbSet.enable_vodafone_cash),
-    enableCreditCard: Boolean(dbSet.enable_credit_card),
+    enableCOD: isCod,
+    enableCod: isCod,
+    enableInstaPay: isInstapay,
+    enableInstapay: isInstapay,
+    enableVodafoneCash: isVodafone,
+    enableCreditCard: isCard,
+    enableCard: isCard,
     maintenanceMode: Boolean(dbSet.maintenance_mode),
     businessHours: dbSet.business_hours || initialStoreSettings.businessHours
   };

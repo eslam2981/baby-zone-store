@@ -130,7 +130,7 @@ export default function AdminLoginPage() {
               <input
                 type="email"
                 dir="ltr"
-                placeholder="admin@babyzone-egypt.com"
+                placeholder="admin@domain.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-4 pr-10 py-2.5 bg-rawaa-soft/60 border border-rawaa-border rounded-xl text-sm font-medium text-rawaa-dark focus:outline-none focus:border-rawaa-primary focus:bg-white transition-colors"

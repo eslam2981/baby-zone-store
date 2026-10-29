@@ -44,20 +44,6 @@ const ICON_MAP = {
   Flame
 };
 
-const getCategoryCountLabel = (count) => {
-  if (count === 1) return 'قسم واحد معتمد';
-  if (count === 2) return 'قسمان معتمدان';
-  if (count >= 3 && count <= 10) return `${count} أقسام معتمدة`;
-  return `${count} قسماً معتمداً`;
-};
-
-const getCategorySubtext = (count) => {
-  if (count === 1) return 'قسم متخصص يلبي متطلبات رحلة الأمومة ونمو طفلك بأعلى المعايير';
-  if (count === 2) return 'قسمان متخصصان يلبيان متطلبات رحلة الأمومة ونمو طفلك بأعلى المعايير';
-  if (count >= 3 && count <= 10) return `${count} أقسام رئيسية تلبي كافة متطلبات رحلة الأمومة ونمو طفلك بأعلى المعايير`;
-  return `${count} قسماً متخصصاً تلبي كافة متطلبات رحلة الأمومة ونمو طفلك بأعلى المعايير`;
-};
-
 export default function CategoryPills() {
   const { categories, selectedCategory, setSelectedCategory, setSelectedSubcategory, isLoadingProducts } = useShop();
   const [isPressed, setIsPressed] = useState(false);

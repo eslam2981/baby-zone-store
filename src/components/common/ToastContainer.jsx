@@ -23,7 +23,6 @@ export default function ToastContainer() {
         const isSuccess = toast.type === 'success';
         const isWarning = toast.type === 'warning';
         const isError = toast.type === 'error';
-        const isInfo = !isSuccess && !isWarning && !isError;
 
         let borderColor = 'border-rawaa-primary/30';
         let bgGradient = 'from-rawaa-primary/[0.04] to-white';

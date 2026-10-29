@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import ModernSelect from '../../components/common/ModernSelect';
 import { useAdmin } from '../../context/AdminContext';
 import {
   Star,
@@ -17,7 +18,7 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 
 /* Reviews and customer ratings moderation page */
 export default function AdminReviewsPage() {
-  const { reviews, isLoadingReviews, toggleReviewApproval, deleteReview, isRealtimeConnected, isSyncing, refreshAllRealtimeData } = useAdmin();
+  const { reviews, isLoadingReviews, toggleReviewApproval, deleteReview, isSyncing, refreshAllRealtimeData } = useAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [ratingFilter, setRatingFilter] = useState('all');
@@ -184,18 +185,20 @@ export default function AdminReviewsPage() {
               </button>
             </div>
 
-            <select
-              value={ratingFilter}
-              onChange={(e) => setRatingFilter(e.target.value)}
-              className="px-3 py-2 bg-rawaa-soft/60 border border-rawaa-border rounded-xl text-xs font-bold text-rawaa-dark focus:outline-none focus:border-rawaa-primary cursor-pointer"
-            >
-              <option value="all">جميع التقييمات</option>
-              <option value="5">5 نجوم (ممتاز)</option>
-              <option value="4">4 نجوم (جيد جداً)</option>
-              <option value="3">3 نجوم (جيد)</option>
-              <option value="2">نجمتان (مقبول)</option>
-              <option value="1">نجمة واحدة (ضعيف)</option>
-            </select>
+            <div className="min-w-[170px]">
+              <ModernSelect
+                value={ratingFilter}
+                onChange={(e) => setRatingFilter(e?.target?.value !== undefined ? e.target.value : e)}
+                options={[
+                  { value: 'all', label: 'جميع التقييمات' },
+                  { value: '5', label: '5 نجوم (ممتاز)' },
+                  { value: '4', label: '4 نجوم (جيد جداً)' },
+                  { value: '3', label: '3 نجوم (جيد)' },
+                  { value: '2', label: 'نجمتان (مقبول)' },
+                  { value: '1', label: 'نجمة واحدة (ضعيف)' }
+                ]}
+              />
+            </div>
           </div>
         </div>
       </div>

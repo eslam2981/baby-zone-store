@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
+import ModernSelect from '../../components/common/ModernSelect';
+import ModernCheckbox from '../../components/common/ModernCheckbox';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import {
   validateCouponCode,
   validateDiscountValue,
-  normalizeCouponCode,
-  sanitizeText
+  normalizeCouponCode
 } from '../../utils/validators';
 import {
   Tag,
@@ -29,9 +30,19 @@ import {
 import ConfirmModal from '../../components/common/ConfirmModal';
 import { CouponCardSkeleton } from '../../components/common/Skeletons';
 
+const INITIAL_COUPON_FORM = {
+  code: '',
+  discountType: 'percentage',
+  discountValue: 10,
+  minSpend: 200,
+  maxUses: 100,
+  expiryDate: '2026-12-31',
+  isActive: true
+};
+
 /* Coupons and marketing discount promotions management interface */
 export default function AdminCouponsPage() {
-  const { coupons, isLoadingCoupons, addCoupon, updateCoupon, deleteCoupon, toggleCouponStatus, isRealtimeConnected, isSyncing, refreshAllRealtimeData } = useAdmin();
+  const { coupons, isLoadingCoupons, addCoupon, updateCoupon, deleteCoupon, toggleCouponStatus, isSyncing, refreshAllRealtimeData } = useAdmin();
   const { addToast } = useShop();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,19 +51,12 @@ export default function AdminCouponsPage() {
   const [copiedCode, setCopiedCode] = useState(null);
 
   /* Form state for creating and editing promo codes */
-  const [formData, setFormData] = useState({
-    code: '',
-    discountType: 'percentage',
-    discountValue: 10,
-    minSpend: 200,
-    maxUses: 100,
-    expiryDate: '2026-12-31',
-    isActive: true
-  });
+  const [formData, setFormData] = useState(INITIAL_COUPON_FORM);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingCoupon(null);
+    setFormData(INITIAL_COUPON_FORM);
     if (searchParams.get('action')) {
       searchParams.delete('action');
       setSearchParams(searchParams, { replace: true });
@@ -60,26 +64,18 @@ export default function AdminCouponsPage() {
   };
 
   /* Open modal in create mode */
-  const handleOpenCreate = () => {
+  const handleOpenCreate = useCallback(() => {
     setEditingCoupon(null);
-    setFormData({
-      code: '',
-      discountType: 'percentage',
-      discountValue: 10,
-      minSpend: 200,
-      maxUses: 100,
-      expiryDate: '2026-12-31',
-      isActive: true
-    });
+    setFormData(INITIAL_COUPON_FORM);
     setIsModalOpen(true);
-  };
+  }, []);
 
   // Synchronize modal state with URL searchParams dynamically without needing any page refresh
   useEffect(() => {
     if (searchParams.get('action') === 'add') {
       handleOpenCreate();
     }
-  }, [searchParams]);
+  }, [searchParams, handleOpenCreate]);
 
   // Lock background scroll when modal is open
   useEffect(() => {
@@ -362,7 +358,7 @@ export default function AdminCouponsPage() {
           onClick={handleCloseModal}
         >
           <div
-            className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-rawaa-border max-h-[90vh] flex flex-col overflow-hidden animate-fadeIn"
+            className="w-full max-w-lg bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-rawaa-border max-h-[90vh] flex flex-col overflow-hidden animate-scaleUp"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 sm:p-5 bg-rawaa-soft/60 border-b border-rawaa-border flex items-center justify-between shrink-0">
@@ -398,14 +394,14 @@ export default function AdminCouponsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-rawaa-dark mb-1">نوع الخصم</label>
-                  <select
+                  <ModernSelect
                     value={formData.discountType}
-                    onChange={(e) => setFormData({ ...formData, discountType: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-rawaa-soft/60 border border-rawaa-border rounded-xl text-xs font-bold text-rawaa-dark focus:outline-none focus:border-rawaa-primary focus:bg-white"
-                  >
-                    <option value="percentage">نسبة مئوية (%)</option>
-                    <option value="fixed">مبلغ ثابت (ج.م)</option>
-                  </select>
+                    onChange={(e) => setFormData({ ...formData, discountType: e?.target?.value !== undefined ? e.target.value : e })}
+                    options={[
+                      { value: 'percentage', label: 'نسبة مئوية (%)' },
+                      { value: 'fixed', label: 'مبلغ ثابت (ج.م)' }
+                    ]}
+                  />
                 </div>
 
                 <div>
@@ -465,17 +461,14 @@ export default function AdminCouponsPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="isActiveToggle"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="w-4 h-4 rounded text-rawaa-primary focus:ring-rawaa-primary border-rawaa-border"
+              <div className="pt-2">
+                <ModernCheckbox
+                  checked={Boolean(formData.isActive)}
+                  onChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                  label="تفعيل الكوبون وإتاحته للاستخدام فوراً"
+                  color="primary"
+                  size="md"
                 />
-                <label htmlFor="isActiveToggle" className="text-xs font-bold text-rawaa-dark cursor-pointer">
-                  تفعيل الكوبون وإتاحته للاستخدام فوراً
-                </label>
               </div>
 
               </div>

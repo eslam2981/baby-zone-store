@@ -227,11 +227,11 @@ export function RevenueTrendChart() {
   );
 }
 
+// Color palette for dynamic categories
+const CATEGORY_PALETTE = ['#C25E3E', '#2D5A46', '#D97706', '#3B82F6', '#8B5CF6'];
+
 export function CategoryDistributionChart() {
   const { categories, allProducts } = useShop();
-
-  // Color palette for dynamic categories
-  const categoryPalette = ['#C25E3E', '#2D5A46', '#D97706', '#3B82F6', '#8B5CF6'];
 
   const dynamicData = useMemo(() => {
     if (!categories || categories.length === 0) {
@@ -244,7 +244,7 @@ export function CategoryDistributionChart() {
         id: cat.id,
         name: cat.name,
         count: prodCount,
-        color: categoryPalette[idx % categoryPalette.length]
+        color: CATEGORY_PALETTE[idx % CATEGORY_PALETTE.length]
       };
     });
 
